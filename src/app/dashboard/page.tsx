@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Icons } from "@/components/icons";
-import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVertical, Plus, ShoppingCart } from "lucide-react";
+import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVertical, Plus, ShoppingCart, Dumbbell, PlayCircle } from "lucide-react";
 import Link from 'next/link';
-import { UtensilsCrossed } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const WaterGlass = ({ filled, onClick }: { filled: boolean, onClick: () => void }) => (
@@ -18,11 +16,32 @@ const WaterGlass = ({ filled, onClick }: { filled: boolean, onClick: () => void 
   </button>
 );
 
+type Exercise = {
+  name: string;
+  sets: string;
+  reps: string;
+  rest: string;
+  videoUrl: string;
+};
+
+type WorkoutPlan = {
+  title: string;
+  description: string;
+  exercises: Exercise[];
+};
 
 export default function DashboardPage() {
     const [waterGlasses, setWaterGlasses] = useState(Array(8).fill(false));
     const [isClicked, setIsClicked] = useState(false);
+    const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
     const affiliateTag = "your-amazon-tag-20"; // Replace with your actual Amazon affiliate tag
+
+    useEffect(() => {
+        const storedPlan = localStorage.getItem('latestWorkoutPlan');
+        if (storedPlan) {
+            setWorkoutPlan(JSON.parse(storedPlan));
+        }
+    }, []);
 
     const handleWaterClick = (index: number) => {
         const newGlasses = [...waterGlasses];
@@ -98,6 +117,44 @@ export default function DashboardPage() {
         </div>
 
         <div className="bg-background rounded-t-3xl -mt-6 p-4 space-y-4">
+            {/* Today's Workout */}
+            {workoutPlan ? (
+              <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Dumbbell className="text-primary"/> Today's Workout</CardTitle>
+                    <CardDescription>{workoutPlan.title}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ul className="space-y-2">
+                        {workoutPlan.exercises.slice(0, 3).map(ex => (
+                            <li key={ex.name} className="text-sm text-muted-foreground flex items-center justify-between">
+                                <span>{ex.name} ({ex.sets} x {ex.reps})</span>
+                                <PlayCircle className="h-5 w-5 text-primary/50" />
+                            </li>
+                        ))}
+                         {workoutPlan.exercises.length > 3 && (
+                             <li className="text-sm text-muted-foreground">...and {workoutPlan.exercises.length - 3} more</li>
+                         )}
+                    </ul>
+                    <Button asChild variant="secondary" className="w-full mt-4">
+                        <Link href="/dashboard/programs">View Full Workout</Link>
+                    </Button>
+                </CardContent>
+              </Card>
+            ) : (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Dumbbell className="text-primary"/> Generate a Workout</CardTitle>
+                        <CardDescription>No workout plan generated yet. Go to the programs tab to create one!</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button asChild className="w-full">
+                            <Link href="/dashboard/programs">Generate AI Workout</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Macros Section */}
             <Card>
                 <CardContent className="p-4">

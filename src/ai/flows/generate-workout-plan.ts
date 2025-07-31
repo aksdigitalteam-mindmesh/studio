@@ -10,7 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {generateExerciseImage} from '@/ai/flows/generate-exercise-image';
+import {generateExerciseMedia} from '@/ai/flows/generate-exercise-media';
 
 const GenerateWorkoutPlanInputSchema = z.object({
   fitnessGoals: z
@@ -34,7 +34,7 @@ const ExerciseSchema = z.object({
   sets: z.string().describe('The number of sets to perform.'),
   reps: z.string().describe('The number of repetitions per set.'),
   rest: z.string().describe('The rest time between sets.'),
-  imageUrl: z.string().url().describe('URL of an image showing the exercise.'),
+  videoUrl: z.string().describe('URL of an video showing the exercise.'),
 });
 
 const GenerateWorkoutPlanOutputSchema = z.object({
@@ -74,7 +74,7 @@ Intensity: {{{intensity}}}
 Duration: {{{duration}}} minutes
 Body Focus: {{#if bodyFocus}}{{{bodyFocus}}}{{else}}No specific body focus{{/if}}
 
-Provide a catchy title, a short description, and a list of specific exercises with sets, reps, and rest times. Do not include images.`,
+Provide a catchy title, a short description, and a list of specific exercises with sets, reps, and rest times. Do not include videos.`,
 });
 
 const generateWorkoutPlanFlow = ai.defineFlow(
@@ -89,20 +89,20 @@ const generateWorkoutPlanFlow = ai.defineFlow(
       throw new Error('Failed to generate workout plan');
     }
 
-    const imagePromises = output.exercises.map(exercise =>
-      generateExerciseImage({exerciseName: exercise.name})
+    const videoPromises = output.exercises.map(exercise =>
+      generateExerciseMedia({exerciseName: exercise.name})
     );
-    const images = await Promise.all(imagePromises);
+    const videos = await Promise.all(videoPromises);
 
-    const exercisesWithImages = output.exercises.map((exercise, index) => ({
+    const exercisesWithVideos = output.exercises.map((exercise, index) => ({
       ...exercise,
-      imageUrl: images[index].imageUrl,
+      videoUrl: videos[index].videoUrl,
     }));
 
     return {
       title: output.title,
       description: output.description,
-      exercises: exercisesWithImages,
+      exercises: exercisesWithVideos,
     };
   }
 );

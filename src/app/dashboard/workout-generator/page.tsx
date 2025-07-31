@@ -20,7 +20,6 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Image from "next/image";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 type Exercise = {
@@ -28,7 +27,7 @@ type Exercise = {
   sets: string;
   reps: string;
   rest: string;
-  imageUrl: string;
+  videoUrl: string;
 };
 
 type WorkoutPlan = {
@@ -59,12 +58,23 @@ export default function WorkoutGeneratorPage() {
       if (response.error) {
         toast({
           variant: "destructive",
-          title: "Error",
+          title: "Error Generating Workout",
           description: response.error,
         });
       }
       if (response.data) {
         setResult(response.data);
+        // Also save to local storage for the dashboard page
+        try {
+          localStorage.setItem('latestWorkoutPlan', JSON.stringify(response.data));
+        } catch (e) {
+            console.error("Could not save workout plan to local storage", e);
+             toast({
+              variant: "destructive",
+              title: "Could not save workout",
+              description: "There was an issue saving your workout plan for the dashboard.",
+            });
+        }
       }
     });
   }
@@ -177,8 +187,8 @@ export default function WorkoutGeneratorPage() {
             {isPending && (
                 <div className="flex h-full flex-col items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="mt-4 text-muted-foreground">Generating your workout and images...</p>
-                    <p className="text-sm text-muted-foreground">(This may take a moment)</p>
+                    <p className="mt-4 text-muted-foreground">Generating your workout and videos...</p>
+                    <p className="text-sm text-muted-foreground">(This may take a minute or two)</p>
                 </div>
             )}
             {result && (
@@ -192,8 +202,8 @@ export default function WorkoutGeneratorPage() {
                        <AccordionItem value={`item-${index}`} key={index}>
                          <AccordionTrigger>
                            <div className="flex items-center gap-4">
-                             <div className="relative h-16 w-16 rounded-md overflow-hidden">
-                                <Image src={exercise.imageUrl} alt={exercise.name} layout="fill" objectFit="cover" />
+                             <div className="relative h-16 w-28 rounded-md overflow-hidden bg-muted">
+                                <video src={exercise.videoUrl} loop autoPlay muted playsInline className="h-full w-full object-cover"></video>
                              </div>
                              <div>
                                <p className="font-semibold text-left">{exercise.name}</p>
