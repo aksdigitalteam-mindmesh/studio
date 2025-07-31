@@ -8,6 +8,7 @@ import { Icons } from "@/components/icons";
 import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVertical, Plus, ShoppingCart } from "lucide-react";
 import Link from 'next/link';
 import { UtensilsCrossed } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 const WaterGlass = ({ filled, onClick }: { filled: boolean, onClick: () => void }) => (
   <button onClick={onClick} className="relative w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded-t-lg overflow-hidden">
@@ -20,12 +21,18 @@ const WaterGlass = ({ filled, onClick }: { filled: boolean, onClick: () => void 
 
 export default function DashboardPage() {
     const [waterGlasses, setWaterGlasses] = useState(Array(8).fill(false));
+    const [isClicked, setIsClicked] = useState(false);
     const affiliateTag = "your-amazon-tag-20"; // Replace with your actual Amazon affiliate tag
 
     const handleWaterClick = (index: number) => {
         const newGlasses = [...waterGlasses];
         newGlasses[index] = !newGlasses[index];
         setWaterGlasses(newGlasses);
+    };
+
+    const handleAmazonClick = () => {
+        setIsClicked(true);
+        setTimeout(() => setIsClicked(false), 300); // Reset after 300ms
     };
 
     const filledGlasses = waterGlasses.filter(Boolean).length;
@@ -74,7 +81,15 @@ export default function DashboardPage() {
             <Button variant="link" className="text-white">
                 SEE STATS <ChevronDown className="ml-1 h-4 w-4" />
             </Button>
-            <Button asChild variant="secondary" className="bg-white/20 hover:bg-white/30 text-white rounded-full">
+            <Button 
+                asChild 
+                variant="secondary" 
+                onClick={handleAmazonClick}
+                className={cn(
+                    "rounded-full text-white transition-colors duration-300",
+                    isClicked ? "bg-green-500" : "bg-gray-500 hover:bg-gray-600"
+                )}
+            >
                 <a href={`https://www.amazon.com/s?k=healthy+ingredients&tag=${affiliateTag}`} target="_blank" rel="noopener noreferrer">
                     <ShoppingCart className="mr-2 h-4 w-4"/> Buy Ingredients
                 </a>
