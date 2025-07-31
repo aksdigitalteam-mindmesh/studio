@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Icons } from "@/components/icons";
-import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVertical, Plus } from "lucide-react";
+import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVertical, Plus, ShoppingCart } from "lucide-react";
 import Link from 'next/link';
 import { UtensilsCrossed } from 'lucide-react';
 
@@ -20,6 +20,7 @@ const WaterGlass = ({ filled, onClick }: { filled: boolean, onClick: () => void 
 
 export default function DashboardPage() {
     const [waterGlasses, setWaterGlasses] = useState(Array(8).fill(false));
+    const affiliateTag = "your-amazon-tag-20"; // Replace with your actual Amazon affiliate tag
 
     const handleWaterClick = (index: number) => {
         const newGlasses = [...waterGlasses];
@@ -69,9 +70,16 @@ export default function DashboardPage() {
               <p className="text-xs">BURNED</p>
             </div>
           </div>
-          <Button variant="link" className="text-white mt-4">
-            SEE STATS <ChevronDown className="ml-1 h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-4 mt-6">
+            <Button variant="link" className="text-white">
+                SEE STATS <ChevronDown className="ml-1 h-4 w-4" />
+            </Button>
+            <Button asChild variant="secondary" className="bg-white/20 hover:bg-white/30 text-white rounded-full">
+                <a href={`https://www.amazon.com/s?k=healthy+ingredients&tag=${affiliateTag}`} target="_blank" rel="noopener noreferrer">
+                    <ShoppingCart className="mr-2 h-4 w-4"/> Buy Ingredients
+                </a>
+            </Button>
+          </div>
         </div>
 
         <div className="bg-background rounded-t-3xl -mt-6 p-4 space-y-4">

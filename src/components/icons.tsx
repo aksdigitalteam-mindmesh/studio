@@ -9,7 +9,8 @@ import {
   LayoutDashboard,
   Sun,
   Moon,
-  Rocket
+  Rocket,
+  ShoppingCart
 } from 'lucide-react';
 
 export const Icons = {
@@ -37,5 +38,6 @@ export const Icons = {
   Subscription: Gem,
   Sun,
   Moon,
-  Rocket
+  Rocket,
+  ShoppingCart
 };
