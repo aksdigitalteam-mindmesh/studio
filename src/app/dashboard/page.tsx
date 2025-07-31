@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Icons } from "@/components/icons";
 import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVertical, Plus } from "lucide-react";
+import Link from 'next/link';
+import { UtensilsCrossed } from 'lucide-react';
 
 const WaterGlass = ({ filled, onClick }: { filled: boolean, onClick: () => void }) => (
   <button onClick={onClick} className="relative w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded-t-lg overflow-hidden">
@@ -159,11 +161,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-// Dummy components for linking
-import Link from 'next/link';
-import { UtensilsCrossed } from 'lucide-react';
-
-const ProgressPage = () => <div>Progress Page</div>;
-const ProgramsPage = () => <div>Programs Page</div>;
-const RecipesPage = () => <div>Recipes Page</div>;

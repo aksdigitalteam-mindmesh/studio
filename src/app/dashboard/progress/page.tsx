@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -28,7 +29,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function WeightPage() {
+export default function ProgressPage() {
   const [weightData, setWeightData] = useState(initialWeightData);
   const [targetWeight, setTargetWeight] = useState(70);
   const [currentWeight, setCurrentWeight] = useState("");
@@ -47,10 +48,10 @@ export default function WeightPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4 md:p-8">
       <div>
-        <h1 className="text-3xl font-bold font-headline md:text-4xl">Weight Tracker</h1>
-        <p className="text-muted-foreground">Monitor your weight and see your progress over time.</p>
+        <h1 className="text-3xl font-bold font-headline md:text-4xl">Your Progress</h1>
+        <p className="text-muted-foreground">Track your weight and see your transformation.</p>
       </div>
       
       <div className="grid gap-4 md:grid-cols-2">
@@ -104,7 +105,7 @@ export default function WeightPage() {
       <Card>
         <CardHeader>
           <CardTitle>Progress Chart</CardTitle>
-          <CardDescription>Current Weight: {weightData[weightData.length-1].weight}kg | Target: {targetWeight}kg</CardDescription>
+          <CardDescription>Current Weight: {weightData.length > 0 ? weightData[weightData.length-1].weight : 'N/A'}kg | Target: {targetWeight}kg</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-64 w-full">
