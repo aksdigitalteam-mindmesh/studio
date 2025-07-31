@@ -5,7 +5,7 @@ import { CheckCircle2, Ticket, Trophy } from "lucide-react";
 
 export default function SubscriptionPage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4 md:p-8 pb-24">
       <div>
         <h1 className="text-3xl font-bold font-headline md:text-4xl">Subscription</h1>
         <p className="text-muted-foreground">Manage your membership and unlock premium features.</p>

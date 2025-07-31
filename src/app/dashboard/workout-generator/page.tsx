@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
 import { generateWorkoutPlanAction, workoutPlanSchema } from "@/lib/actions";
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
@@ -59,15 +58,7 @@ export default function WorkoutGeneratorPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-            <h1 className="text-3xl font-bold font-headline md:text-4xl">AI Workout Plan Generator</h1>
-            <p className="text-muted-foreground">Let our AI build the perfect workout for you.</p>
-        </div>
-        <PremiumBadge />
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8">
         <Card>
           <CardHeader>
             <CardTitle>Your Preferences</CardTitle>
@@ -164,7 +155,7 @@ export default function WorkoutGeneratorPage() {
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col">
+        <Card className="flex flex-col min-h-[400px]">
             <CardHeader>
                 <CardTitle>Your Personalized Workout</CardTitle>
                 <CardDescription>Your AI-generated workout plan will appear here.</CardDescription>

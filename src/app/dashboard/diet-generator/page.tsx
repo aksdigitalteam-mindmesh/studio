@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -20,7 +19,6 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PremiumBadge } from "@/components/premium-badge";
 
 type DietPlan = { 
   dietPlan: string;
@@ -63,15 +61,7 @@ export default function DietGeneratorPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-            <h1 className="text-3xl font-bold font-headline md:text-4xl">AI Diet Plan Generator</h1>
-            <p className="text-muted-foreground">Craft your perfect meal plan with the power of AI.</p>
-        </div>
-        <PremiumBadge />
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8">
         <Card>
           <CardHeader>
             <CardTitle>Your Details</CardTitle>
@@ -158,7 +148,7 @@ export default function DietGeneratorPage() {
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col">
+        <Card className="flex flex-col min-h-[400px]">
             <CardHeader>
                 <CardTitle>Your Personalized Diet Plan</CardTitle>
                 <CardDescription>Your AI-generated diet plan will appear here.</CardDescription>
