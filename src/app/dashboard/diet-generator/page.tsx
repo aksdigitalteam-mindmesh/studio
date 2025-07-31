@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { generateDietPlanAction, dietPlanSchema } from "@/lib/actions";
+import { generateDietPlanAction } from "@/lib/actions";
+import { dietPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
