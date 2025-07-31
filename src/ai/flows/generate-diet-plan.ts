@@ -34,13 +34,31 @@ const GenerateDietPlanInputSchema = z.object({
 });
 export type GenerateDietPlanInput = z.infer<typeof GenerateDietPlanInputSchema>;
 
-const GenerateDietPlanOutputSchema = z.object({
-  dietPlan: z.string().describe('A personalized diet plan with meal suggestions.'),
-  calorieRecommendation: z.number().describe('Recommended daily calorie intake.'),
-  macroRecommendation: z
-    .string()
-    .describe('Recommended macro breakdown (protein, carbs, fat).'),
+const MealSchema = z.object({
+  name: z.string().describe("Name of the meal (e.g., Breakfast, Lunch, Dinner, Snack)."),
+  description: z.string().describe("A short, appealing description of the meal."),
+  recipe: z.object({
+    ingredients: z.array(z.string()).describe("List of ingredients for the recipe."),
+    instructions: z.array(z.string()).describe("Step-by-step cooking instructions."),
+  }),
+  calories: z.number().describe("Estimated calories for this meal."),
+  macros: z.object({
+    protein: z.string().describe("Protein content in grams (e.g., '30g')."),
+    carbs: z.string().describe("Carbohydrate content in grams (e.g., '40g')."),
+    fat: z.string().describe("Fat content in grams (e.g., '15g')."),
+  }),
 });
+
+const GenerateDietPlanOutputSchema = z.object({
+    title: z.string().describe("A catchy and motivating title for the diet plan."),
+    summary: z.string().describe("A brief, encouraging summary of the diet plan and its benefits."),
+    dailyTotals: z.object({
+        calorieRecommendation: z.number().describe('Total recommended daily calorie intake for the plan.'),
+        macroRecommendation: z.string().describe('Recommended daily macro breakdown (protein, carbs, fat) in grams or percentages.'),
+    }),
+    meals: z.array(MealSchema).describe('A list of meals for one full day, including detailed recipes and nutritional info.'),
+});
+
 export type GenerateDietPlanOutput = z.infer<typeof GenerateDietPlanOutputSchema>;
 
 export async function generateDietPlan(
@@ -53,7 +71,7 @@ const prompt = ai.definePrompt({
   name: 'generateDietPlanPrompt',
   input: {schema: GenerateDietPlanInputSchema},
   output: {schema: GenerateDietPlanOutputSchema},
-  prompt: `You are a certified nutritionist and personal trainer. A paid member wants to generate a personalized diet plan with calorie and macro recommendations to optimize their nutrition for their fitness goals.
+  prompt: `You are a certified nutritionist and expert recipe creator. A paid member wants to generate a personalized one-day diet plan with calorie and macro recommendations to optimize their nutrition for their fitness goals.
 
   Fitness Goals: {{{fitnessGoals}}}
   Calorie Target: {{{calorieTarget}}} calories
@@ -61,8 +79,14 @@ const prompt = ai.definePrompt({
   Dietary Restrictions: {{{dietaryRestrictions}}}
   Food Preferences: {{{foodPreferences}}}
 
-  Generate a detailed diet plan including specific meals for the user.
-  The diet plan MUST align with the calorie target, macro ratio, dietary restrictions and food preferences.
+  Generate a detailed one-day diet plan including specific meals (Breakfast, Lunch, Dinner, and an optional Snack).
+  For each meal, provide:
+  1. A short, appealing description.
+  2. A detailed recipe with a list of ingredients and step-by-step instructions.
+  3. An estimation of calories, and macros (protein, carbs, fat) in grams.
+
+  The entire diet plan MUST align with the total daily calorie target and macro ratio. It also must respect all dietary restrictions and food preferences.
+  Create a catchy title and a brief, encouraging summary for the overall plan.
 `,
 });
 

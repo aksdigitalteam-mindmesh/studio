@@ -17,29 +17,51 @@ import { Textarea } from "@/components/ui/textarea";
 import { generateDietPlanAction } from "@/lib/actions";
 import { dietPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShoppingCart, Apple, ChefHat, Dot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 
-type DietPlan = { 
-  dietPlan: string;
-  calorieRecommendation: number;
-  macroRecommendation: string;
+type Meal = {
+  name: string;
+  description: string;
+  recipe: {
+    ingredients: string[];
+    instructions: string[];
+  };
+  calories: number;
+  macros: {
+    protein: string;
+    carbs: string;
+    fat: string;
+  };
+};
+
+type DietPlan = {
+  title: string;
+  summary: string;
+  dailyTotals: {
+    calorieRecommendation: number;
+    macroRecommendation: string;
+  };
+  meals: Meal[];
 };
 
 export default function DietGeneratorPage() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<DietPlan | null>(null);
   const { toast } = useToast();
+  const affiliateTag = "your-amazon-tag-20"; // Replace with your actual Amazon affiliate tag
 
   const form = useForm<z.infer<typeof dietPlanSchema>>({
     resolver: zodResolver(dietPlanSchema),
     defaultValues: {
-      fitnessGoals: "",
-      calorieTarget: 2000,
-      macroRatio: "40% protein, 40% carbs, 20% fat",
-      dietaryRestrictions: "",
-      foodPreferences: "",
+      fitnessGoals: "Lose weight and build lean muscle",
+      calorieTarget: 2200,
+      macroRatio: "40% protein, 30% carbs, 30% fat",
+      dietaryRestrictions: "None",
+      foodPreferences: "I enjoy spicy food, chicken, and vegetables.",
     },
   });
 
@@ -152,7 +174,7 @@ export default function DietGeneratorPage() {
         <Card className="flex flex-col min-h-[400px]">
             <CardHeader>
                 <CardTitle>Your Personalized Diet Plan</CardTitle>
-                <CardDescription>Your AI-generated diet plan will appear here.</CardDescription>
+                <CardDescription>Your AI-generated diet plan and recipes will appear here.</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
             {isPending && (
@@ -161,13 +183,74 @@ export default function DietGeneratorPage() {
                 </div>
             )}
             {result && (
-                <div className="prose dark:prose-invert prose-sm sm:prose-base max-w-none">
-                    <h3 className="font-headline">Recommended Plan</h3>
-                    <p>{result.dietPlan}</p>
-                    <h4 className="font-headline">Calorie Recommendation</h4>
-                    <p>{result.calorieRecommendation} kcal / day</p>
-                    <h4 className="font-headline">Macro Recommendation</h4>
-                    <p>{result.macroRecommendation}</p>
+                <div className="space-y-6">
+                    <div className="text-center p-4 bg-secondary rounded-lg">
+                        <h2 className="text-2xl font-bold font-headline">{result.title}</h2>
+                        <p className="text-muted-foreground mt-2">{result.summary}</p>
+                        <div className="flex justify-center items-center gap-4 mt-4 text-sm">
+                            <Badge variant="outline">{result.dailyTotals.calorieRecommendation} kcal</Badge>
+                            <Badge variant="outline">{result.dailyTotals.macroRecommendation}</Badge>
+                        </div>
+                    </div>
+
+                    <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
+                      {result.meals.map((meal, index) => (
+                        <AccordionItem value={`item-${index}`} key={index}>
+                          <AccordionTrigger>
+                            <div className="flex items-center gap-4">
+                              <div className="bg-primary/10 p-3 rounded-full">
+                                <ChefHat className="h-6 w-6 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-left">{meal.name}</p>
+                                <p className="text-sm text-muted-foreground text-left">{meal.description}</p>
+                              </div>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                             <div className="space-y-4 pl-4 border-l-2 border-primary/20 ml-5">
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold flex items-center gap-2"><Apple className="h-4 w-4" /> Ingredients</h4>
+                                    <ul className="space-y-2">
+                                        {meal.recipe.ingredients.map((ingredient, i) => (
+                                            <li key={i} className="flex justify-between items-center">
+                                              <span className="flex items-center"><Dot className="h-4 w-4" />{ingredient}</span>
+                                              <Button asChild variant="ghost" size="sm">
+                                                <a href={`https://www.amazon.com/s?k=${encodeURIComponent(ingredient)}&tag=${affiliateTag}`} target="_blank" rel="noopener noreferrer">
+                                                  <ShoppingCart className="mr-2 h-4 w-4"/> Buy on Amazon
+                                                </a>
+                                              </Button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold flex items-center gap-2"><ChefHat className="h-4 w-4" /> Instructions</h4>
+                                    <ol className="list-decimal list-inside space-y-1">
+                                      {meal.recipe.instructions.map((step, i) => (
+                                        <li key={i}>{step}</li>
+                                      ))}
+                                    </ol>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2 text-center text-xs pt-2">
+                                    <div className="p-2 bg-muted rounded-md">
+                                        <p className="font-semibold">Calories</p>
+                                        <p>{meal.calories} kcal</p>
+                                    </div>
+                                    <div className="p-2 bg-muted rounded-md">
+                                        <p className="font-semibold">Protein</p>
+                                        <p>{meal.macros.protein}</p>
+                                    </div>
+                                     <div className="p-2 bg-muted rounded-md">
+                                        <p className="font-semibold">Carbs</p>
+                                        <p>{meal.macros.carbs}</p>
+                                    </div>
+                                </div>
+                             </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
                 </div>
             )}
             {!isPending && !result && (
