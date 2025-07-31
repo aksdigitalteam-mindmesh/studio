@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,9 +20,22 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PremiumBadge } from "@/components/premium-badge";
+import Image from "next/image";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-type WorkoutPlan = { workoutPlan: string };
+type Exercise = {
+  name: string;
+  sets: string;
+  reps: string;
+  rest: string;
+  imageUrl: string;
+};
+
+type WorkoutPlan = {
+  title: string;
+  description: string;
+  exercises: Exercise[];
+};
 
 export default function WorkoutGeneratorPage() {
   const [isPending, startTransition] = useTransition();
@@ -163,13 +175,40 @@ export default function WorkoutGeneratorPage() {
             </CardHeader>
             <CardContent className="flex-grow">
             {isPending && (
-                <div className="flex h-full items-center justify-center">
+                <div className="flex h-full flex-col items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="mt-4 text-muted-foreground">Generating your workout and images...</p>
+                    <p className="text-sm text-muted-foreground">(This may take a moment)</p>
                 </div>
             )}
             {result && (
-                <div className="prose dark:prose-invert prose-sm sm:prose-base max-w-none whitespace-pre-wrap font-body">
-                    {result.workoutPlan}
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold font-headline">{result.title}</h2>
+                    <p className="text-muted-foreground">{result.description}</p>
+                  </div>
+                  <Accordion type="single" collapsible className="w-full">
+                    {result.exercises.map((exercise, index) => (
+                       <AccordionItem value={`item-${index}`} key={index}>
+                         <AccordionTrigger>
+                           <div className="flex items-center gap-4">
+                             <div className="relative h-16 w-16 rounded-md overflow-hidden">
+                                <Image src={exercise.imageUrl} alt={exercise.name} layout="fill" objectFit="cover" />
+                             </div>
+                             <div>
+                               <p className="font-semibold text-left">{exercise.name}</p>
+                               <p className="text-sm text-muted-foreground text-left">{exercise.sets} sets, {exercise.reps} reps</p>
+                             </div>
+                           </div>
+                         </AccordionTrigger>
+                         <AccordionContent>
+                           <div className="prose dark:prose-invert prose-sm max-w-none">
+                              <p><strong>Rest:</strong> {exercise.rest}</p>
+                           </div>
+                         </AccordionContent>
+                       </AccordionItem>
+                    ))}
+                  </Accordion>
                 </div>
             )}
             {!isPending && !result && (
