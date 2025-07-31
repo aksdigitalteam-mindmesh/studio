@@ -17,10 +17,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { generateWorkoutPlanAction } from "@/lib/actions";
 import { workoutPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, VideoOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Exercise = {
   name: string;
@@ -202,8 +203,15 @@ export default function WorkoutGeneratorPage() {
                        <AccordionItem value={`item-${index}`} key={index}>
                          <AccordionTrigger>
                            <div className="flex items-center gap-4">
-                             <div className="relative h-16 w-28 rounded-md overflow-hidden bg-muted">
-                                <video src={exercise.videoUrl} loop autoPlay muted playsInline className="h-full w-full object-cover"></video>
+                             <div className="relative h-16 w-28 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                               {exercise.videoUrl !== 'error' ? (
+                                 <video src={exercise.videoUrl} loop autoPlay muted playsInline className="h-full w-full object-cover"></video>
+                               ) : (
+                                  <div className="flex flex-col items-center text-destructive">
+                                    <VideoOff className="h-6 w-6" />
+                                    <span className="text-xs">No video</span>
+                                  </div>
+                               )}
                              </div>
                              <div>
                                <p className="font-semibold text-left">{exercise.name}</p>
@@ -214,6 +222,14 @@ export default function WorkoutGeneratorPage() {
                          <AccordionContent>
                            <div className="prose dark:prose-invert prose-sm max-w-none">
                               <p><strong>Rest:</strong> {exercise.rest}</p>
+                               {exercise.videoUrl === 'error' && (
+                                <Alert variant="destructive" className="mt-2">
+                                  <AlertTitle>Video Generation Failed</AlertTitle>
+                                  <AlertDescription>
+                                    We couldn't generate a video for this exercise. Please try generating the plan again.
+                                  </AlertDescription>
+                                </Alert>
+                               )}
                            </div>
                          </AccordionContent>
                        </AccordionItem>

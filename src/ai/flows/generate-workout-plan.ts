@@ -86,18 +86,18 @@ const generateWorkoutPlanFlow = ai.defineFlow(
   async input => {
     const {output} = await workoutPrompt(input);
     if (!output) {
-      throw new Error('Failed to generate workout plan');
+      throw new Error('Failed to generate workout plan text');
     }
 
-    const videoPromises = output.exercises.map(exercise =>
-      generateExerciseMedia({exerciseName: exercise.name})
-    );
-    const videos = await Promise.all(videoPromises);
+    const exercisesWithVideos = [];
 
-    const exercisesWithVideos = output.exercises.map((exercise, index) => ({
-      ...exercise,
-      videoUrl: videos[index].videoUrl,
-    }));
+    for (const exercise of output.exercises) {
+      const videoResult = await generateExerciseMedia({ exerciseName: exercise.name });
+      exercisesWithVideos.push({
+        ...exercise,
+        videoUrl: videoResult.videoUrl,
+      });
+    }
 
     return {
       title: output.title,
