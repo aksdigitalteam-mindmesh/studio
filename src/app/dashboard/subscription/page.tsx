@@ -1,9 +1,20 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icons } from "@/components/icons";
 import { CheckCircle2, Ticket, Trophy } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-export default function SubscriptionPage() {
+export default function SubscriptionPage({ searchParams }: { searchParams: { success?: string } }) {
+  const router = useRouter();
+
+  const handleUpgrade = () => {
+    // In a real app, you'd handle payment here.
+    // We'll simulate success by redirecting with a query param.
+    router.push("/dashboard/programs?upgraded=true");
+  };
+
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
       <div>
@@ -65,7 +76,7 @@ export default function SubscriptionPage() {
               <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-500" /> Ad-free experience</li>
               <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-500" /> Advanced statistics</li>
             </ul>
-             <Button className="w-full">
+             <Button className="w-full" onClick={handleUpgrade}>
                 Upgrade Now <span className="ml-2 font-light text-primary-foreground/80"> (750 Fit-Coins / week)</span>
              </Button>
           </CardContent>

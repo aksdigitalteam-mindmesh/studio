@@ -1,8 +1,9 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,8 +12,10 @@ import WorkoutGeneratorPage from "../workout-generator/page";
 import DietGeneratorPage from "../diet-generator/page";
 import { Lock } from "lucide-react";
 
-export default function ProgramsPage() {
-  const [isPremium, setIsPremium] = useState(false);
+function ProgramsPageContent() {
+  const searchParams = useSearchParams();
+  const isUpgraded = searchParams.get('upgraded') === 'true';
+  const [isPremium, setIsPremium] = useState(isUpgraded);
 
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
@@ -67,4 +70,12 @@ export default function ProgramsPage() {
       )}
     </div>
   );
+}
+
+export default function ProgramsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProgramsPageContent />
+    </Suspense>
+  )
 }
