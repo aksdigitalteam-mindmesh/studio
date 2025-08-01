@@ -3,39 +3,38 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icons } from "@/components/icons";
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
+import { UtensilsCrossed } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: Icons.Dashboard },
-  { href: "/dashboard/calories", label: "Calorie Tracker", icon: Icons.Calories },
-  { href: "/dashboard/water", label: "Water Tracker", icon: Icons.Water },
-  { href: "/dashboard/weight", label: "Weight Tracker", icon: Icons.Weight },
-  { href: "/dashboard/workout-generator", label: "AI Workout Plan", icon: Icons.Workout },
-  { href: "/dashboard/diet-generator", label: "AI Diet Plan", icon: Icons.Diet },
-  { href: "/dashboard/subscription", label: "Subscription", icon: Icons.Subscription },
+    { href: "/dashboard", label: "Diary", icon: Icons.Diet },
+    { href: "/dashboard/progress", label: "Progress", icon: Icons.Workout },
+    { href: "/dashboard/programs", label: "Programs", icon: Icons.Rocket },
+    { href: "/dashboard/subscription", label: "Premium", icon: Icons.Subscription },
+    { href: "/dashboard/recipes", label: "Recipes", icon: UtensilsCrossed },
 ];
 
 export function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <div className="px-2 py-4">
-      <SidebarMenu>
-        {navItems.map((item) => (
-          <SidebarMenuItem key={item.href}>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard')}
-              tooltip={{children: item.label}}
-            >
-              <Link href={item.href}>
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
-    </div>
+    <nav className="flex items-center justify-around p-2 border-t bg-background sticky bottom-0 z-50">
+        {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+                <Link 
+                    key={item.href}
+                    href={item.href} 
+                    className={cn(
+                        "flex flex-col items-center",
+                        isActive ? "text-primary" : "text-muted-foreground"
+                    )}
+                >
+                    <item.icon className="h-6 w-6" />
+                    <span className="text-xs">{item.label}</span>
+                </Link>
+            )
+        })}
+    </nav>
   );
 }
