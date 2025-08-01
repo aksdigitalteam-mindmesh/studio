@@ -57,6 +57,16 @@ export default function DashboardPage() {
     };
 
     const filledGlasses = waterGlasses.filter(Boolean).length;
+    
+    const menuItems = [
+      { href: "/dashboard/calories", bg: "bg-orange-100", image: "https://placehold.co/100x100.png", hint: "juice glass", label: "Breakfast" },
+      { href: "/dashboard/calories", bg: "bg-blue-100", image: "https://placehold.co/100x100.png", hint: "salad bowl", label: "Lunch" },
+      { href: "/dashboard/calories", bg: "bg-red-100", image: "https://placehold.co/100x100.png", hint: "spaghetti plate", label: "Dinner" },
+      { href: "/dashboard/calories", bg: "bg-yellow-100", image: "https://placehold.co/100x100.png", hint: "banana fruit", label: "Snacks" },
+      { href: "/dashboard/programs", bg: "bg-purple-100", image: "https://placehold.co/100x100.png", hint: "person lifting weights", label: "Exercise" },
+      { href: "/dashboard/water", bg: "bg-sky-100", image: "https://placehold.co/100x100.png", hint: "water glass", label: "Water" },
+    ];
+
 
   return (
     <div className="w-full flex flex-col font-sans pb-24">
@@ -232,44 +242,29 @@ export default function DashboardPage() {
                     </div>
                 </CardContent>
             </Card>
-
-            <div className="grid grid-cols-2 gap-8 mt-12 w-full max-w-xs">
-                 <Link href="/dashboard/calories" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
-                    <div className="w-24 h-24 rounded-full bg-orange-100 flex items-center justify-center">
-                        <Image src="https://placehold.co/100x100.png" alt="Breakfast" width={100} height={100} className="rounded-full" data-ai-hint="juice glass" />
+            
+            <div className="relative w-[300px] h-[300px] mt-12">
+              {menuItems.map((item, index) => {
+                 const angle = (index / 6) * 2 * Math.PI - Math.PI / 2;
+                 const x = Math.cos(angle) * 120;
+                 const y = Math.sin(angle) * 120;
+                return (
+                 <Link 
+                    href={item.href} 
+                    key={item.label}
+                    className="absolute flex flex-col items-center gap-2 text-center transition-transform duration-300 hover:scale-110"
+                    style={{
+                      top: `calc(50% + ${y}px - 50px)`,
+                      left: `calc(50% + ${x}px - 50px)`,
+                    }}
+                    onClick={() => setIsMenuOpen(false)}>
+                    <div className={cn("w-24 h-24 rounded-full flex items-center justify-center", item.bg)}>
+                        <Image src={item.image} alt={item.label} width={100} height={100} className="rounded-full" data-ai-hint={item.hint} />
                     </div>
-                    <p className="font-semibold">Breakfast</p>
+                    <p className="font-semibold">{item.label}</p>
                 </Link>
-                 <Link href="/dashboard/calories" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
-                     <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Image src="https://placehold.co/100x100.png" alt="Lunch" width={100} height={100} className="rounded-full" data-ai-hint="salad bowl" />
-                    </div>
-                    <p className="font-semibold">Lunch</p>
-                </Link>
-                 <Link href="/dashboard/calories" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
-                    <div className="w-24 h-24 rounded-full bg-red-100 flex items-center justify-center">
-                        <Image src="https://placehold.co/100x100.png" alt="Dinner" width={100} height={100} className="rounded-full" data-ai-hint="spaghetti plate" />
-                    </div>
-                    <p className="font-semibold">Dinner</p>
-                </Link>
-                 <Link href="/dashboard/calories" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
-                    <div className="w-24 h-24 rounded-full bg-yellow-100 flex items-center justify-center">
-                        <Image src="https://placehold.co/100x100.png" alt="Snacks" width={100} height={100} className="rounded-full" data-ai-hint="banana fruit" />
-                    </div>
-                    <p className="font-semibold">Snacks</p>
-                </Link>
-                 <Link href="/dashboard/programs" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
-                    <div className="w-24 h-24 rounded-full bg-purple-100 flex items-center justify-center">
-                        <Image src="https://placehold.co/100x100.png" alt="Exercise" width={100} height={100} className="rounded-full" data-ai-hint="person lifting weights" />
-                    </div>
-                    <p className="font-semibold">Exercise</p>
-                </Link>
-                 <Link href="/dashboard/water" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
-                     <div className="w-24 h-24 rounded-full bg-sky-100 flex items-center justify-center">
-                        <Image src="https://placehold.co/100x100.png" alt="Water" width={100} height={100} className="rounded-full" data-ai-hint="water glass" />
-                    </div>
-                    <p className="font-semibold">Water</p>
-                </Link>
+                )
+              })}
             </div>
         </div>
       )}
