@@ -15,7 +15,8 @@ import {
   Salad,
   Clapperboard,
   Banana,
-  Egg
+  Egg,
+  Dumbbell
 } from 'lucide-react';
 
 export const Icons = {
