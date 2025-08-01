@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVertical, Plus, ShoppingCart, Dumbbell, PlayCircle } from "lucide-react";
+import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVertical, Plus, ShoppingCart, Dumbbell, PlayCircle, X, Salad, Clapperboard, Banana, Egg, Scale, Apple } from "lucide-react";
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const WaterGlass = ({ filled, onClick }: { filled: boolean, onClick: () => void }) => (
   <button onClick={onClick} className="relative w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded-t-lg overflow-hidden">
@@ -34,6 +35,7 @@ export default function DashboardPage() {
     const [waterGlasses, setWaterGlasses] = useState(Array(8).fill(false));
     const [isClicked, setIsClicked] = useState(false);
     const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const affiliateTag = "your-amazon-tag-20"; // Replace with your actual Amazon affiliate tag
 
     useEffect(() => {
@@ -209,11 +211,68 @@ export default function DashboardPage() {
       </main>
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-24 right-6">
-        <Button className="rounded-full w-16 h-16 bg-green-500 hover:bg-green-600 shadow-lg">
-            <Plus className="w-8 h-8"/>
+      <div className="fixed bottom-24 right-6 z-50">
+        <Button 
+          className="rounded-full w-16 h-16 bg-green-500 hover:bg-green-600 shadow-lg"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+            {isMenuOpen ? <X className="w-8 h-8"/> : <Plus className="w-8 h-8"/>}
         </Button>
       </div>
+
+       {/* Plus Button Menu */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 bg-background/95 z-40 flex flex-col justify-center items-center p-8 pt-20">
+            <Card className="w-full max-w-md bg-green-100/50 border-green-200">
+                <CardContent className="flex items-center gap-4 p-4">
+                    <Scale className="h-8 w-8 text-primary"/>
+                    <div>
+                        <h3 className="font-bold">Compare products</h3>
+                        <p className="text-sm text-muted-foreground">to get nutritional recommendations</p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-2 gap-8 mt-12 w-full max-w-xs">
+                 <Link href="/dashboard/calories" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
+                    <div className="w-24 h-24 rounded-full bg-orange-100 flex items-center justify-center">
+                        <Image src="https://placehold.co/100x100.png" alt="Breakfast" width={100} height={100} className="rounded-full" data-ai-hint="juice glass" />
+                    </div>
+                    <p className="font-semibold">Breakfast</p>
+                </Link>
+                 <Link href="/dashboard/calories" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
+                     <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Image src="https://placehold.co/100x100.png" alt="Lunch" width={100} height={100} className="rounded-full" data-ai-hint="salad bowl" />
+                    </div>
+                    <p className="font-semibold">Lunch</p>
+                </Link>
+                 <Link href="/dashboard/calories" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
+                    <div className="w-24 h-24 rounded-full bg-red-100 flex items-center justify-center">
+                        <Image src="https://placehold.co/100x100.png" alt="Dinner" width={100} height={100} className="rounded-full" data-ai-hint="spaghetti plate" />
+                    </div>
+                    <p className="font-semibold">Dinner</p>
+                </Link>
+                 <Link href="/dashboard/calories" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
+                    <div className="w-24 h-24 rounded-full bg-yellow-100 flex items-center justify-center">
+                        <Image src="https://placehold.co/100x100.png" alt="Snacks" width={100} height={100} className="rounded-full" data-ai-hint="banana fruit" />
+                    </div>
+                    <p className="font-semibold">Snacks</p>
+                </Link>
+                 <Link href="/dashboard/programs" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
+                    <div className="w-24 h-24 rounded-full bg-purple-100 flex items-center justify-center">
+                        <Image src="https://placehold.co/100x100.png" alt="Exercise" width={100} height={100} className="rounded-full" data-ai-hint="person lifting weights" />
+                    </div>
+                    <p className="font-semibold">Exercise</p>
+                </Link>
+                 <Link href="/dashboard/water" className="flex flex-col items-center gap-2 text-center" onClick={() => setIsMenuOpen(false)}>
+                     <div className="w-24 h-24 rounded-full bg-sky-100 flex items-center justify-center">
+                        <Image src="https://placehold.co/100x100.png" alt="Water" width={100} height={100} className="rounded-full" data-ai-hint="water glass" />
+                    </div>
+                    <p className="font-semibold">Water</p>
+                </Link>
+            </div>
+        </div>
+      )}
     </div>
   );
 }

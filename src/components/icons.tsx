@@ -10,7 +10,12 @@ import {
   Sun,
   Moon,
   Rocket,
-  ShoppingCart
+  ShoppingCart,
+  Apple,
+  Salad,
+  Clapperboard,
+  Banana,
+  Egg
 } from 'lucide-react';
 
 export const Icons = {
@@ -39,5 +44,10 @@ export const Icons = {
   Sun,
   Moon,
   Rocket,
-  ShoppingCart
+  ShoppingCart,
+  Apple,
+  Salad,
+  Snack: Banana,
+  Dinner: Egg,
+  Exercise: Dumbbell
 };
