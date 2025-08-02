@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVertical, Plus, ShoppingCart, Dumbbell, PlayCircle, X, Salad, Clapperboard, Banana, Egg, Scale, Apple } from "lucide-react";
+import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVertical, Plus, ShoppingCart, Dumbbell, PlayCircle, X, Scale } from "lucide-react";
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -52,7 +52,7 @@ export default function DashboardPage() {
 
     const handleWaterClick = (index: number) => {
         const newGlasses = [...waterGlasses];
-        // If the user clicks a glass, fill all glasses up to that one
+        // If the user clicks a glass, fill all glasses up to that one, or empty all glasses from that one on
         const isFilling = !newGlasses[index];
         for (let i = 0; i < newGlasses.length; i++) {
           if (isFilling) {
@@ -284,3 +284,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
