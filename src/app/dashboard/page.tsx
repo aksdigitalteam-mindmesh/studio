@@ -10,10 +10,15 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 const WaterGlass = ({ filled, onClick }: { filled: boolean, onClick: () => void }) => (
-  <button onClick={onClick} className="relative w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded-t-lg overflow-hidden">
-    {filled && <div className="absolute bottom-0 w-full h-full bg-blue-400" />}
+  <button onClick={onClick} className="relative w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded-t-lg overflow-hidden flex items-center justify-center">
+    <div 
+      className={cn(
+        "absolute bottom-0 w-full bg-blue-400 transition-all duration-300",
+        filled ? "h-full" : "h-0"
+      )} 
+    />
     <div className="absolute top-0 w-full h-full border-2 border-gray-300 dark:border-gray-600 rounded-t-lg" />
-    {!filled && <Plus className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-400" />}
+    {!filled && <Plus className="h-6 w-6 text-gray-400" />}
   </button>
 );
 
@@ -47,7 +52,15 @@ export default function DashboardPage() {
 
     const handleWaterClick = (index: number) => {
         const newGlasses = [...waterGlasses];
-        newGlasses[index] = !newGlasses[index];
+        // If the user clicks a glass, fill all glasses up to that one
+        const isFilling = !newGlasses[index];
+        for (let i = 0; i < newGlasses.length; i++) {
+          if (isFilling) {
+            if (i <= index) newGlasses[i] = true;
+          } else {
+             if (i >= index) newGlasses[i] = false;
+          }
+        }
         setWaterGlasses(newGlasses);
     };
 
@@ -205,7 +218,7 @@ export default function DashboardPage() {
                 <CardHeader className="flex flex-row items-center justify-between p-4">
                     <div className="flex flex-col">
                         <CardTitle className="text-lg">Water</CardTitle>
-                        <CardDescription>{filledGlasses} / {waterGlasses.length}</CardDescription>
+                        <CardDescription>{filledGlasses} / {waterGlasses.length} glasses</CardDescription>
                     </div>
                     <Button variant="ghost" size="icon"><MoreVertical /></Button>
                 </CardHeader>
