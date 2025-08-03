@@ -36,6 +36,13 @@ type WorkoutPlan = {
   exercises: Exercise[];
 };
 
+const mealCategories = [
+  { name: 'Breakfast', recommended: '492 - 737', image: 'https://placehold.co/100x100.png', hint: 'juice glass' },
+  { name: 'Lunch', recommended: '737 - 983', image: 'https://placehold.co/100x100.png', hint: 'salad bowl' },
+  { name: 'Dinner', recommended: '737 - 983', image: 'https://placehold.co/100x100.png', hint: 'spaghetti plate' },
+  { name: 'Snacks', recommended: '0 - 246', image: 'https://placehold.co/100x100.png', hint: 'banana fruit' },
+];
+
 export default function DashboardPage() {
     const [waterGlasses, setWaterGlasses] = useState(Array(8).fill(false));
     const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
@@ -210,6 +217,29 @@ export default function DashboardPage() {
                     </div>
                 </CardContent>
             </Card>
+
+             {/* Meal Logging Section */}
+            <div className="space-y-2">
+              {mealCategories.map((cat) => (
+                  <Link href="/dashboard/calories" key={cat.name}>
+                      <Card className="hover:bg-muted/50 transition-colors">
+                          <CardContent className="p-4 flex items-center gap-4">
+                              <div className="w-16 h-16 rounded-full flex items-center justify-center bg-orange-100">
+                                  <Image src={cat.image} alt={cat.name} width={64} height={64} data-ai-hint={cat.hint} className="rounded-full" />
+                              </div>
+                              <div className="flex-grow">
+                                  <h3 className="font-bold">{cat.name}</h3>
+                                  <p className="text-sm text-muted-foreground">Recommended {cat.recommended} kcal</p>
+                              </div>
+                              <Button variant="ghost" size="icon" className="rounded-full bg-gray-100">
+                                  <Plus className="text-muted-foreground" />
+                              </Button>
+                          </CardContent>
+                      </Card>
+                  </Link>
+              ))}
+            </div>
+
         </div>
       </main>
 
@@ -264,5 +294,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
