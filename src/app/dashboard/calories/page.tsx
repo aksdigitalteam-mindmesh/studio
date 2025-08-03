@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { Flame, PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2 } from "lucide-react";
 
 interface Meal {
   id: number;
@@ -45,7 +45,7 @@ export default function CaloriesPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4 md:p-8">
       <div>
         <h1 className="text-3xl font-bold font-headline md:text-4xl">Calorie Tracker</h1>
         <p className="text-muted-foreground">Log your daily meals to stay on track.</p>
