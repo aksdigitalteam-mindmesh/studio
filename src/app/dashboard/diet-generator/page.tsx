@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { generateDietPlanAction } from "@/lib/actions";
 import { dietPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
-import { Loader2, ShoppingCart, Apple, ChefHat, Dot } from "lucide-react";
+import { Loader2, Apple, ChefHat, Dot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -52,7 +52,6 @@ export default function DietGeneratorPage() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<DietPlan | null>(null);
   const { toast } = useToast();
-  const affiliateTag = "your-amazon-tag-20"; // Replace with your actual Amazon affiliate tag
 
   const form = useForm<z.infer<typeof dietPlanSchema>>({
     resolver: zodResolver(dietPlanSchema),
@@ -215,11 +214,6 @@ export default function DietGeneratorPage() {
                                         {meal.recipe.ingredients.map((ingredient, i) => (
                                             <li key={i} className="flex justify-between items-center">
                                               <span className="flex items-center"><Dot className="h-4 w-4" />{ingredient}</span>
-                                              <Button asChild variant="ghost" size="sm">
-                                                <a href={`https://www.amazon.com/s?k=${encodeURIComponent(ingredient)}&tag=${affiliateTag}`} target="_blank" rel="noopener noreferrer">
-                                                  <ShoppingCart className="mr-2 h-4 w-4"/> Buy on Amazon
-                                                </a>
-                                              </Button>
                                             </li>
                                         ))}
                                     </ul>
@@ -264,3 +258,5 @@ export default function DietGeneratorPage() {
     </div>
   );
 }
+
+    
