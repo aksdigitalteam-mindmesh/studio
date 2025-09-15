@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
-const WaterGlass = ({ filled, onClick }: { filled: boolean, onClick: () => void }) => (
+const WaterGlassComponent = ({ filled, onClick }: { filled: boolean, onClick: () => void }) => (
   <button onClick={onClick} className="relative w-16 h-20 bg-gray-200/50 dark:bg-gray-700/50 rounded-t-lg overflow-hidden flex items-center justify-center group">
     {/* Water fill */}
     <div 
@@ -27,6 +27,9 @@ const WaterGlass = ({ filled, onClick }: { filled: boolean, onClick: () => void 
     {!filled && <Plus className="h-6 w-6 text-gray-400 group-hover:text-gray-500 transition-colors" />}
   </button>
 );
+
+const WaterGlass = memo(WaterGlassComponent);
+
 
 type Exercise = {
   name: string;
@@ -300,3 +303,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
