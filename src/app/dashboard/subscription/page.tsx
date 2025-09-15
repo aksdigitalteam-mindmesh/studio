@@ -1,14 +1,35 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icons } from "@/components/icons";
-import { CheckCircle2, Ticket, Trophy, Zap } from "lucide-react";
+import { CheckCircle2, Ticket, Trophy, Zap, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function SubscriptionPage({ searchParams }: { searchParams: { success?: string } }) {
   const router = useRouter();
+  const [timeLeft, setTimeLeft] = useState(23 * 3600 + 59 * 60 + 59); // 23:59:59
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const intervalId = setInterval(() => {
+      setTimeLeft(timeLeft - 1);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [timeLeft]);
+
+  const formatTime = (seconds: number) => {
+    if (seconds <= 0) return "Offer expired!";
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
 
   const handleUpgrade = () => {
     // In a real app, you'd handle payment here.
@@ -50,7 +71,13 @@ export default function SubscriptionPage({ searchParams }: { searchParams: { suc
           <Zap className="h-5 w-5 text-accent" />
           <AlertTitle className="font-bold">Limited-Time Offer!</AlertTitle>
           <AlertDescription>
-            ⚡ Beta users get <strong>15% off</strong> the first month of Premium. Don't miss out!
+            <div className="flex flex-col sm:flex-row justify-between items-center">
+                <p>⚡ Beta users get <strong>15% off</strong> the first month of Premium. Don't miss out!</p>
+                <div className="flex items-center gap-2 mt-2 sm:mt-0 font-mono text-sm sm:text-base font-bold bg-accent/20 px-3 py-1 rounded-md">
+                    <Clock className="h-4 w-4" />
+                    <span>{formatTime(timeLeft)}</span>
+                </div>
+            </div>
           </AlertDescription>
         </Alert>
 

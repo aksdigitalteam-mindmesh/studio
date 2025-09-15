@@ -18,7 +18,8 @@ import {
   Egg,
   Dumbbell,
   BarChartBig,
-  Sparkles
+  Sparkles,
+  Clock
 } from 'lucide-react';
 
 export const Icons = {
@@ -55,4 +56,5 @@ export const Icons = {
   Exercise: Dumbbell,
   Analytics: BarChartBig,
   AdFree: Sparkles,
+  Clock,
 };
