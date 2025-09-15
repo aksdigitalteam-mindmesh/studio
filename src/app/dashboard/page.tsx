@@ -93,8 +93,8 @@ export default function DashboardPage() {
   return (
     <div className="w-full flex flex-col font-sans pb-24">
       {/* Header */}
-      <header className="flex items-center justify-between p-4 bg-gradient-to-b from-green-400 to-green-500 text-white">
-        <Button className="bg-orange-400 hover:bg-orange-500 rounded-full text-white font-bold">SAVE 50%</Button>
+      <header className="flex items-center justify-between p-4 bg-gradient-to-b from-primary to-primary/80 text-primary-foreground">
+        <Button className="bg-accent hover:bg-accent/90 rounded-full text-accent-foreground font-bold">SAVE 50%</Button>
         <h1 className="text-2xl font-bold">Lifesum</h1>
         <div className="flex items-center gap-4">
           <User />
@@ -105,7 +105,7 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="flex-1">
         {/* Calorie Circle */}
-        <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-b from-green-500 to-green-600 text-white">
+        <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-b from-primary/80 to-primary text-primary-foreground">
           <div className="relative w-56 h-56">
             <svg className="w-full h-full" viewBox="0 0 36 36">
               <path
@@ -255,7 +255,7 @@ export default function DashboardPage() {
       {/* Floating Action Button */}
       <div className="fixed bottom-24 right-6 z-50">
         <Button 
-          className="rounded-full w-16 h-16 bg-green-500 hover:bg-green-600 shadow-lg"
+          className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90 shadow-lg"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
             {isMenuOpen ? <X className="w-8 h-8"/> : <Plus className="w-8 h-8"/>}
@@ -303,5 +303,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
