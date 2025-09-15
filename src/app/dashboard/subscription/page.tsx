@@ -12,7 +12,7 @@ export default function SubscriptionPage({ searchParams }: { searchParams: { suc
   const handleUpgrade = () => {
     // In a real app, you'd handle payment here.
     // We'll simulate success by redirecting with a query param.
-    router.push("/dashboard/programs?upgraded=true");
+    router.push("/dashboard/progress?upgraded=true");
   };
 
   return (
