@@ -16,7 +16,9 @@ import {
   Clapperboard,
   Banana,
   Egg,
-  Dumbbell
+  Dumbbell,
+  BarChartBig,
+  Sparkles
 } from 'lucide-react';
 
 export const Icons = {
@@ -50,5 +52,7 @@ export const Icons = {
   Salad,
   Snack: Banana,
   Dinner: Egg,
-  Exercise: Dumbbell
+  Exercise: Dumbbell,
+  Analytics: BarChartBig,
+  AdFree: Sparkles,
 };
