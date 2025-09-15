@@ -53,12 +53,12 @@ export function MuscleFatigueDiagram({ fatiguedMuscles }: MuscleFatigueDiagramPr
         <path d="M90,105 H110 L105,145 H95 Z" style={getMuscleStyle("abs")} />
 
         {/* Biceps */}
-        <path d="M68,80 C75,90 78,110 70,120 L60,110 C68,100 65,85 68,80 Z" style={get_muscle_style("biceps")} />
-        <path d="M132,80 C125,90 122,110 130,120 L140,110 C132,100 135,85 132,80 Z" style={get_muscle_style("biceps")} />
+        <path d="M68,80 C75,90 78,110 70,120 L60,110 C68,100 65,85 68,80 Z" style={getMuscleStyle("biceps")} />
+        <path d="M132,80 C125,90 122,110 130,120 L140,110 C132,100 135,85 132,80 Z" style={getMuscleStyle("biceps")} />
 
         {/* Quads */}
         <path d="M75,150 L95,150 L90,220 L70,220 Z" style={getMuscleStyle("quads")} />
-        <path d_1="M105,150 L125,150 L130,220 L110,220 Z" style={getMuscleStyle("quads")} />
+        <path d="M105,150 L125,150 L130,220 L110,220 Z" style={getMuscleStyle("quads")} />
 
       </svg>
     </div>
