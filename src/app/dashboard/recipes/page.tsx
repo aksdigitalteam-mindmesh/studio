@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 const recipes = [
   {
@@ -46,15 +47,17 @@ export default function RecipesPage() {
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {recipes.map((recipe) => (
-          <Card key={recipe.title} className="overflow-hidden">
-            <CardHeader className="p-0">
-              <Image src={recipe.image} alt={recipe.title} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={recipe.hint} />
-            </CardHeader>
-            <CardContent className="p-4">
-              <p className="text-sm font-semibold text-primary">{recipe.category}</p>
-              <CardTitle className="mt-1 text-lg">{recipe.title}</CardTitle>
-            </CardContent>
-          </Card>
+          <Link href="#" key={recipe.title}>
+            <Card className="overflow-hidden h-full transition-transform transform hover:scale-105 duration-300">
+              <CardHeader className="p-0">
+                <Image src={recipe.image} alt={recipe.title} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={recipe.hint} />
+              </CardHeader>
+              <CardContent className="p-4">
+                <p className="text-sm font-semibold text-primary">{recipe.category}</p>
+                <CardTitle className="mt-1 text-lg">{recipe.title}</CardTitle>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
     </div>
