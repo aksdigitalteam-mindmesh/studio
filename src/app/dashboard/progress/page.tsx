@@ -1,16 +1,18 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Image from 'next/image';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
-import { UploadCloud, PlusCircle } from "lucide-react";
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { UploadCloud, PlusCircle, Lock } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
+import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
 
 const initialWeightData = [
   { date: "2024-05-01", weight: 80.0, photo: "https://placehold.co/600x400.png" },
@@ -29,7 +31,11 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function ProgressPage() {
+function ProgressPageContent() {
+  const searchParams = useSearchParams();
+  const isUpgraded = searchParams.get('upgraded') === 'true';
+  const [isPremium] = useState(isUpgraded);
+
   const [weightData, setWeightData] = useState(initialWeightData);
   const [targetWeight, setTargetWeight] = useState(70);
   const [currentWeight, setCurrentWeight] = useState("");
@@ -45,6 +51,14 @@ export default function ProgressPage() {
       setWeightData([...weightData, newEntry]);
       setCurrentWeight("");
     }
+  };
+  
+  const fatiguedMuscles = {
+    chest: 0.8,
+    biceps: 0.6,
+    abs: 0.4,
+    quads: 0.9,
+    shoulders: 0.5,
   };
 
   return (
@@ -113,11 +127,33 @@ export default function ProgressPage() {
               <CartesianGrid vertical={false} />
               <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
               <YAxis domain={['dataMin - 2', 'dataMax + 2']} hide />
-              <Tooltip content={<ChartTooltipContent />} />
+              <ChartTooltip content={<ChartTooltipContent />} />
               <Line dataKey="weight" type="monotone" stroke="var(--color-weight)" strokeWidth={2} dot={true} />
             </LineChart>
           </ChartContainer>
         </CardContent>
+      </Card>
+
+      <Card className="relative">
+        {!isPremium && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-8 text-center rounded-lg">
+              <Lock className="h-12 w-12 text-primary mb-4" />
+              <h2 className="text-2xl font-bold font-headline mb-2">Unlock Muscle Fatigue Analysis</h2>
+              <p className="text-muted-foreground mb-6">Upgrade to Premium to visualize your muscle recovery and optimize your training schedule.</p>
+              <Button asChild>
+                <Link href="/dashboard/subscription">Upgrade to Premium</Link>
+              </Button>
+          </div>
+        )}
+        <div className={!isPremium ? 'blur-sm pointer-events-none' : ''}>
+          <CardHeader>
+            <CardTitle>Muscle Fatigue</CardTitle>
+            <CardDescription>Visualization of your recently worked muscle groups.</CardDescription>
+          </CardHeader>
+          <CardContent>
+              <MuscleFatigueDiagram fatiguedMuscles={fatiguedMuscles} />
+          </CardContent>
+        </div>
       </Card>
       
       <Card>
@@ -144,5 +180,13 @@ export default function ProgressPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function ProgressPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProgressPageContent />
+    </Suspense>
   );
 }
