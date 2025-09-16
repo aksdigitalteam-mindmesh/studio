@@ -14,7 +14,7 @@ import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { UploadCloud, PlusCircle, Lock, Dumbbell } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
 import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
-import { getCompletedWorkouts } from "@/lib/actions";
+import { getCompletedWorkouts } from "@/lib/workout-log-actions";
 import { format } from "date-fns";
 
 const initialWeightData = [
@@ -28,7 +28,6 @@ const initialWeightData = [
 ];
 
 const WEIGHT_STORAGE_KEY = 'weightData';
-const WORKOUT_LOG_STORAGE_KEY = 'completedWorkouts';
 
 const chartConfig = {
   weight: {

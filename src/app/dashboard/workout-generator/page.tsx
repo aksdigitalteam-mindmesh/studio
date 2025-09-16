@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { generateWorkoutPlanAction, saveCompletedWorkoutAction } from "@/lib/actions";
+import { generateWorkoutPlanAction } from "@/lib/actions";
+import { saveCompletedWorkoutAction } from "@/lib/workout-log-actions";
 import { workoutPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
 import { Loader2, VideoOff, CheckCircle } from "lucide-react";
