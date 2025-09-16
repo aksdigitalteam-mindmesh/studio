@@ -11,9 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { UploadCloud, PlusCircle, Lock } from "lucide-react";
+import { UploadCloud, PlusCircle, Lock, Dumbbell } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
 import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
+import { getCompletedWorkouts } from "@/lib/actions";
+import { format } from "date-fns";
 
 const initialWeightData = [
   { date: "2024-05-01", weight: 80.0, photo: "https://placehold.co/600x400.png" },
@@ -25,7 +27,8 @@ const initialWeightData = [
   { date: "2024-06-12", weight: 75.2, photo: null },
 ];
 
-const STORAGE_KEY = 'weightData';
+const WEIGHT_STORAGE_KEY = 'weightData';
+const WORKOUT_LOG_STORAGE_KEY = 'completedWorkouts';
 
 const chartConfig = {
   weight: {
@@ -33,6 +36,11 @@ const chartConfig = {
     color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig;
+
+type CompletedWorkout = {
+  title: string;
+  date: string;
+}
 
 function ProgressPageContent() {
   const searchParams = useSearchParams();
@@ -49,16 +57,31 @@ function ProgressPageContent() {
 
   const [weightData, setWeightData] = useState(() => {
     if (typeof window === 'undefined') return initialWeightData;
-    const savedData = localStorage.getItem(STORAGE_KEY);
+    const savedData = localStorage.getItem(WEIGHT_STORAGE_KEY);
     return savedData ? JSON.parse(savedData) : initialWeightData;
   });
+
+  const [completedWorkouts, setCompletedWorkouts] = useState<CompletedWorkout[]>([]);
 
   const [targetWeight, setTargetWeight] = useState(70);
   const [currentWeight, setCurrentWeight] = useState("");
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(weightData));
+    localStorage.setItem(WEIGHT_STORAGE_KEY, JSON.stringify(weightData));
   }, [weightData]);
+  
+  useEffect(() => {
+    setCompletedWorkouts(getCompletedWorkouts());
+
+    const handleStorageChange = () => {
+      setCompletedWorkouts(getCompletedWorkouts());
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+        window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const handleAddWeight = (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +105,7 @@ function ProgressPageContent() {
   };
 
   return (
-    <div className="space-y-8 p-4 md:p-8">
+    <div className="space-y-8 p-4 md:p-8 pb-24">
       <div>
         <h1 className="text-3xl font-bold font-headline md:text-4xl">Your Progress</h1>
         <p className="text-muted-foreground">Track your weight and see your transformation.</p>
@@ -151,6 +174,37 @@ function ProgressPageContent() {
               <Line dataKey="weight" type="monotone" stroke="var(--color-weight)" strokeWidth={2} dot={true} />
             </LineChart>
           </ChartContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+            <CardTitle>Workout Log</CardTitle>
+            <CardDescription>A history of your completed workouts.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            {completedWorkouts.length > 0 ? (
+                <ul className="space-y-4 max-h-64 overflow-y-auto">
+                    {completedWorkouts.slice().reverse().map((workout, index) => (
+                        <li key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center gap-4">
+                                <Dumbbell className="h-5 w-5 text-primary" />
+                                <div>
+                                    <p className="font-semibold">{workout.title}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {format(new Date(workout.date), "MMMM dd, yyyy")}
+                                    </p>
+                                </div>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <div className="text-center text-muted-foreground py-8">
+                    <p>You haven't logged any workouts yet.</p>
+                    <p className="text-sm">Complete a workout in the "Programs" tab to see it here.</p>
+                </div>
+            )}
         </CardContent>
       </Card>
 

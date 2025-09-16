@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -14,10 +15,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { generateWorkoutPlanAction } from "@/lib/actions";
+import { generateWorkoutPlanAction, saveCompletedWorkoutAction } from "@/lib/actions";
 import { workoutPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
-import { Loader2, VideoOff } from "lucide-react";
+import { Loader2, VideoOff, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -79,6 +80,16 @@ export default function WorkoutGeneratorPage() {
       }
     });
   }
+  
+  const handleCompleteWorkout = () => {
+    if (result) {
+      saveCompletedWorkoutAction(result.title);
+      toast({
+        title: "Workout Completed!",
+        description: `Great job! "${result.title}" has been added to your log.`,
+      });
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -198,6 +209,10 @@ export default function WorkoutGeneratorPage() {
                     <h2 className="text-2xl font-bold font-headline">{result.title}</h2>
                     <p className="text-muted-foreground">{result.description}</p>
                   </div>
+                   <Button onClick={handleCompleteWorkout} className="w-full">
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Mark Workout as Complete
+                    </Button>
                   <Accordion type="single" collapsible className="w-full">
                     {result.exercises.map((exercise, index) => (
                        <AccordionItem value={`item-${index}`} key={index}>
