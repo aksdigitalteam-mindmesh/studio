@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icons } from "@/components/icons";
-import { CheckCircle2, Ticket, Trophy, Zap, Clock } from "lucide-react";
+import { Ticket, Trophy, Zap, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -32,9 +33,14 @@ export default function SubscriptionPage({ searchParams }: { searchParams: { suc
 
 
   const handleUpgrade = () => {
-    // In a real app, you'd handle payment here.
-    // We'll simulate success by redirecting with a query param.
-    router.push("/dashboard/progress?upgraded=true");
+    // In a real app, you'd handle payment here (e.g., Stripe).
+    // For this simulation, we'll set the subscription status in localStorage
+    // and redirect to the programs page to show the unlocked features.
+    
+    // The usePremiumStatus hook will handle creating the subscription object
+    // because of the `upgraded=true` query param.
+    
+    router.push("/dashboard/programs?upgraded=true");
   };
 
   const premiumFeatures = [
@@ -85,7 +91,7 @@ export default function SubscriptionPage({ searchParams }: { searchParams: { suc
          <Card className="flex flex-col">
           <CardHeader>
             <CardTitle className="font-headline">Premium Membership</CardTitle>
-            <CardDescription>Get full access to all FitBoost features.</CardDescription>
+            <CardDescription>Get full access to all FitBoost features for one month.</CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex flex-col justify-between space-y-4">
             <ul className="space-y-4 text-sm">

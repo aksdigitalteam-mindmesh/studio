@@ -2,29 +2,23 @@
 "use client";
 
 import { useState, Suspense, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, ShoppingCart, Sparkles } from 'lucide-react';
+import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, ShoppingCart, Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { PremiumBadge } from '@/components/premium-badge';
+import { usePremiumStatus } from '@/hooks/use-premium-status';
 
 function ProfilePageContent() {
-  const searchParams = useSearchParams();
   const { toast } = useToast();
-  const isUpgraded = searchParams.get('upgraded') === 'true';
-
-  const [isPremium, setIsPremium] = useState(() => {
-     if (typeof window === 'undefined') return isUpgraded;
-     return isUpgraded || localStorage.getItem('isPremium') === 'true';
-  });
+  const { isPremium, isLoading } = usePremiumStatus();
 
   // Notification states
   const [workoutReminder, setWorkoutReminder] = useState(() => {
@@ -46,13 +40,6 @@ function ProfilePageContent() {
   });
 
 
-  useEffect(() => {
-    if (isUpgraded) {
-      localStorage.setItem('isPremium', 'true');
-      setIsPremium(true);
-    }
-  }, [isUpgraded]);
-  
   useEffect(() => {
     localStorage.setItem('workoutReminder', JSON.stringify(workoutReminder));
   }, [workoutReminder]);
@@ -138,6 +125,14 @@ function ProfilePageContent() {
     height: '175 cm',
     weight: '72 kg',
   };
+  
+  if (isLoading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+    );
+  }
 
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
@@ -281,10 +276,12 @@ function ProfilePageContent() {
 
 export default function ProfilePage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={
+            <div className="flex h-screen w-full items-center justify-center">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            </div>
+        }>
             <ProfilePageContent />
         </Suspense>
     )
 }
-
-    

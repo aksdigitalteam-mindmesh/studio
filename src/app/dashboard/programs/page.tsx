@@ -1,29 +1,27 @@
 
 "use client";
 
-import { useState, Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PremiumBadge } from "@/components/premium-badge";
 import WorkoutGeneratorPage from "../workout-generator/page";
 import DietGeneratorPage from "../diet-generator/page";
-import { Lock } from "lucide-react";
+import { Lock, Loader2 } from "lucide-react";
+import { usePremiumStatus } from "@/hooks/use-premium-status";
 
 function ProgramsPageContent() {
-  const searchParams = useSearchParams();
-  const isUpgraded = searchParams.get('upgraded') === 'true';
-  const [isPremium, setIsPremium] = useState(false);
+  const { isPremium, isLoading } = usePremiumStatus();
 
-  useEffect(() => {
-    const premiumStatus = isUpgraded || localStorage.getItem('isPremium') === 'true';
-    setIsPremium(premiumStatus);
-    if (isUpgraded) {
-        localStorage.setItem('isPremium', 'true');
-    }
-  }, [isUpgraded]);
+  if (isLoading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+    );
+  }
 
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
@@ -82,7 +80,11 @@ function ProgramsPageContent() {
 
 export default function ProgramsPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={
+      <div className="flex h-screen w-full items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    }>
       <ProgramsPageContent />
     </Suspense>
   )

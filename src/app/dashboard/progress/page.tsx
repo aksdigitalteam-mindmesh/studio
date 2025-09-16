@@ -4,16 +4,16 @@
 import { useState, Suspense, useEffect } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { UploadCloud, PlusCircle, Lock } from "lucide-react";
+import { UploadCloud, PlusCircle, Lock, Loader2 } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
 import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
+import { usePremiumStatus } from "@/hooks/use-premium-status";
 
 const initialWeightData = [
   { date: "2024-05-01", weight: 80.0, photo: "https://placehold.co/600x400.png" },
@@ -36,17 +36,7 @@ const chartConfig = {
 
 
 function ProgressPageContent() {
-  const searchParams = useSearchParams();
-  const isUpgraded = searchParams.get('upgraded') === 'true';
-  const [isPremium, setIsPremium] = useState(isUpgraded);
-
-   useEffect(() => {
-    const premiumStatus = isUpgraded || localStorage.getItem('isPremium') === 'true';
-    setIsPremium(premiumStatus);
-    if (isUpgraded) {
-        localStorage.setItem('isPremium', 'true');
-    }
-  }, [isUpgraded]);
+  const { isPremium, isLoading } = usePremiumStatus();
 
   const [weightData, setWeightData] = useState(() => {
     if (typeof window === 'undefined') return initialWeightData;
@@ -82,6 +72,14 @@ function ProgressPageContent() {
     quads: 0.9,
     shoulders: 0.5,
   };
+
+  if (isLoading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+    );
+  }
 
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
@@ -207,7 +205,11 @@ function ProgressPageContent() {
 
 export default function ProgressPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+    }>
       <ProgressPageContent />
     </Suspense>
   );
