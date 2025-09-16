@@ -11,15 +11,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export default function RecipeDetailsPage({ params }: { params: { slug: string } }) {
+function RecipeDetails({ slug }: { slug: string }) {
     const [recipe, setRecipe] = useState<Recipe | null>(null);
 
     useEffect(() => {
-        const foundRecipe = getRecipeBySlug(params.slug);
+        const foundRecipe = getRecipeBySlug(slug);
         if (foundRecipe) {
             setRecipe(foundRecipe);
         }
-    }, [params.slug]);
+    }, [slug]);
 
     if (!recipe) {
         return (
@@ -94,4 +94,9 @@ export default function RecipeDetailsPage({ params }: { params: { slug: string }
             </Card>
         </div>
     );
+}
+
+
+export default function RecipeDetailsPage({ params }: { params: { slug: string } }) {
+    return <RecipeDetails slug={params.slug} />;
 }
