@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { generateDietPlanAction } from "@/lib/actions";
 import { dietPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
-import { Loader2, Apple, ChefHat, Dot } from "lucide-react";
+import { Loader2, Apple, ChefHat, Dot, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -214,6 +214,9 @@ export default function DietGeneratorPage() {
                                         {meal.recipe.ingredients.map((ingredient, i) => (
                                             <li key={i} className="flex justify-between items-center">
                                               <span className="flex items-center"><Dot className="h-4 w-4" />{ingredient}</span>
+                                              <Button variant="ghost" size="icon">
+                                                  <ShoppingCart className="h-4 w-4 text-muted-foreground"/>
+                                              </Button>
                                             </li>
                                         ))}
                                     </ul>
@@ -258,5 +261,3 @@ export default function DietGeneratorPage() {
     </div>
   );
 }
-
-    
