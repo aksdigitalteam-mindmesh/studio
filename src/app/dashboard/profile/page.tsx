@@ -8,12 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, Clock } from 'lucide-react';
+import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, ShoppingCart, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { PremiumBadge } from '@/components/premium-badge';
 
 function ProfilePageContent() {
   const searchParams = useSearchParams();
@@ -25,13 +26,23 @@ function ProfilePageContent() {
      return isUpgraded || localStorage.getItem('isPremium') === 'true';
   });
 
-  const [reminderEnabled, setReminderEnabled] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('reminderEnabled') === 'true';
+  // Notification states
+  const [workoutReminder, setWorkoutReminder] = useState(() => {
+    if (typeof window === 'undefined') return { enabled: false, time: '17:00' };
+    const saved = localStorage.getItem('workoutReminder');
+    return saved ? JSON.parse(saved) : { enabled: false, time: '17:00' };
   });
-  const [reminderTime, setReminderTime] = useState(() => {
-     if (typeof window === 'undefined') return '17:00';
-     return localStorage.getItem('reminderTime') || '17:00';
+  const [mealReminder, setMealReminder] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('mealReminder') === 'true';
+  });
+  const [shoppingReminder, setShoppingReminder] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('shoppingReminder') === 'true';
+  });
+  const [motivationalReminder, setMotivationalReminder] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('motivationalReminder') === 'true';
   });
 
 
@@ -41,27 +52,41 @@ function ProfilePageContent() {
       setIsPremium(true);
     }
   }, [isUpgraded]);
+  
+  useEffect(() => {
+    localStorage.setItem('workoutReminder', JSON.stringify(workoutReminder));
+  }, [workoutReminder]);
+
+  useEffect(() => {
+    localStorage.setItem('mealReminder', String(mealReminder));
+  }, [mealReminder]);
+
+  useEffect(() => {
+    localStorage.setItem('shoppingReminder', String(shoppingReminder));
+  }, [shoppingReminder]);
+  
+  useEffect(() => {
+    localStorage.setItem('motivationalReminder', String(motivationalReminder));
+  }, [motivationalReminder]);
+
 
   const handleReminderToggle = (enabled: boolean) => {
     if (enabled && Notification.permission !== 'granted') {
       Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
-          setReminderEnabled(true);
-          localStorage.setItem('reminderEnabled', 'true');
+          setWorkoutReminder(prev => ({...prev, enabled: true}));
           toast({ title: "Reminders Enabled", description: "You'll now receive workout notifications." });
         } else {
           toast({ variant: "destructive", title: "Permission Denied", description: "You need to grant permission to enable notifications." });
         }
       });
     } else {
-      setReminderEnabled(enabled);
-      localStorage.setItem('reminderEnabled', String(enabled));
+      setWorkoutReminder(prev => ({...prev, enabled: enabled}));
     }
   };
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setReminderTime(e.target.value);
-    localStorage.setItem('reminderTime', e.target.value);
+    setWorkoutReminder(prev => ({...prev, time: e.target.value}));
   };
   
   const scheduleNotification = useCallback(() => {
@@ -72,8 +97,8 @@ function ProfilePageContent() {
       "Rise and grind! It's workout time!",
     ];
 
-    if (reminderEnabled && 'Notification' in window && Notification.permission === 'granted') {
-      const [hours, minutes] = reminderTime.split(':').map(Number);
+    if (workoutReminder.enabled && 'Notification' in window && Notification.permission === 'granted') {
+      const [hours, minutes] = workoutReminder.time.split(':').map(Number);
       const now = new Date();
       const reminderDate = new Date();
       reminderDate.setHours(hours, minutes, 0, 0);
@@ -97,7 +122,7 @@ function ProfilePageContent() {
 
       return () => clearTimeout(timer);
     }
-  }, [reminderEnabled, reminderTime]);
+  }, [workoutReminder.enabled, workoutReminder.time]);
 
   useEffect(() => {
     const clearNotification = scheduleNotification();
@@ -166,27 +191,58 @@ function ProfilePageContent() {
           <CardHeader>
               <CardTitle className="flex items-center gap-2">
                   <Bell className="text-primary"/>
-                  Workout Reminders
+                  Notification Settings
               </CardTitle>
-              <CardDescription>Set a daily reminder to make sure you never miss a workout.</CardDescription>
+              <CardDescription>Manage your app notifications and reminders.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
               <div className="flex items-center justify-between rounded-lg border p-4">
-                  <Label htmlFor="reminder-toggle" className="font-semibold flex-grow">Enable Daily Reminders</Label>
-                  <Switch id="reminder-toggle" checked={reminderEnabled} onCheckedChange={handleReminderToggle} />
+                  <Label htmlFor="reminder-toggle" className="font-semibold flex-grow">Enable Workout Reminders</Label>
+                  <Switch id="reminder-toggle" checked={workoutReminder.enabled} onCheckedChange={handleReminderToggle} />
               </div>
-              {reminderEnabled && (
+              {workoutReminder.enabled && (
                   <div className="flex items-center justify-between rounded-lg border p-4">
                        <Label htmlFor="reminder-time" className="font-semibold">Reminder Time</Label>
                        <Input 
                           id="reminder-time"
                           type="time" 
-                          value={reminderTime}
+                          value={workoutReminder.time}
                           onChange={handleTimeChange}
                           className="w-32"
                         />
                   </div>
               )}
+              {/* Premium Features */}
+               <div className="space-y-2 rounded-lg border p-4 relative">
+                  {!isPremium && <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-10 rounded-lg"></div>}
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="meal-reminder-toggle" className="font-semibold flex items-center gap-2">
+                        Meal Reminders <PremiumBadge className="h-5 px-1.5 text-[10px]" />
+                    </Label>
+                    <Switch id="meal-reminder-toggle" disabled={!isPremium} checked={mealReminder} onCheckedChange={setMealReminder} />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Get notified at meal times with meal name & calories.</p>
+               </div>
+                <div className="space-y-2 rounded-lg border p-4 relative">
+                    {!isPremium && <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-10 rounded-lg"></div>}
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="shopping-reminder-toggle" className="font-semibold flex items-center gap-2">
+                           <ShoppingCart className="h-4 w-4"/> Shopping Reminders <PremiumBadge className="h-5 px-1.5 text-[10px]" />
+                        </Label>
+                        <Switch id="shopping-reminder-toggle" disabled={!isPremium} checked={shoppingReminder} onCheckedChange={setShoppingReminder} />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Reminds you to buy ingredients you haven't purchased.</p>
+               </div>
+                <div className="space-y-2 rounded-lg border p-4 relative">
+                   {!isPremium && <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-10 rounded-lg"></div>}
+                   <div className="flex items-center justify-between">
+                        <Label htmlFor="motivational-reminder-toggle" className="font-semibold flex items-center gap-2">
+                           <Sparkles className="h-4 w-4"/> Motivational Nudges <PremiumBadge className="h-5 px-1.5 text-[10px]" />
+                        </Label>
+                        <Switch id="motivational-reminder-toggle" disabled={!isPremium} checked={motivationalReminder} onCheckedChange={setMotivationalReminder} />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Get a motivational push if you skip a workout or meal.</p>
+               </div>
           </CardContent>
       </Card>
 
@@ -230,3 +286,5 @@ export default function ProfilePage() {
         </Suspense>
     )
 }
+
+    
