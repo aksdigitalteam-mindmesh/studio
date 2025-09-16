@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icons } from "@/components/icons";
-import { UtensilsCrossed, BarChart3, Home } from "lucide-react";
+import { UtensilsCrossed, BarChart3, Home, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
     { href: "/dashboard", label: "Home", icon: Home },
     { href: "/dashboard/progress", label: "Progress", icon: BarChart3 },
     { href: "/dashboard/programs", label: "Programs", icon: Icons.Rocket },
-    { href: "/dashboard/subscription", label: "Premium", icon: Icons.Subscription },
     { href: "/dashboard/recipes", label: "Recipes", icon: UtensilsCrossed },
+    { href: "/dashboard/profile", label: "Profile", icon: User },
 ];
 
 export function DashboardNav() {

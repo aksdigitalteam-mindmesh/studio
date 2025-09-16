@@ -105,7 +105,9 @@ export default function DashboardPage() {
         <Button className="bg-accent hover:bg-accent/90 rounded-full text-accent-foreground font-bold">SAVE 50%</Button>
         <h1 className="text-2xl font-bold">Lifesum</h1>
         <div className="flex items-center gap-4">
-          <User />
+          <Link href="/dashboard/profile">
+            <User className="cursor-pointer" />
+          </Link>
           <Bell />
         </div>
       </header>
