@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -24,6 +24,8 @@ const initialWeightData = [
   { date: "2024-06-12", weight: 75.2, photo: null },
 ];
 
+const STORAGE_KEY = 'weightData';
+
 const chartConfig = {
   weight: {
     label: "Weight (kg)",
@@ -36,9 +38,18 @@ function ProgressPageContent() {
   const isUpgraded = searchParams.get('upgraded') === 'true';
   const [isPremium] = useState(isUpgraded);
 
-  const [weightData, setWeightData] = useState(initialWeightData);
+  const [weightData, setWeightData] = useState(() => {
+    if (typeof window === 'undefined') return initialWeightData;
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    return savedData ? JSON.parse(savedData) : initialWeightData;
+  });
+
   const [targetWeight, setTargetWeight] = useState(70);
   const [currentWeight, setCurrentWeight] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(weightData));
+  }, [weightData]);
 
   const handleAddWeight = (e: React.FormEvent) => {
     e.preventDefault();

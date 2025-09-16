@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,13 +14,20 @@ interface Meal {
   calories: number;
 }
 
+const STORAGE_KEY = "dailyMeals";
+
 export default function CaloriesPage() {
-  const [meals, setMeals] = useState<Meal[]>([
-    { id: 1, name: "Oatmeal with berries", calories: 350 },
-    { id: 2, name: "Grilled Chicken Salad", calories: 450 },
-  ]);
+  const [meals, setMeals] = useState<Meal[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const savedMeals = localStorage.getItem(STORAGE_KEY);
+    return savedMeals ? JSON.parse(savedMeals) : [];
+  });
   const [mealName, setMealName] = useState("");
   const [calories, setCalories] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(meals));
+  }, [meals]);
 
   const totalCalories = meals.reduce((acc, meal) => acc + meal.calories, 0);
   const calorieGoal = 2000;

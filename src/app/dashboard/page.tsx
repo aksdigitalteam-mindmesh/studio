@@ -53,7 +53,11 @@ const mealCategories = [
 ];
 
 export default function DashboardPage() {
-    const [waterGlasses, setWaterGlasses] = useState(Array(8).fill(false));
+    const [waterGlasses, setWaterGlasses] = useState(() => {
+        if (typeof window === 'undefined') return Array(8).fill(false);
+        const savedWater = localStorage.getItem('waterGlasses');
+        return savedWater ? JSON.parse(savedWater) : Array(8).fill(false);
+    });
     const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -63,6 +67,10 @@ export default function DashboardPage() {
             setWorkoutPlan(JSON.parse(storedPlan));
         }
     }, []);
+
+    useEffect(() => {
+        localStorage.setItem('waterGlasses', JSON.stringify(waterGlasses));
+    }, [waterGlasses]);
 
     const handleWaterClick = (index: number) => {
         const newGlasses = [...waterGlasses];
@@ -93,7 +101,7 @@ export default function DashboardPage() {
   return (
     <div className="w-full flex flex-col font-sans pb-24">
       {/* Header */}
-      <header className="flex items-center justify-between p-4 bg-gradient-to-b from-primary to-primary/80 text-primary-foreground">
+      <header className="flex items-center justify-between p-4 bg-gradient-to-r from-primary to-green-400 text-primary-foreground">
         <Button className="bg-accent hover:bg-accent/90 rounded-full text-accent-foreground font-bold">SAVE 50%</Button>
         <h1 className="text-2xl font-bold">Lifesum</h1>
         <div className="flex items-center gap-4">
@@ -105,7 +113,7 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="flex-1">
         {/* Calorie Circle */}
-        <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-b from-primary/80 to-primary text-primary-foreground">
+        <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-b from-green-400 to-primary text-primary-foreground">
           <div className="relative w-56 h-56">
             <svg className="w-full h-full" viewBox="0 0 36 36">
               <path
