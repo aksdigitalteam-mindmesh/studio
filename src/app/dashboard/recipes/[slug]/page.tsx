@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { getRecipeBySlug } from "@/lib/recipe-actions";
 import type { Recipe } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,6 +97,7 @@ function RecipeDetails({ slug }: { slug: string }) {
 }
 
 
-export default function RecipeDetailsPage({ params }: { params: { slug: string } }) {
-    return <RecipeDetails slug={params.slug} />;
+export default function RecipeDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+    const resolvedParams = use(params);
+    return <RecipeDetails slug={resolvedParams.slug} />;
 }
