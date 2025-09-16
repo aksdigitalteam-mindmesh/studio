@@ -8,6 +8,7 @@ import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVerti
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { format, addDays, subDays, isToday, isYesterday } from 'date-fns';
 
 const WaterGlassComponent = ({ filled, onClick }: { filled: boolean, onClick: () => void }) => (
   <button onClick={onClick} className="relative w-16 h-20 bg-gray-200/50 dark:bg-gray-700/50 rounded-t-lg overflow-hidden flex items-center justify-center group">
@@ -60,6 +61,7 @@ export default function DashboardPage() {
     });
     const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [currentDate, setCurrentDate] = useState(new Date());
 
     useEffect(() => {
         const storedPlan = localStorage.getItem('latestWorkoutPlan');
@@ -97,6 +99,14 @@ export default function DashboardPage() {
       { href: "/dashboard/water", bg: "bg-sky-100", image: "https://placehold.co/100x100.png", hint: "water glass", label: "Water" },
     ];
 
+    const nextDay = () => setCurrentDate(addDays(currentDate, 1));
+    const prevDay = () => setCurrentDate(subDays(currentDate, 1));
+    
+    const formattedDate = (() => {
+      if (isToday(currentDate)) return `TODAY, ${format(currentDate, 'dd MMM').toUpperCase()}`;
+      if (isYesterday(currentDate)) return `YESTERDAY, ${format(currentDate, 'dd MMM').toUpperCase()}`;
+      return format(currentDate, 'EEEE, dd MMM').toUpperCase();
+    })();
 
   return (
     <div className="w-full flex flex-col font-sans pb-24">
@@ -211,12 +221,12 @@ export default function DashboardPage() {
 
             {/* Date Navigator */}
             <div className="flex items-center justify-between p-2">
-                <Button variant="ghost" size="icon"><ChevronLeft /></Button>
+                <Button variant="ghost" size="icon" onClick={prevDay}><ChevronLeft /></Button>
                 <div className="flex items-center gap-2 font-semibold">
                     <Calendar className="h-5 w-5" />
-                    <span>TODAY, 31 JUL</span>
+                    <span>{formattedDate}</span>
                 </div>
-                <Button variant="ghost" size="icon"><ChevronRight /></Button>
+                <Button variant="ghost" size="icon" onClick={nextDay}><ChevronRight /></Button>
             </div>
 
             {/* Water Tracker */}
