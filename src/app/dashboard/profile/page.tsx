@@ -1,19 +1,109 @@
+
 "use client";
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight } from 'lucide-react';
+import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 function ProfilePageContent() {
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const isUpgraded = searchParams.get('upgraded') === 'true';
-  const [isPremium] = useState(isUpgraded);
+
+  const [isPremium, setIsPremium] = useState(() => {
+     if (typeof window === 'undefined') return isUpgraded;
+     return isUpgraded || localStorage.getItem('isPremium') === 'true';
+  });
+
+  const [reminderEnabled, setReminderEnabled] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('reminderEnabled') === 'true';
+  });
+  const [reminderTime, setReminderTime] = useState(() => {
+     if (typeof window === 'undefined') return '17:00';
+     return localStorage.getItem('reminderTime') || '17:00';
+  });
+
+
+  useEffect(() => {
+    if (isUpgraded) {
+      localStorage.setItem('isPremium', 'true');
+      setIsPremium(true);
+    }
+  }, [isUpgraded]);
+
+  const handleReminderToggle = (enabled: boolean) => {
+    if (enabled && Notification.permission !== 'granted') {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          setReminderEnabled(true);
+          localStorage.setItem('reminderEnabled', 'true');
+          toast({ title: "Reminders Enabled", description: "You'll now receive workout notifications." });
+        } else {
+          toast({ variant: "destructive", title: "Permission Denied", description: "You need to grant permission to enable notifications." });
+        }
+      });
+    } else {
+      setReminderEnabled(enabled);
+      localStorage.setItem('reminderEnabled', String(enabled));
+    }
+  };
+
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setReminderTime(e.target.value);
+    localStorage.setItem('reminderTime', e.target.value);
+  };
+  
+  const scheduleNotification = useCallback(() => {
+    const motivationalMessages = [
+      "Time to crush your workout 💥",
+      "Your body is waiting, let’s move 🏋️",
+      "Let's get that heart pumping! 💪",
+      "Rise and grind! It's workout time!",
+    ];
+
+    if (reminderEnabled && 'Notification' in window && Notification.permission === 'granted') {
+      const [hours, minutes] = reminderTime.split(':').map(Number);
+      const now = new Date();
+      const reminderDate = new Date();
+      reminderDate.setHours(hours, minutes, 0, 0);
+
+      // If the time is already past, schedule it for tomorrow
+      if (reminderDate < now) {
+        reminderDate.setDate(reminderDate.getDate() + 1);
+      }
+
+      const timeout = reminderDate.getTime() - now.getTime();
+      
+      const timer = setTimeout(() => {
+         const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+         new Notification('FitBoost Workout Reminder', {
+            body: randomMessage,
+            icon: '/logo.svg' // Make sure you have a logo here
+         });
+         // Schedule for next day
+         scheduleNotification();
+      }, timeout);
+
+      return () => clearTimeout(timer);
+    }
+  }, [reminderEnabled, reminderTime]);
+
+  useEffect(() => {
+    const clearNotification = scheduleNotification();
+    return clearNotification;
+  }, [scheduleNotification]);
+
 
   const user = {
     name: 'Alex Doe',
@@ -70,6 +160,34 @@ function ProfilePageContent() {
             <span className="font-semibold">{user.weight}</span>
           </div>
         </CardContent>
+      </Card>
+      
+      <Card>
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                  <Bell className="text-primary"/>
+                  Workout Reminders
+              </CardTitle>
+              <CardDescription>Set a daily reminder to make sure you never miss a workout.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                  <Label htmlFor="reminder-toggle" className="font-semibold flex-grow">Enable Daily Reminders</Label>
+                  <Switch id="reminder-toggle" checked={reminderEnabled} onCheckedChange={handleReminderToggle} />
+              </div>
+              {reminderEnabled && (
+                  <div className="flex items-center justify-between rounded-lg border p-4">
+                       <Label htmlFor="reminder-time" className="font-semibold">Reminder Time</Label>
+                       <Input 
+                          id="reminder-time"
+                          type="time" 
+                          value={reminderTime}
+                          onChange={handleTimeChange}
+                          className="w-32"
+                        />
+                  </div>
+              )}
+          </CardContent>
       </Card>
 
       {!isPremium && (

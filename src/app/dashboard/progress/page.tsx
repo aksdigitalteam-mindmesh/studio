@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Suspense, useEffect } from "react";
@@ -36,7 +37,15 @@ const chartConfig = {
 function ProgressPageContent() {
   const searchParams = useSearchParams();
   const isUpgraded = searchParams.get('upgraded') === 'true';
-  const [isPremium] = useState(isUpgraded);
+  const [isPremium, setIsPremium] = useState(isUpgraded);
+
+   useEffect(() => {
+    const premiumStatus = isUpgraded || localStorage.getItem('isPremium') === 'true';
+    setIsPremium(premiumStatus);
+    if (isUpgraded) {
+        localStorage.setItem('isPremium', 'true');
+    }
+  }, [isUpgraded]);
 
   const [weightData, setWeightData] = useState(() => {
     if (typeof window === 'undefined') return initialWeightData;
@@ -181,7 +190,7 @@ function ProgressPageContent() {
           {weightData.slice().reverse().map((entry) => (
             entry.photo && (
               <div key={entry.date} className="group relative aspect-square">
-                <Image src={entry.photo} alt={`Progress photo from ${entry.date}`} layout="fill" objectFit="cover" className="rounded-lg" data-ai-hint="person fitness" />
+                <Image src={entry.photo} alt={`Progress photo from ${entry.date}`} fill objectFit="cover" className="rounded-lg" data-ai-hint="person fitness" />
                 <div className="absolute inset-0 rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 flex items-end p-2">
                   <p className="text-sm font-semibold text-white">{entry.date} - {entry.weight}kg</p>
                 </div>
