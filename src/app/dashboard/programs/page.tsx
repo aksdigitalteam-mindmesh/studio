@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,15 @@ import { Lock } from "lucide-react";
 function ProgramsPageContent() {
   const searchParams = useSearchParams();
   const isUpgraded = searchParams.get('upgraded') === 'true';
-  const [isPremium, setIsPremium] = useState(isUpgraded);
+  const [isPremium, setIsPremium] = useState(false);
+
+  useEffect(() => {
+    const premiumStatus = isUpgraded || localStorage.getItem('isPremium') === 'true';
+    setIsPremium(premiumStatus);
+    if (isUpgraded) {
+        localStorage.setItem('isPremium', 'true');
+    }
+  }, [isUpgraded]);
 
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
