@@ -1,38 +1,35 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
+"use client";
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, Bookmark } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
-const recipes = [
-  {
-    title: "Avocado Toast",
-    category: "Breakfast",
-    image: "https://placehold.co/600x400.png",
-    hint: "avocado toast",
-  },
-  {
-    title: "Chicken Salad",
-    category: "Lunch",
-    image: "https://placehold.co/600x400.png",
-    hint: "chicken salad",
-  },
-  {
-    title: "Salmon and Veggies",
-    category: "Dinner",
-    image: "https://placehold.co/600x400.png",
-    hint: "salmon vegetables",
-  },
-    {
-    title: "Protein Smoothie",
-    category: "Snack",
-    image: "https://placehold.co/600x400.png",
-    hint: "protein smoothie",
-  },
-];
+import { getSavedRecipes, getDiscoverableRecipes } from "@/lib/recipe-actions";
+import type { Recipe } from "@/lib/types";
+import { Separator } from "@/components/ui/separator";
 
 export default function RecipesPage() {
+  const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
+  const [discoverRecipes, setDiscoverRecipes] = useState<Recipe[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    setSavedRecipes(getSavedRecipes());
+    setDiscoverRecipes(getDiscoverableRecipes());
+  }, []);
+  
+  const filteredSavedRecipes = savedRecipes.filter(recipe => 
+    recipe.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredDiscoverRecipes = discoverRecipes.filter(recipe => 
+    recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) && 
+    !savedRecipes.some(saved => saved.title === recipe.title) // Exclude saved recipes from discover list
+  );
+
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
       <div>
@@ -42,24 +39,67 @@ export default function RecipesPage() {
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <Input placeholder="Search for recipes..." className="pl-10" />
+        <Input 
+          placeholder="Search for recipes..." 
+          className="pl-10"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+      
+      {/* Saved Recipes */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold font-headline flex items-center gap-2">
+            <Bookmark className="text-primary" />
+            Your Saved Recipes
+        </h2>
+        {filteredSavedRecipes.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredSavedRecipes.map((recipe) => (
+                <Link href={`/dashboard/recipes/${recipe.slug}`} key={recipe.slug}>
+                    <Card className="overflow-hidden h-full transition-transform transform hover:scale-105 duration-300">
+                    <CardHeader className="p-0">
+                        <Image src={recipe.image || "https://placehold.co/600x400.png"} alt={recipe.title} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={recipe.hint} />
+                    </CardHeader>
+                    <CardContent className="p-4">
+                        <p className="text-sm font-semibold text-primary">{recipe.category}</p>
+                        <CardTitle className="mt-1 text-lg">{recipe.title}</CardTitle>
+                    </CardContent>
+                    </Card>
+                </Link>
+                ))}
+            </div>
+        ) : (
+            <p className="text-muted-foreground">You haven't saved any recipes yet. Generate a diet plan to save some!</p>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {recipes.map((recipe) => (
-          <Link href="#" key={recipe.title}>
-            <Card className="overflow-hidden h-full transition-transform transform hover:scale-105 duration-300">
-              <CardHeader className="p-0">
-                <Image src={recipe.image} alt={recipe.title} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={recipe.hint} />
-              </CardHeader>
-              <CardContent className="p-4">
-                <p className="text-sm font-semibold text-primary">{recipe.category}</p>
-                <CardTitle className="mt-1 text-lg">{recipe.title}</CardTitle>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+      <Separator />
+
+      {/* Discover Recipes */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold font-headline">Discover New Recipes</h2>
+         {filteredDiscoverRecipes.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredDiscoverRecipes.map((recipe) => (
+                <Link href={`/dashboard/recipes/${recipe.slug}`} key={recipe.slug}>
+                    <Card className="overflow-hidden h-full transition-transform transform hover:scale-105 duration-300">
+                    <CardHeader className="p-0">
+                        <Image src={recipe.image || "https://placehold.co/600x400.png"} alt={recipe.title} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={recipe.hint} />
+                    </CardHeader>
+                    <CardContent className="p-4">
+                        <p className="text-sm font-semibold text-primary">{recipe.category}</p>
+                        <CardTitle className="mt-1 text-lg">{recipe.title}</CardTitle>
+                    </CardContent>
+                    </Card>
+                </Link>
+                ))}
+            </div>
+        ) : (
+             <p className="text-muted-foreground">No new recipes to discover at the moment.</p>
+        )}
       </div>
+
     </div>
   );
 }

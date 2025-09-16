@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -17,26 +18,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { generateDietPlanAction } from "@/lib/actions";
 import { dietPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
-import { Loader2, Apple, ChefHat, Dot, ShoppingCart } from "lucide-react";
+import { Loader2, Apple, ChefHat, Dot, ShoppingCart, Bookmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-
-type Meal = {
-  name: string;
-  description: string;
-  recipe: {
-    ingredients: string[];
-    instructions: string[];
-  };
-  calories: number;
-  macros: {
-    protein: string;
-    carbs: string;
-    fat: string;
-  };
-};
+import type { Meal } from "@/lib/types";
+import { saveRecipesFromPlan } from "@/lib/recipe-actions";
 
 type DietPlan = {
   title: string;
@@ -76,10 +64,27 @@ export default function DietGeneratorPage() {
         });
       }
       if (response.data) {
-        setResult(response.data);
+        setResult(response.data as DietPlan);
       }
     });
   }
+
+  const handleSavePlan = () => {
+    if (result) {
+      const saved = saveRecipesFromPlan(result.meals);
+      if(saved.length > 0) {
+        toast({
+            title: "Plan Saved!",
+            description: `${saved.length} new recipes have been added to your collection.`,
+        });
+      } else {
+         toast({
+            title: "Already Saved",
+            description: "These recipes are already in your collection.",
+        });
+      }
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -191,6 +196,11 @@ export default function DietGeneratorPage() {
                             <Badge variant="outline">{result.dailyTotals.macroRecommendation}</Badge>
                         </div>
                     </div>
+                    
+                    <Button onClick={handleSavePlan} className="w-full">
+                      <Bookmark className="mr-2 h-4 w-4" />
+                      Save Plan to Recipes
+                    </Button>
 
                     <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
                       {result.meals.map((meal, index) => (
