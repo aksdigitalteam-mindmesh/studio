@@ -1,14 +1,16 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icons } from "@/components/icons";
-import { UtensilsCrossed, BarChart3, Home } from "lucide-react";
+import { UtensilsCrossed, BarChart3, Home, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
     { href: "/dashboard", label: "Home", icon: Home },
     { href: "/dashboard/progress", label: "Progress", icon: BarChart3 },
+    { href: "/dashboard/workout", label: "Workout", icon: Dumbbell },
     { href: "/dashboard/programs", label: "Programs", icon: Icons.Rocket },
     { href: "/dashboard/recipes", label: "Recipes", icon: UtensilsCrossed },
 ];
@@ -18,7 +20,7 @@ export function DashboardNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-sm">
-      <div className="flex h-16 items-center justify-around">
+      <div className="grid h-16 grid-cols-5 items-center justify-around">
         {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (

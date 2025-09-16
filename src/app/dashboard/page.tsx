@@ -96,7 +96,7 @@ export default function DashboardPage() {
       { href: "/dashboard/calories", bg: "bg-blue-100", image: "https://placehold.co/100x100.png", hint: "salad bowl", label: "Lunch" },
       { href: "/dashboard/calories", bg: "bg-red-100", image: "https://placehold.co/100x100.png", hint: "spaghetti plate", label: "Dinner" },
       { href: "/dashboard/calories", bg: "bg-yellow-100", image: "https://placehold.co/100x100.png", hint: "banana fruit", label: "Snacks" },
-      { href: "/dashboard/programs", bg: "bg-purple-100", image: "https://placehold.co/100x100.png", hint: "person lifting weights", label: "Exercise" },
+      { href: "/dashboard/workout", bg: "bg-purple-100", image: "https://placehold.co/100x100.png", hint: "person lifting weights", label: "Exercise" },
       { href: "/dashboard/water", bg: "bg-sky-100", image: "https://placehold.co/100x100.png", hint: "water glass", label: "Water" },
     ];
 
@@ -179,7 +179,7 @@ export default function DashboardPage() {
                          )}
                     </ul>
                     <Button asChild variant="secondary" className="w-full mt-4">
-                        <Link href="/dashboard/programs">View Full Workout</Link>
+                        <Link href="/dashboard/workout">View Full Workout</Link>
                     </Button>
                 </CardContent>
               </Card>
@@ -324,5 +324,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

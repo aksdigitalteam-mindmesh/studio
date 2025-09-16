@@ -11,11 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { UploadCloud, PlusCircle, Lock, Dumbbell } from "lucide-react";
+import { UploadCloud, PlusCircle, Lock } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
 import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
-import { getCompletedWorkouts } from "@/lib/workout-log-actions";
-import { format } from "date-fns";
 
 const initialWeightData = [
   { date: "2024-05-01", weight: 80.0, photo: "https://placehold.co/600x400.png" },
@@ -36,10 +34,6 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-type CompletedWorkout = {
-  title: string;
-  date: string;
-}
 
 function ProgressPageContent() {
   const searchParams = useSearchParams();
@@ -60,8 +54,6 @@ function ProgressPageContent() {
     return savedData ? JSON.parse(savedData) : initialWeightData;
   });
 
-  const [completedWorkouts, setCompletedWorkouts] = useState<CompletedWorkout[]>([]);
-
   const [targetWeight, setTargetWeight] = useState(70);
   const [currentWeight, setCurrentWeight] = useState("");
 
@@ -69,18 +61,6 @@ function ProgressPageContent() {
     localStorage.setItem(WEIGHT_STORAGE_KEY, JSON.stringify(weightData));
   }, [weightData]);
   
-  useEffect(() => {
-    setCompletedWorkouts(getCompletedWorkouts());
-
-    const handleStorageChange = () => {
-      setCompletedWorkouts(getCompletedWorkouts());
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-        window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
 
   const handleAddWeight = (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,37 +156,6 @@ function ProgressPageContent() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-            <CardTitle>Workout Log</CardTitle>
-            <CardDescription>A history of your completed workouts.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            {completedWorkouts.length > 0 ? (
-                <ul className="space-y-4 max-h-64 overflow-y-auto">
-                    {completedWorkouts.slice().reverse().map((workout, index) => (
-                        <li key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                            <div className="flex items-center gap-4">
-                                <Dumbbell className="h-5 w-5 text-primary" />
-                                <div>
-                                    <p className="font-semibold">{workout.title}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                        {format(new Date(workout.date), "MMMM dd, yyyy")}
-                                    </p>
-                                </div>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <div className="text-center text-muted-foreground py-8">
-                    <p>You haven't logged any workouts yet.</p>
-                    <p className="text-sm">Complete a workout in the "Programs" tab to see it here.</p>
-                </div>
-            )}
-        </CardContent>
-      </Card>
-
       <Card className="relative">
         {!isPremium && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-8 text-center rounded-lg">
@@ -263,5 +212,3 @@ export default function ProgressPage() {
     </Suspense>
   );
 }
-
-    
