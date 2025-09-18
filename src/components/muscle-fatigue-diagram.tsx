@@ -17,7 +17,7 @@ export function MuscleFatigueDiagram({ fatiguedMuscles }: MuscleFatigueDiagramPr
     let color = 'transparent';
     if (intensity >= 80) color = 'hsl(0, 100%, 50%)';      // Red
     else if (intensity >= 50) color = 'hsl(30, 100%, 50%)'; // Orange
-    else if (intensity >= 30) color = 'hsl(54, 100%, 50%)'; // Yellow
+    else if (intensity >= 30) color = 'hsl(48, 100%, 50%)'; // Yellow
     else if (intensity >= 10) color = 'hsl(211, 100%, 50%)';// Blue
     
     if (intensity < 10) {
