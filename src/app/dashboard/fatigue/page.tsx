@@ -9,7 +9,10 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
 import type { Muscle } from "@/components/muscle-fatigue-diagram";
-import { Hand, Eye } from "lucide-react";
+import { Hand, Eye, PersonStanding, VenetianMask } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Label } from "@/components/ui/label";
+
 
 type FatigueData = Partial<Record<Muscle, number>>;
 
@@ -52,6 +55,7 @@ const fatigueLegend = [
 
 export default function FatigueTrackerPage() {
   const [fatigueData, setFatigueData] = useState<FatigueData>(initialFatigueData);
+  const [gender, setGender] = useState<'male' | 'female'>('male');
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -105,7 +109,19 @@ export default function FatigueTrackerPage() {
             <CardDescription>A visual representation of your muscle fatigue levels.</CardDescription>
           </CardHeader>
           <CardContent>
-            <MuscleFatigueDiagram fatiguedMuscles={fatigueData} />
+            <div className="flex justify-center mb-4">
+               <ToggleGroup type="single" value={gender} onValueChange={(value) => {if(value) setGender(value as 'male' | 'female')}} aria-label="Select gender diagram">
+                <ToggleGroupItem value="male" aria-label="Male diagram">
+                  <PersonStanding className="h-4 w-4 mr-2" />
+                  Male
+                </ToggleGroupItem>
+                <ToggleGroupItem value="female" aria-label="Female diagram">
+                  <PersonStanding className="h-4 w-4 mr-2" />
+                  Female
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+            <MuscleFatigueDiagram fatiguedMuscles={fatigueData} gender={gender} />
           </CardContent>
         </Card>
         
