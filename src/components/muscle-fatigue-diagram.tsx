@@ -161,3 +161,5 @@ export function MuscleFatigueDiagram({ fatiguedMuscles = {}, gender = "male", on
     </div>
   );
 }
+
+    

@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PremiumBadge } from '@/components/premium-badge';
 import { usePremiumStatus } from '@/hooks/use-premium-status';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { FormControl, FormItem } from '@/components/ui/form';
 
 function ProfilePageContent() {
   const { toast } = useToast();

@@ -61,6 +61,9 @@ export default function FatigueTrackerPage() {
   const [selectedMuscle, setSelectedMuscle] = useState<Muscle | null>(null);
 
   useEffect(() => {
+    // This effect runs only on the client-side
+    setIsClient(true);
+
     const savedFatigueData = localStorage.getItem(FATIGUE_STORAGE_KEY);
     if (savedFatigueData) {
         setFatigueData(JSON.parse(savedFatigueData));
@@ -72,7 +75,6 @@ export default function FatigueTrackerPage() {
     if(savedGender) {
         setGender(savedGender);
     }
-    setIsClient(true);
   }, []);
 
   useEffect(() => {
@@ -217,3 +219,5 @@ export default function FatigueTrackerPage() {
     </div>
   );
 }
+
+    
