@@ -11,8 +11,9 @@ import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
 import type { Muscle } from "@/components/muscle-fatigue-diagram";
 import { Hand, Eye, Loader2, BrainCircuit } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 
 type FatigueData = Partial<Record<Muscle, number>>;
 
@@ -54,7 +55,7 @@ const fatigueLegend = [
 ];
 
 export default function FatigueTrackerPage() {
-  const [fatigueData, setFatigueData] = useState<FatigueData>(initialFatigueData);
+  const [fatigueData, setFatigueData] = useState<FatigueData>({});
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [isClient, setIsClient] = useState(false);
   const [selectedMuscle, setSelectedMuscle] = useState<Muscle | null>(null);
@@ -80,12 +81,6 @@ export default function FatigueTrackerPage() {
     }
   }, [fatigueData, isClient]);
 
-  useEffect(() => {
-    if(isClient) {
-        localStorage.setItem(GENDER_STORAGE_KEY, gender);
-    }
-  }, [gender, isClient]);
-  
   const highFatigueMuscle = isClient ? Object.entries(fatigueData).find(([, value]) => value > 70) : undefined;
   
   const handleMuscleClick = (muscle: Muscle) => {
@@ -129,16 +124,8 @@ export default function FatigueTrackerPage() {
              <div className="flex justify-between items-center">
                 <div>
                     <CardTitle>Muscle Recovery Status</CardTitle>
-                    <CardDescription>Tap a muscle for details.</CardDescription>
+                    <CardDescription>Tap a muscle for details. Body type from profile.</CardDescription>
                 </div>
-                 {isClient && (
-                     <RadioGroup value={gender} onValueChange={(v) => setGender(v as 'male' | 'female')} className="flex gap-2">
-                        <RadioGroupItem value="male" id="male" className="peer sr-only" />
-                        <Label htmlFor="male" className="px-3 py-1 rounded-full cursor-pointer border peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">Male</Label>
-                        <RadioGroupItem value="female" id="female" className="peer sr-only" />
-                        <Label htmlFor="female" className="px-3 py-1 rounded-full cursor-pointer border peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">Female</Label>
-                    </RadioGroup>
-                 )}
              </div>
           </CardHeader>
           <CardContent>
@@ -230,5 +217,3 @@ export default function FatigueTrackerPage() {
     </div>
   );
 }
-
-    
