@@ -17,11 +17,11 @@ const FATIGUE_STORAGE_KEY = 'muscleFatigueData';
 
 // Simulated initial data matching the visual style of the example
 const initialFatigueData: FatigueData = {
-  shoulders: 35, // Orange in the example
-  chest: 55, // Red in the example
-  biceps: 55, // Red in the example
-  abs: 55, // Red in the example
-  quads: 75, // Red in the example
+  shoulders: 35,
+  chest: 55,
+  biceps: 55,
+  abs: 55,
+  quads: 75,
   triceps: 15,
   back: 25,
   glutes: 5,
@@ -51,17 +51,26 @@ const fatigueLegend = [
 ];
 
 export default function FatigueTrackerPage() {
-  const [fatigueData, setFatigueData] = useState<FatigueData>(() => {
-    if (typeof window === 'undefined') return initialFatigueData;
-    const savedData = localStorage.getItem(FATIGUE_STORAGE_KEY);
-    return savedData ? JSON.parse(savedData) : initialFatigueData;
-  });
+  const [fatigueData, setFatigueData] = useState<FatigueData>(initialFatigueData);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem(FATIGUE_STORAGE_KEY, JSON.stringify(fatigueData));
-  }, [fatigueData]);
+    setIsClient(true);
+    const savedData = localStorage.getItem(FATIGUE_STORAGE_KEY);
+    if (savedData) {
+        setFatigueData(JSON.parse(savedData));
+    } else {
+        setFatigueData(initialFatigueData);
+    }
+  }, []);
+
+  useEffect(() => {
+    if(isClient) {
+        localStorage.setItem(FATIGUE_STORAGE_KEY, JSON.stringify(fatigueData));
+    }
+  }, [fatigueData, isClient]);
   
-  const highFatigueMuscle = Object.entries(fatigueData).find(([, value]) => value > 70);
+  const highFatigueMuscle = isClient ? Object.entries(fatigueData).find(([, value]) => value > 70) : Object.entries(initialFatigueData).find(([, value]) => value > 70);
 
   const getProgressColor = (value: number) => {
     if (value >= 80) return "bg-red-500";
