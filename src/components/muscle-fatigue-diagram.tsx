@@ -77,7 +77,7 @@ export function MuscleFatigueDiagram({ fatiguedMuscles }: MuscleFatigueDiagramPr
           
           {/* Triceps (approximated on the side of the arm) */}
           <path d="M60,90 L63,130 L58,125 L55,95 Z" style={getMuscleStyle("triceps")} />
-          <path d="M140,90 L137,130 L142,125 L145,95 Z" style={getMuscleStyle("triceps")} />
+          <path d="M140,90 L137,130 L142,125 L145,95 Z" style={getGuscleStyle("triceps")} />
 
           {/* Back (approximated as part of torso) */}
            <path d="M85,70 L115,70 L115,140 L85,140 Z" style={getMuscleStyle("back")} />

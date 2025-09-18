@@ -15,15 +15,18 @@ type FatigueData = Partial<Record<Muscle, number>>;
 
 const FATIGUE_STORAGE_KEY = 'muscleFatigueData';
 
-// Simulated initial data
+// Simulated initial data matching the visual style of the example
 const initialFatigueData: FatigueData = {
-  chest: 75,
-  biceps: 40,
-  abs: 55,
-  quads: 85,
-  shoulders: 25,
-  back: 15,
-  triceps: 35,
+  shoulders: 35, // Orange in the example
+  chest: 55, // Red in the example
+  biceps: 55, // Red in the example
+  abs: 55, // Red in the example
+  quads: 75, // Red in the example
+  triceps: 15,
+  back: 25,
+  glutes: 5,
+  hamstrings: 5,
+  calves: 5,
 };
 
 const muscleGroupNames: Record<Muscle, string> = {
