@@ -4,14 +4,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icons } from "@/components/icons";
-import { UtensilsCrossed, BarChart3, Home, Dumbbell } from "lucide-react";
+import { UtensilsCrossed, BarChart3, Home, Dumbbell, HeartPulse } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
     { href: "/dashboard", label: "Home", icon: Home },
     { href: "/dashboard/progress", label: "Progress", icon: BarChart3 },
     { href: "/dashboard/workout", label: "Workout", icon: Dumbbell },
-    { href: "/dashboard/programs", label: "Programs", icon: Icons.Rocket },
+    { href: "/dashboard/fatigue", label: "Fatigue", icon: HeartPulse },
     { href: "/dashboard/recipes", label: "Recipes", icon: UtensilsCrossed },
 ];
 
