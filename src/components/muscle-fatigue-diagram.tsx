@@ -1,17 +1,15 @@
 
 "use client";
 
-import { cn } from "@/lib/utils";
-
 export type Muscle = "chest" | "biceps" | "abs" | "quads" | "shoulders" | "back" | "triceps" | "glutes" | "hamstrings" | "calves";
 
 interface MuscleFatigueDiagramProps {
-  fatiguedMuscles: Partial<Record<Muscle, number>>; // Value from 0 to 100
+  fatiguedMuscles: Partial<Record<Muscle, number>>;
   gender?: "male" | "female";
 }
 
 const MaleDiagram = ({ getMuscleStyle }: { getMuscleStyle: (muscle: Muscle) => any }) => (
-    <g>
+    <g transform="translate(0, 15)">
         {/* Base Body */}
         <g fill="hsl(var(--muted-foreground) / 0.1)" stroke="hsl(var(--muted-foreground) / 0.2)" strokeWidth="0.5">
             {/* Head */}
@@ -42,7 +40,7 @@ const MaleDiagram = ({ getMuscleStyle }: { getMuscleStyle: (muscle: Muscle) => a
             {/* Abs */}
             <path d="M90 95 h 20 l 2 23 h -24 z" style={getMuscleStyle("abs")} />
             {/* Back */}
-            <path d="M85 70 l 30 0 l 5 50 h-40 Z" style={getMuscleStyle("back")} />
+            <path d="M85 70 l 30 0 l 5 50 h -40 Z" style={getMuscleStyle("back")} />
             {/* Quads */}
             <path d="M72 122 h 20 l -5 50 h -15 Z" style={getMuscleStyle("quads")} />
             <path d="M108 122 h 20 l 5 50 h -15 Z" style={getMuscleStyle("quads")} />
@@ -59,7 +57,7 @@ const MaleDiagram = ({ getMuscleStyle }: { getMuscleStyle: (muscle: Muscle) => a
 );
 
 const FemaleDiagram = ({ getMuscleStyle }: { getMuscleStyle: (muscle: Muscle) => any }) => (
-    <g>
+    <g transform="translate(0, 15)">
         {/* Base Body */}
         <g fill="hsl(var(--muted-foreground) / 0.1)" stroke="hsl(var(--muted-foreground) / 0.2)" strokeWidth="0.5">
             {/* Head */}
@@ -114,20 +112,20 @@ export function MuscleFatigueDiagram({ fatiguedMuscles, gender = "male" }: Muscl
   const getMuscleStyle = (muscle: Muscle) => {
     const intensity = fatiguedMuscles[muscle] || 0;
     
-    let color = 'transparent';
-    if (intensity >= 80) color = 'hsl(0, 100%, 50%)';      // Red
-    else if (intensity >= 50) color = 'hsl(30, 100%, 50%)'; // Orange
-    else if (intensity >= 30) color = 'hsl(48, 100%, 50%)'; // Yellow
-    else if (intensity >= 10) color = 'hsl(211, 100%, 50%)';// Blue
+    let color = 'hsl(var(--muted-foreground) / 0.1)';
+    if (intensity >= 80) color = 'hsl(0, 72%, 51%)';      // Red
+    else if (intensity >= 50) color = 'hsl(30, 95%, 52%)'; // Orange
+    else if (intensity >= 30) color = 'hsl(45, 93%, 47%)'; // Yellow
+    else if (intensity >= 10) color = 'hsl(211, 90%, 50%)';// Blue
     
     if (intensity < 10) {
-      return { fill: "transparent" };
+      return { fill: "hsl(var(--muted-foreground) / 0.1)", stroke: "hsl(var(--muted-foreground) / 0.2)", strokeWidth: 0.5 };
     }
 
     return {
       fill: color,
-      stroke: "white",
-      strokeWidth: 0.2,
+      stroke: "hsl(var(--card-foreground))",
+      strokeWidth: 0.3,
       opacity: intensity / 100 * 0.7 + 0.3, // Min opacity 0.3, max 1.0
     };
   };
@@ -145,4 +143,3 @@ export function MuscleFatigueDiagram({ fatiguedMuscles, gender = "male" }: Muscl
     </div>
   );
 }
-

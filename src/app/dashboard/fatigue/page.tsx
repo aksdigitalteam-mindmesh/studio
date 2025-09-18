@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
 import type { Muscle } from "@/components/muscle-fatigue-diagram";
-import { Hand, Eye } from "lucide-react";
+import { Hand, Eye, Loader2 } from "lucide-react";
 
 type FatigueData = Partial<Record<Muscle, number>>;
 
@@ -55,7 +55,7 @@ export default function FatigueTrackerPage() {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
+    // This effect runs only on the client-side
     const savedFatigueData = localStorage.getItem(FATIGUE_STORAGE_KEY);
     if (savedFatigueData) {
         setFatigueData(JSON.parse(savedFatigueData));
@@ -63,10 +63,11 @@ export default function FatigueTrackerPage() {
         setFatigueData(initialFatigueData);
     }
     
-    const savedGender = localStorage.getItem('userGender') as 'male' | 'female';
+    const savedGender = localStorage.getItem('userGender') as 'male' | 'female' | null;
     if(savedGender) {
         setGender(savedGender);
     }
+    setIsClient(true);
   }, []);
 
   useEffect(() => {
@@ -92,7 +93,7 @@ export default function FatigueTrackerPage() {
         <p className="text-muted-foreground">Visualize your muscle recovery and train smarter.</p>
       </div>
       
-      {highFatigueMuscle && (
+      {isClient && highFatigueMuscle && (
         <Alert variant="destructive">
           <Hand className="h-5 w-5"/>
           <AlertTitle>High Fatigue Warning!</AlertTitle>
@@ -109,11 +110,13 @@ export default function FatigueTrackerPage() {
             <CardDescription>Visual representation of your muscle fatigue levels.</CardDescription>
           </CardHeader>
           <CardContent>
-            {isClient ? <MuscleFatigueDiagram fatiguedMuscles={fatigueData} gender={gender} /> : 
-             <div className="flex justify-center items-center h-full min-h-[250px]">
-                <p>Loading diagram...</p>
-            </div>
-            }
+            {!isClient ? (
+             <div className="flex justify-center items-center h-full min-h-[450px]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+             </div>
+            ) : (
+             <MuscleFatigueDiagram fatiguedMuscles={fatigueData} gender={gender} />
+            )}
           </CardContent>
         </Card>
         
@@ -153,7 +156,7 @@ export default function FatigueTrackerPage() {
           <CardDescription>Breakdown of fatigue levels for each muscle group.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {Object.entries(fatigueData)
+          {isClient ? (Object.entries(fatigueData)
             .sort(([, a], [, b]) => b - a)
             .map(([muscle, value]) => (
             <div key={muscle} className="space-y-1">
@@ -161,14 +164,16 @@ export default function FatigueTrackerPage() {
                 <span className="font-medium">{muscleGroupNames[muscle as Muscle]}</span>
                 <span className="text-muted-foreground">{value}%</span>
               </div>
-              <Progress value={value} indicatorClassName={getProgressColor(value)} />
+              <Progress value={value} indicatorClassName={getProgressColor(value || 0)} />
             </div>
-          ))}
+          ))) : (
+            <div className="flex justify-center items-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground"/>
+            </div>
+          )}
         </CardContent>
       </Card>
 
     </div>
   );
 }
-
-    
