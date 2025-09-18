@@ -9,16 +9,12 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
 import type { Muscle } from "@/components/muscle-fatigue-diagram";
-import { Hand, Eye, PersonStanding, VenetianMask } from "lucide-react";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Label } from "@/components/ui/label";
-
+import { Hand, Eye } from "lucide-react";
 
 type FatigueData = Partial<Record<Muscle, number>>;
 
 const FATIGUE_STORAGE_KEY = 'muscleFatigueData';
 
-// Simulated initial data matching the visual style of the example
 const initialFatigueData: FatigueData = {
   shoulders: 35,
   chest: 55,
@@ -60,11 +56,16 @@ export default function FatigueTrackerPage() {
 
   useEffect(() => {
     setIsClient(true);
-    const savedData = localStorage.getItem(FATIGUE_STORAGE_KEY);
-    if (savedData) {
-        setFatigueData(JSON.parse(savedData));
+    const savedFatigueData = localStorage.getItem(FATIGUE_STORAGE_KEY);
+    if (savedFatigueData) {
+        setFatigueData(JSON.parse(savedFatigueData));
     } else {
         setFatigueData(initialFatigueData);
+    }
+    
+    const savedGender = localStorage.getItem('userGender') as 'male' | 'female';
+    if(savedGender) {
+        setGender(savedGender);
     }
   }, []);
 
@@ -74,7 +75,7 @@ export default function FatigueTrackerPage() {
     }
   }, [fatigueData, isClient]);
   
-  const highFatigueMuscle = isClient ? Object.entries(fatigueData).find(([, value]) => value > 70) : Object.entries(initialFatigueData).find(([, value]) => value > 70);
+  const highFatigueMuscle = isClient ? Object.entries(fatigueData).find(([, value]) => value > 70) : undefined;
 
   const getProgressColor = (value: number) => {
     if (value >= 80) return "bg-red-500";
@@ -83,7 +84,6 @@ export default function FatigueTrackerPage() {
     if (value >= 10) return "bg-blue-500";
     return "bg-primary";
   };
-
 
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
@@ -106,22 +106,14 @@ export default function FatigueTrackerPage() {
         <Card>
           <CardHeader>
             <CardTitle>Muscle Recovery Status</CardTitle>
-            <CardDescription>A visual representation of your muscle fatigue levels.</CardDescription>
+            <CardDescription>Visual representation of your muscle fatigue levels.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center mb-4">
-               <ToggleGroup type="single" value={gender} onValueChange={(value) => {if(value) setGender(value as 'male' | 'female')}} aria-label="Select gender diagram">
-                <ToggleGroupItem value="male" aria-label="Male diagram">
-                  <PersonStanding className="h-4 w-4 mr-2" />
-                  Male
-                </ToggleGroupItem>
-                <ToggleGroupItem value="female" aria-label="Female diagram">
-                  <PersonStanding className="h-4 w-4 mr-2" />
-                  Female
-                </ToggleGroupItem>
-              </ToggleGroup>
+            {isClient ? <MuscleFatigueDiagram fatiguedMuscles={fatigueData} gender={gender} /> : 
+             <div className="flex justify-center items-center h-full min-h-[250px]">
+                <p>Loading diagram...</p>
             </div>
-            <MuscleFatigueDiagram fatiguedMuscles={fatigueData} gender={gender} />
+            }
           </CardContent>
         </Card>
         
@@ -178,3 +170,5 @@ export default function FatigueTrackerPage() {
     </div>
   );
 }
+
+    

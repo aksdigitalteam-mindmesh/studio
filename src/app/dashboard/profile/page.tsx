@@ -15,10 +15,16 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { PremiumBadge } from '@/components/premium-badge';
 import { usePremiumStatus } from '@/hooks/use-premium-status';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 function ProfilePageContent() {
   const { toast } = useToast();
   const { isPremium, isLoading } = usePremiumStatus();
+
+  const [gender, setGender] = useState(() => {
+    if (typeof window === 'undefined') return 'male';
+    return localStorage.getItem('userGender') || 'male';
+  });
 
   // Notification states
   const [workoutReminder, setWorkoutReminder] = useState(() => {
@@ -55,6 +61,10 @@ function ProfilePageContent() {
   useEffect(() => {
     localStorage.setItem('motivationalReminder', String(motivationalReminder));
   }, [motivationalReminder]);
+
+  useEffect(() => {
+    localStorage.setItem('userGender', gender);
+  }, [gender]);
 
 
   const handleReminderToggle = (enabled: boolean) => {
@@ -158,6 +168,26 @@ function ProfilePageContent() {
           <CardTitle>Your Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <User className="h-5 w-5" />
+              <span className="font-medium">Gender</span>
+            </div>
+            <RadioGroup value={gender} onValueChange={setGender} className="flex gap-4">
+                <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                        <RadioGroupItem value="male" id="male" />
+                    </FormControl>
+                    <Label htmlFor="male" className="font-normal">Male</Label>
+                </FormItem>
+                <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                        <RadioGroupItem value="female" id="female" />
+                    </FormControl>
+                    <Label htmlFor="female" className="font-normal">Female</Label>
+                </FormItem>
+            </RadioGroup>
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-muted-foreground">
               <Cake className="h-5 w-5" />
@@ -285,3 +315,5 @@ export default function ProfilePage() {
         </Suspense>
     )
 }
+
+    
