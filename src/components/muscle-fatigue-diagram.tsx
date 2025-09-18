@@ -71,7 +71,7 @@ const MaleDiagram = ({ onMuscleClick, selectedMuscle, fatiguedMuscles }: Omit<Mu
             <MuscleGroup muscle="biceps" d="M120 80 a 10 10 0 0 0 -10 0 l -5 20 l 15 0 l 5 -20" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
             <MuscleGroup muscle="triceps" d="M63 85 l-3 20 l 5 0 l 3 -20" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
             <MuscleGroup muscle="triceps" d="M137 85 l 3 20 l -5 0 l -3 -20" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
-            <MuscleGroup muscle="chest" d="M88 72 l 24 0 l 5 20 l -10 0 l-4 -10 l-10 0 l-5 20 Z" fatiguedMuscles={fatigues} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
+            <MuscleGroup muscle="chest" d="M88 72 l 24 0 l 5 20 l -10 0 l-4 -10 l-10 0 l-5 20 Z" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
             <MuscleGroup muscle="abs" d="M90 95 h 20 l 2 23 h -24 z" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
             <MuscleGroup muscle="back" d="M85 70 l 30 0 l 5 50 h -40 Z" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
             <MuscleGroup muscle="quads" d="M72 122 h 20 l -5 50 h -15 Z" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
@@ -113,7 +113,7 @@ const FemaleDiagram = ({ onMuscleClick, selectedMuscle, fatiguedMuscles }: Omit<
             <MuscleGroup muscle="triceps" d="M125 80 l 2 15 l -4 0 l -2 -15" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
             <MuscleGroup muscle="chest" d="M90 65 h 20 l 3 15 h -26 z" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
             <MuscleGroup muscle="abs" d="M92 82 h 16 l 2 28 h -20 z" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
-            <MuscleGroup muscle="back" d="M88 65 l 24 0 l 5 45 h -34 Z" fatiguedMuscles={fatigues} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
+            <MuscleGroup muscle="back" d="M88 65 l 24 0 l 5 45 h -34 Z" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
             <MuscleGroup muscle="quads" d="M78 122 h 15 l -4 50 h -11 Z" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
             <MuscleGroup muscle="quads" d="M107 122 h 15 l 4 50 h -11 Z" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
             <MuscleGroup muscle="glutes" d="M80 115 l 40 0 l 5 15 l -50 0 Z" fatiguedMuscles={fatiguedMuscles} onMuscleClick={onMuscleClick} selectedMuscle={selectedMuscle} />
@@ -161,5 +161,3 @@ export function MuscleFatigueDiagram({ fatiguedMuscles = {}, gender = "male", on
     </div>
   );
 }
-
-    
