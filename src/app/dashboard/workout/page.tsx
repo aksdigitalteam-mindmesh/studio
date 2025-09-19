@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Dumbbell, CheckCircle, Flame, BarChart3, BrainCircuit, ArrowLeft } from "lucide-react";
+import { Dumbbell, CheckCircle, Flame, BarChart3, BrainCircuit, ArrowLeft, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { saveCompletedWorkoutAction, getCompletedWorkouts } from "@/lib/workout-log-actions";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +16,6 @@ import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 
