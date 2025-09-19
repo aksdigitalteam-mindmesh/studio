@@ -258,27 +258,24 @@ function WorkoutLog() {
 }
 
 
-// --- Main Page Component ---
-export default function ActivityPage() {
-  const [view, setView] = useState<View>("hub");
-  const [isAnimated, setIsAnimated] = useState(false);
+// --- Main Hub Component ---
+function HubView({ setView }: { setView: (view: View) => void }) {
+    const [isAnimated, setIsAnimated] = useState(false);
 
-  useEffect(() => {
-    // Trigger animation shortly after component mounts
-    const timer = setTimeout(() => setIsAnimated(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
+    useEffect(() => {
+        const timer = setTimeout(() => setIsAnimated(true), 100);
+        return () => clearTimeout(timer);
+    }, []);
 
-  const HubView = () => {
     const bubbleCommonClass = "w-40 h-40 rounded-full flex flex-col items-center justify-center text-primary-foreground shadow-lg transition-all duration-700 ease-in-out";
     const bubbleAnimationClass = isAnimated ? "scale-100 opacity-100" : "scale-0 opacity-0";
 
     const getBubbleTransform = (bubble: 'workout' | 'progress' | 'coach') => {
         if (!isAnimated) return 'translate-y-0 translate-x-0';
         switch (bubble) {
-            case 'workout': return '-translate-y-28'; // Top bubble
-            case 'progress': return 'translate-y-24 -translate-x-32'; // Bottom-left
-            case 'coach': return 'translate-y-24 translate-x-32'; // Bottom-right
+            case 'workout': return '-translate-y-28';
+            case 'progress': return 'translate-y-24 -translate-x-32';
+            case 'coach': return 'translate-y-24 translate-x-32';
         }
     }
 
@@ -289,7 +286,6 @@ export default function ActivityPage() {
                 Track your workouts and monitor your progress.
             </p>
             <div className="relative w-full max-w-sm h-80 flex items-center justify-center">
-                {/* AI Coach Bubble */}
                 <Link
                     href="/dashboard/programs"
                     className={cn(
@@ -304,7 +300,6 @@ export default function ActivityPage() {
                     <span className="font-bold mt-2">AI Coach</span>
                 </Link>
 
-                {/* Progress Bubble */}
                  <button
                     onClick={() => setView('progress')}
                     className={cn(
@@ -319,7 +314,6 @@ export default function ActivityPage() {
                     <span className="font-bold mt-2">Progress</span>
                 </button>
 
-                 {/* Workout Bubble */}
                 <button
                     onClick={() => setView('workout')}
                     className={cn(
@@ -336,7 +330,12 @@ export default function ActivityPage() {
             </div>
         </div>
     );
-  };
+};
+
+
+// --- Main Page Component ---
+export default function ActivityPage() {
+  const [view, setView] = useState<View>("hub");
 
   const PageContent = () => {
     switch (view) {
@@ -345,7 +344,7 @@ export default function ActivityPage() {
       case "progress":
         return <ProgressTracker />;
       default:
-        return <HubView />;
+        return <HubView setView={setView} />;
     }
   };
 
