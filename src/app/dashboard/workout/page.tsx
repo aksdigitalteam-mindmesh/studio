@@ -273,9 +273,9 @@ function HubView({ setView }: { setView: (view: View) => void }) {
     const getBubbleTransform = (bubble: 'workout' | 'progress' | 'coach') => {
         if (!isAnimated) return 'translate-y-0 translate-x-0';
         switch (bubble) {
-            case 'workout': return '-translate-y-28';
+            case 'coach': return '-translate-y-28';
             case 'progress': return 'translate-y-24 -translate-x-32';
-            case 'coach': return 'translate-y-24 translate-x-32';
+            case 'workout': return 'translate-y-24 translate-x-32';
         }
     }
 
@@ -308,7 +308,7 @@ function HubView({ setView }: { setView: (view: View) => void }) {
                         bubbleAnimationClass,
                         "hover:shadow-blue-400/40 hover:scale-105"
                     )}
-                    style={{ transform: getBubbleTransform('workout') }}
+                    style={{ transform: getBubbleTransform('workout'), transitionDelay: '400ms' }}
                 >
                     <Dumbbell className="h-12 w-12" />
                     <span className="font-bold mt-2">Workout</span>
@@ -322,7 +322,7 @@ function HubView({ setView }: { setView: (view: View) => void }) {
                         bubbleAnimationClass,
                         "hover:shadow-purple-400/40 hover:scale-105"
                     )}
-                    style={{ transform: getBubbleTransform('coach'), transitionDelay: '400ms' }}
+                    style={{ transform: getBubbleTransform('coach') }}
                 >
                     <BrainCircuit className="h-12 w-12" />
                     <span className="font-bold mt-2">AI Coach</span>
@@ -334,7 +334,7 @@ function HubView({ setView }: { setView: (view: View) => void }) {
 
 
 // --- Main Page Component ---
-export default function ActivityPage() {
+function ActivityPage() {
   const [view, setView] = useState<View>("hub");
 
   const PageContent = () => {
@@ -361,4 +361,6 @@ export default function ActivityPage() {
   )
 }
 
-    
+export default function() {
+    return <ActivityPage />
+}
