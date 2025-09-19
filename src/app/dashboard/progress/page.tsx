@@ -16,13 +16,13 @@ import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
 import { usePremiumStatus } from "@/hooks/use-premium-status";
 
 const initialWeightData = [
-  { date: "2024-05-01", weight: 80.0, photo: "https://placehold.co/600x400.png" },
-  { date: "2024-05-08", weight: 79.5, photo: "https://placehold.co/600x400.png" },
-  { date: "2024-05-15", weight: 78.7, photo: "https://placehold.co/600x400.png" },
-  { date: "2024-05-22", weight: 77.8, photo: "https://placehold.co/600x400.png" },
-  { date: "2024-05-29", weight: 77.1, photo: "https://placehold.co/600x400.png" },
-  { date: "2024-06-05", weight: 76.3, photo: "https://placehold.co/600x400.png" },
-  { date: "2024-06-12", weight: 75.2, photo: null },
+  { date: "2024-05-01", weight: 80.0 },
+  { date: "2024-05-08", weight: 79.5 },
+  { date: "2024-05-15", weight: 78.7 },
+  { date: "2024-05-22", weight: 77.8 },
+  { date: "2024-05-29", weight: 77.1 },
+  { date: "2024-06-05", weight: 76.3 },
+  { date: "2024-06-12", weight: 75.2 },
 ];
 
 const WEIGHT_STORAGE_KEY = 'weightData';
@@ -58,7 +58,6 @@ function ProgressPageContent() {
       const newEntry = {
         date: new Date().toISOString().split('T')[0],
         weight: parseFloat(currentWeight),
-        photo: null,
       };
       setWeightData([...weightData, newEntry]);
       setCurrentWeight("");
@@ -174,30 +173,6 @@ function ProgressPageContent() {
               <MuscleFatigueDiagram fatiguedMuscles={fatiguedMuscles} />
           </CardContent>
         </div>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Progress Pictures</CardTitle>
-          <CardDescription>A visual timeline of your transformation.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <div className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-dashed">
-                <UploadCloud className="h-10 w-10 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">Upload Picture</p>
-                <p className="text-xs text-muted-foreground">{new Date().toLocaleDateString()}</p>
-            </div>
-          {weightData.slice().reverse().map((entry) => (
-            entry.photo && (
-              <div key={entry.date} className="group relative aspect-square">
-                <Image src={entry.photo} alt={`Progress photo from ${entry.date}`} fill objectFit="cover" className="rounded-lg" data-ai-hint="person fitness" />
-                <div className="absolute inset-0 rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 flex items-end p-2">
-                  <p className="text-sm font-semibold text-white">{entry.date} - {entry.weight}kg</p>
-                </div>
-              </div>
-            )
-          ))}
-        </CardContent>
       </Card>
     </div>
   );
