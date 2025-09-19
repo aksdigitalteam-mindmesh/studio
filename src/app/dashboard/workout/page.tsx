@@ -273,9 +273,9 @@ function HubView({ setView }: { setView: (view: View) => void }) {
     const getBubbleTransform = (bubble: 'workout' | 'progress' | 'coach') => {
         if (!isAnimated) return 'translate-y-0 translate-x-0';
         switch (bubble) {
-            case 'coach': return '-translate-y-28';
-            case 'progress': return 'translate-y-24 -translate-x-32';
-            case 'workout': return 'translate-y-24 translate-x-32';
+            case 'coach': return 'translate-y-[-7rem]'; // Top
+            case 'progress': return 'translate-y-[5.5rem] translate-x-[-6rem]'; // Bottom-left
+            case 'workout': return 'translate-y-[5.5rem] translate-x-[6rem]'; // Bottom-right
         }
     }
 
@@ -361,6 +361,6 @@ function ActivityPage() {
   )
 }
 
-export default function() {
+export default function WorkoutPage() {
     return <ActivityPage />
 }
