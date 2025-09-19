@@ -3,14 +3,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BrainCircuit, Home, HeartPulse, Activity } from "lucide-react";
+import { Home, HeartPulse, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
     { href: "/dashboard", label: "Home", icon: Home },
-    { href: "/dashboard/workout", label: "Activity", icon: Activity },
-    { href: "/dashboard/programs", label: "Programs", icon: BrainCircuit },
     { href: "/dashboard/fatigue", label: "Fatigue", icon: HeartPulse },
+    { href: "/dashboard/workout", label: "Activity", icon: Activity },
 ];
 
 export function DashboardNav() {
@@ -18,9 +17,35 @@ export function DashboardNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-sm">
-      <div className="grid h-16 grid-cols-4 items-center justify-around">
-        {navItems.map((item) => {
+      <div className="grid h-16 grid-cols-3 items-center justify-around">
+        {navItems.map((item, index) => {
             const isActive = pathname.startsWith(item.href) && (item.href !== "/dashboard" || pathname === "/dashboard");
+            
+            // Special styling for the middle "Activity" button
+            if (item.label === "Activity") {
+              return (
+                <div key={item.href} className="relative flex h-full items-center justify-center">
+                   <Link 
+                        href={item.href}
+                        className={cn(
+                          "relative z-10 flex h-16 w-16 -translate-y-4 flex-col items-center justify-center gap-1 rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300",
+                           isActive && "shadow-primary/50"
+                        )}
+                    >
+                        <item.icon className="h-7 w-7" />
+                        <span className="text-[10px] font-medium">{item.label}</span>
+                         {isActive && (
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/50 opacity-75"></span>
+                        )}
+                  </Link>
+                  {/* Hemisphere shape */}
+                  <div className="absolute bottom-0 h-8 w-24 overflow-hidden">
+                    <div className="h-16 w-24 rounded-t-full border-t bg-background"></div>
+                  </div>
+                </div>
+              )
+            }
+
             return (
                 <Link 
                     key={item.href}
@@ -44,5 +69,3 @@ export function DashboardNav() {
     </nav>
   );
 }
-
-    
