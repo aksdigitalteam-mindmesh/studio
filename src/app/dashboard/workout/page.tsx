@@ -17,6 +17,8 @@ import type { ChartConfig } from "@/components/ui/chart";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+
 
 // --- Types ---
 type Exercise = {
@@ -34,7 +36,7 @@ type WorkoutPlan = {
 };
 
 type CompletedWorkout = {
-  title: string;
+  title:string;
   date: string;
 };
 
@@ -260,36 +262,82 @@ function WorkoutLog() {
 // --- Main Page Component ---
 export default function ActivityPage() {
   const [view, setView] = useState<View>("hub");
+  const [isAnimated, setIsAnimated] = useState(false);
 
-  const HubView = () => (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <h1 className="text-3xl font-bold font-headline md:text-4xl">Activity Hub</h1>
-        <p className="text-muted-foreground mb-12">Track your workouts and monitor your progress.</p>
-        <div className="relative w-full max-w-sm h-80">
-            {/* Top Circle */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2">
-                <button onClick={() => setView('workout')} className="w-40 h-40 bg-primary/20 rounded-full flex flex-col items-center justify-center text-primary-foreground transition-transform hover:scale-105">
-                    <Dumbbell className="h-12 w-12 text-primary" />
+  useEffect(() => {
+    // Trigger animation shortly after component mounts
+    const timer = setTimeout(() => setIsAnimated(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const HubView = () => {
+    const bubbleCommonClass = "w-40 h-40 rounded-full flex flex-col items-center justify-center text-primary-foreground shadow-lg transition-all duration-700 ease-in-out";
+    const bubbleAnimationClass = isAnimated ? "scale-100 opacity-100" : "scale-0 opacity-0";
+
+    const getBubbleTransform = (bubble: 'workout' | 'progress' | 'coach') => {
+        if (!isAnimated) return 'translate-y-0 translate-x-0';
+        switch (bubble) {
+            case 'workout': return '-translate-y-28'; // Top bubble
+            case 'progress': return 'translate-y-24 -translate-x-32'; // Bottom-left
+            case 'coach': return 'translate-y-24 translate-x-32'; // Bottom-right
+        }
+    }
+
+    return (
+        <div className="flex flex-col items-center justify-center min-h-[70vh] text-center overflow-hidden">
+            <h1 className="text-3xl font-bold font-headline md:text-4xl transition-opacity duration-500 delay-500" style={{opacity: isAnimated ? 1 : 0}}>Activity Hub</h1>
+            <p className="text-muted-foreground mb-12 transition-opacity duration-500 delay-700" style={{opacity: isAnimated ? 1 : 0}}>
+                Track your workouts and monitor your progress.
+            </p>
+            <div className="relative w-full max-w-sm h-80 flex items-center justify-center">
+                {/* AI Coach Bubble */}
+                <Link
+                    href="/dashboard/programs"
+                    className={cn(
+                        bubbleCommonClass,
+                        "absolute bg-gradient-to-br from-purple-500 to-indigo-600",
+                        bubbleAnimationClass,
+                        "hover:shadow-purple-400/40 hover:scale-105"
+                    )}
+                    style={{ transform: getBubbleTransform('coach'), transitionDelay: '400ms' }}
+                >
+                    <BrainCircuit className="h-12 w-12" />
+                    <span className="font-bold mt-2">AI Coach</span>
+                </Link>
+
+                {/* Progress Bubble */}
+                 <button
+                    onClick={() => setView('progress')}
+                    className={cn(
+                        bubbleCommonClass,
+                        "absolute bg-gradient-to-br from-green-400 to-emerald-500",
+                        bubbleAnimationClass,
+                        "hover:shadow-green-400/40 hover:scale-105"
+                    )}
+                    style={{ transform: getBubbleTransform('progress'), transitionDelay: '200ms' }}
+                >
+                    <BarChart3 className="h-12 w-12" />
+                    <span className="font-bold mt-2">Progress</span>
+                </button>
+
+                 {/* Workout Bubble */}
+                <button
+                    onClick={() => setView('workout')}
+                    className={cn(
+                        bubbleCommonClass,
+                        "absolute bg-gradient-to-br from-blue-500 to-cyan-500",
+                        bubbleAnimationClass,
+                        "hover:shadow-blue-400/40 hover:scale-105"
+                    )}
+                    style={{ transform: getBubbleTransform('workout') }}
+                >
+                    <Dumbbell className="h-12 w-12" />
                     <span className="font-bold mt-2">Workout</span>
                 </button>
             </div>
-            {/* Bottom-Left Circle */}
-            <div className="absolute bottom-0 left-0">
-                <button onClick={() => setView('progress')} className="w-40 h-40 bg-primary/20 rounded-full flex flex-col items-center justify-center text-primary-foreground transition-transform hover:scale-105">
-                    <BarChart3 className="h-12 w-12 text-primary" />
-                    <span className="font-bold mt-2">Progress</span>
-                </button>
-            </div>
-            {/* Bottom-Right Circle */}
-             <div className="absolute bottom-0 right-0">
-                <Link href="/dashboard/programs" className="w-40 h-40 bg-primary/20 rounded-full flex flex-col items-center justify-center text-primary-foreground transition-transform hover:scale-105">
-                    <BrainCircuit className="h-12 w-12 text-primary" />
-                    <span className="font-bold mt-2">AI Coach</span>
-                </Link>
-            </div>
         </div>
-    </div>
-  );
+    );
+  };
 
   const PageContent = () => {
     switch (view) {
