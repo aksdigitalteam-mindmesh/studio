@@ -260,41 +260,43 @@ function WorkoutLog() {
 
 // --- Main Hub Component ---
 function HubView({ setView }: { setView: (view: View) => void }) {
-    const [isAnimated, setIsAnimated] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
-        const timer = setTimeout(() => setIsAnimated(true), 100);
-        return () => clearTimeout(timer);
+        // Trigger fade-in animation
+        setIsMounted(true);
     }, []);
 
-    const bubbleCommonClass = "w-40 h-40 rounded-full flex flex-col items-center justify-center text-primary-foreground shadow-lg transition-all duration-700 ease-in-out";
-    const bubbleAnimationClass = isAnimated ? "scale-100 opacity-100" : "scale-0 opacity-0";
-
-    const getBubbleTransform = (bubble: 'workout' | 'progress' | 'coach') => {
-        if (!isAnimated) return 'translate-y-0 translate-x-0';
-        switch (bubble) {
-            case 'coach': return 'translate-y-[-7rem]'; // Top
-            case 'progress': return 'translate-y-[5.5rem] translate-x-[-6rem]'; // Bottom-left
-            case 'workout': return 'translate-y-[5.5rem] translate-x-[6rem]'; // Bottom-right
-        }
-    }
+    const bubbleCommonClass = "w-40 h-40 rounded-full flex flex-col items-center justify-center text-primary-foreground shadow-lg transition-opacity duration-1000";
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] text-center overflow-hidden">
-            <h1 className="text-3xl font-bold font-headline md:text-4xl transition-opacity duration-500 delay-500" style={{opacity: isAnimated ? 1 : 0}}>Activity Hub</h1>
-            <p className="text-muted-foreground mb-12 transition-opacity duration-500 delay-700" style={{opacity: isAnimated ? 1 : 0}}>
+            <h1 className={cn("text-3xl font-bold font-headline md:text-4xl transition-opacity duration-500", isMounted ? "opacity-100" : "opacity-0")}>Activity Hub</h1>
+            <p className={cn("text-muted-foreground mb-12 transition-opacity duration-500 delay-200", isMounted ? "opacity-100" : "opacity-0")}>
                 Track your workouts and monitor your progress.
             </p>
             <div className="relative w-full max-w-sm h-80 flex items-center justify-center">
-                 <button
+                 <Link
+                    href="/dashboard/programs"
+                    className={cn(
+                        bubbleCommonClass,
+                        "absolute bg-gradient-to-br from-purple-500 to-indigo-600 hover:shadow-purple-400/40 hover:scale-105",
+                        isMounted ? "opacity-100" : "opacity-0"
+                    )}
+                    style={{ top: '0', left: '50%', transform: 'translateX(-50%)', transitionDelay: '200ms' }}
+                >
+                    <BrainCircuit className="h-12 w-12" />
+                    <span className="font-bold mt-2">AI Coach</span>
+                </Link>
+
+                <button
                     onClick={() => setView('progress')}
                     className={cn(
                         bubbleCommonClass,
-                        "absolute bg-gradient-to-br from-green-400 to-emerald-500",
-                        bubbleAnimationClass,
-                        "hover:shadow-green-400/40 hover:scale-105"
+                        "absolute bg-gradient-to-br from-green-400 to-emerald-500 hover:shadow-green-400/40 hover:scale-105",
+                         isMounted ? "opacity-100" : "opacity-0"
                     )}
-                    style={{ transform: getBubbleTransform('progress'), transitionDelay: '200ms' }}
+                    style={{ bottom: '0', left: '0', transitionDelay: '400ms' }}
                 >
                     <BarChart3 className="h-12 w-12" />
                     <span className="font-bold mt-2">Progress</span>
@@ -304,29 +306,14 @@ function HubView({ setView }: { setView: (view: View) => void }) {
                     onClick={() => setView('workout')}
                     className={cn(
                         bubbleCommonClass,
-                        "absolute bg-gradient-to-br from-blue-500 to-cyan-500",
-                        bubbleAnimationClass,
-                        "hover:shadow-blue-400/40 hover:scale-105"
+                        "absolute bg-gradient-to-br from-blue-500 to-cyan-500 hover:shadow-blue-400/40 hover:scale-105",
+                        isMounted ? "opacity-100" : "opacity-0"
                     )}
-                    style={{ transform: getBubbleTransform('workout'), transitionDelay: '400ms' }}
+                    style={{ bottom: '0', right: '0', transitionDelay: '600ms' }}
                 >
                     <Dumbbell className="h-12 w-12" />
                     <span className="font-bold mt-2">Workout</span>
                 </button>
-
-                <Link
-                    href="/dashboard/programs"
-                    className={cn(
-                        bubbleCommonClass,
-                        "absolute bg-gradient-to-br from-purple-500 to-indigo-600",
-                        bubbleAnimationClass,
-                        "hover:shadow-purple-400/40 hover:scale-105"
-                    )}
-                    style={{ transform: getBubbleTransform('coach') }}
-                >
-                    <BrainCircuit className="h-12 w-12" />
-                    <span className="font-bold mt-2">AI Coach</span>
-                </Link>
             </div>
         </div>
     );
@@ -364,3 +351,5 @@ function ActivityPage() {
 export default function WorkoutPage() {
     return <ActivityPage />
 }
+
+    
