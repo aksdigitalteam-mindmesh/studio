@@ -286,20 +286,6 @@ function HubView({ setView }: { setView: (view: View) => void }) {
                 Track your workouts and monitor your progress.
             </p>
             <div className="relative w-full max-w-sm h-80 flex items-center justify-center">
-                <Link
-                    href="/dashboard/programs"
-                    className={cn(
-                        bubbleCommonClass,
-                        "absolute bg-gradient-to-br from-purple-500 to-indigo-600",
-                        bubbleAnimationClass,
-                        "hover:shadow-purple-400/40 hover:scale-105"
-                    )}
-                    style={{ transform: getBubbleTransform('coach'), transitionDelay: '400ms' }}
-                >
-                    <BrainCircuit className="h-12 w-12" />
-                    <span className="font-bold mt-2">AI Coach</span>
-                </Link>
-
                  <button
                     onClick={() => setView('progress')}
                     className={cn(
@@ -327,6 +313,20 @@ function HubView({ setView }: { setView: (view: View) => void }) {
                     <Dumbbell className="h-12 w-12" />
                     <span className="font-bold mt-2">Workout</span>
                 </button>
+
+                <Link
+                    href="/dashboard/programs"
+                    className={cn(
+                        bubbleCommonClass,
+                        "absolute bg-gradient-to-br from-purple-500 to-indigo-600",
+                        bubbleAnimationClass,
+                        "hover:shadow-purple-400/40 hover:scale-105"
+                    )}
+                    style={{ transform: getBubbleTransform('coach'), transitionDelay: '400ms' }}
+                >
+                    <BrainCircuit className="h-12 w-12" />
+                    <span className="font-bold mt-2">AI Coach</span>
+                </Link>
             </div>
         </div>
     );
@@ -360,3 +360,5 @@ export default function ActivityPage() {
      </div>
   )
 }
+
+    
