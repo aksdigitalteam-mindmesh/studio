@@ -18,9 +18,8 @@ export function DashboardNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-sm">
       <div className="grid h-16 grid-cols-3 items-center justify-around">
         
-        {/* Left Item */}
+        {/* Left Item: Home */}
         <Link 
-            key={navItems[0].href}
             href={navItems[0].href} 
             className={cn(
                 "flex flex-col items-center justify-center gap-1 w-full h-full transition-colors duration-200",
@@ -57,9 +56,8 @@ export function DashboardNav() {
           </div>
         </div>
 
-        {/* Right Item */}
+        {/* Right Item: Fatigue */}
          <Link 
-            key={navItems[1].href}
             href={navItems[1].href} 
             className={cn(
                 "flex flex-col items-center justify-center gap-1 w-full h-full transition-colors duration-200",
