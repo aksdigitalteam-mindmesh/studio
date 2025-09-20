@@ -164,80 +164,85 @@ export default function DashboardPage() {
   return (
     <div className="w-full flex flex-col font-sans pb-24">
       {/* Header */}
-      <header className="flex items-center justify-end p-4 bg-gradient-to-r from-primary to-green-400 text-primary-foreground">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/profile">
-            <User className="cursor-pointer" />
-          </Link>
-          <Bell />
-        </div>
-      </header>
+       <div className="relative text-primary-foreground bg-gradient-to-r from-primary to-green-400">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/0" />
+        <div className="relative z-10">
+          <header className="flex items-center justify-end p-4">
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard/profile">
+                <User className="cursor-pointer" />
+              </Link>
+              <Bell />
+            </div>
+          </header>
 
-      {/* Main Content */}
-      <main className="flex-1">
-        {/* Calorie Circle */}
-        <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-b from-green-400 to-primary text-primary-foreground">
-          <div className="relative w-56 h-56">
-            <svg className="w-full h-full" viewBox="0 0 36 36">
-              <defs>
-                  <linearGradient id="eatenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" style={{stopColor: "rgb(255, 0, 0)"}} />
-                      <stop offset="50%" style={{stopColor: "rgb(255, 165, 0)"}} />
-                      <stop offset="100%" style={{stopColor: "rgb(0, 0, 255)"}} />
-                  </linearGradient>
-                  <linearGradient id="burnedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" style={{stopColor: "rgb(0, 0, 255)"}} />
-                      <stop offset="100%" style={{stopColor: "rgb(128, 0, 128)"}} />
-                  </linearGradient>
-              </defs>
-              <path
-                className="text-white/30"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                strokeWidth="2"
-              />
-               <path
-                stroke="url(#eatenGradient)"
-                strokeDasharray={`${eatenProgress}, 100`}
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                strokeWidth="2"
-                strokeLinecap="round"
-                transform="rotate(-90 18 18)"
-              />
-              <path
-                stroke="url(#burnedGradient)"
-                strokeDasharray={`${burnedProgress}, 100`}
-                d="M18 5.0845 a 12.9155 12.9155 0 0 1 0 25.831 a 12.9155 12.9155 0 0 1 0 -25.831"
-                fill="none"
-                strokeWidth="2"
-                strokeLinecap="round"
-                transform="rotate(-90 18 18)"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-5xl font-bold">{Math.round(caloriesLeft)}</span>
-              <span className="text-sm tracking-wider">KCAL LEFT</span>
+          {/* Main Content */}
+          <main className="flex-1">
+            {/* Calorie Circle */}
+            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-b from-green-400/0 to-primary/0">
+              <div className="relative w-56 h-56">
+                <svg className="w-full h-full" viewBox="0 0 36 36">
+                  <defs>
+                      <linearGradient id="eatenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" style={{stopColor: "rgb(255, 0, 0)"}} />
+                          <stop offset="50%" style={{stopColor: "rgb(255, 165, 0)"}} />
+                          <stop offset="100%" style={{stopColor: "rgb(0, 0, 255)"}} />
+                      </linearGradient>
+                      <linearGradient id="burnedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" style={{stopColor: "rgb(0, 0, 255)"}} />
+                          <stop offset="100%" style={{stopColor: "rgb(128, 0, 128)"}} />
+                      </linearGradient>
+                  </defs>
+                  <path
+                    className="text-white/30"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    strokeWidth="2"
+                  />
+                  <path
+                    stroke="url(#eatenGradient)"
+                    strokeDasharray={`${eatenProgress}, 100`}
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    transform="rotate(-90 18 18)"
+                  />
+                  <path
+                    stroke="url(#burnedGradient)"
+                    strokeDasharray={`${burnedProgress}, 100`}
+                    d="M18 5.0845 a 12.9155 12.9155 0 0 1 0 25.831 a 12.9155 12.9155 0 0 1 0 -25.831"
+                    fill="none"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    transform="rotate(-90 18 18)"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-5xl font-bold">{Math.round(caloriesLeft)}</span>
+                  <span className="text-sm tracking-wider">KCAL LEFT</span>
+                </div>
+              </div>
+              <div className="flex justify-between w-full max-w-sm mt-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{eatenCalories}</p>
+                  <p className="text-xs">EATEN</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{burnedCalories}</p>
+                  <p className="text-xs">BURNED</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 mt-6">
+                <Button variant="link" className="text-white">
+                    SEE STATS <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
-          <div className="flex justify-between w-full max-w-sm mt-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold">{eatenCalories}</p>
-              <p className="text-xs">EATEN</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold">{burnedCalories}</p>
-              <p className="text-xs">BURNED</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 mt-6">
-            <Button variant="link" className="text-white">
-                SEE STATS <ChevronDown className="ml-1 h-4 w-4" />
-            </Button>
-          </div>
+            </main>
         </div>
-
-        <div className="bg-background rounded-t-3xl -mt-6 p-4 space-y-4">
+      </div>
+      <div className="bg-background rounded-t-3xl -mt-6 p-4 space-y-4">
             {/* Today's Workout */}
             {workoutPlan ? (
               <Card>
@@ -350,7 +355,6 @@ export default function DashboardPage() {
             </div>
 
         </div>
-      </main>
 
       {/* Floating Action Button */}
       <div className="fixed bottom-24 right-6 z-50">
@@ -403,6 +407,8 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
 
