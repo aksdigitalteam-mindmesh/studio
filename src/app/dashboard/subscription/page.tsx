@@ -35,11 +35,7 @@ export default function SubscriptionPage({ searchParams }: { searchParams: { suc
   const handleUpgrade = () => {
     // In a real app, you'd handle payment here (e.g., Stripe).
     // For this simulation, we'll set the subscription status in localStorage
-    // and redirect to the programs page to show the unlocked features.
-    
-    // The usePremiumStatus hook will handle creating the subscription object
-    // because of the `upgraded=true` query param.
-    
+    // by redirecting with a query parameter that our hook will detect.
     router.push("/dashboard/programs?upgraded=true");
   };
 
