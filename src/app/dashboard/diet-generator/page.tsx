@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Meal } from "@/lib/types";
 import { saveRecipesFromPlan } from "@/lib/recipe-actions";
 import { useUsageTracker } from "@/hooks/use-usage-tracker";
+import { addIngredientsToShoppingList } from "@/lib/shopping-list-actions";
 
 
 type DietPlan = {
@@ -97,6 +98,17 @@ export default function DietGeneratorPage() {
             description: "These recipes are already in your collection.",
         });
       }
+    }
+  };
+
+  const handleAddToShoppingList = () => {
+    if (result) {
+      const allIngredients = result.meals.flatMap(meal => meal.recipe.ingredients);
+      const addedCount = addIngredientsToShoppingList(allIngredients);
+      toast({
+        title: "Shopping List Updated",
+        description: `${addedCount} new ingredients have been added to your shopping list.`,
+      });
     }
   };
 
@@ -220,10 +232,16 @@ export default function DietGeneratorPage() {
                         </div>
                     </div>
                     
-                    <Button onClick={handleSavePlan} className="w-full">
-                      <Bookmark className="mr-2 h-4 w-4" />
-                      Save Plan to Recipes
-                    </Button>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button onClick={handleSavePlan} variant="outline">
+                        <Bookmark className="mr-2 h-4 w-4" />
+                        Save Plan
+                      </Button>
+                      <Button onClick={handleAddToShoppingList}>
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        Add to Shopping List
+                      </Button>
+                    </div>
 
                     <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
                       {result.meals.map((meal, index) => (
@@ -243,13 +261,10 @@ export default function DietGeneratorPage() {
                              <div className="space-y-4 pl-4 border-l-2 border-primary/20 ml-5">
                                 <div className="space-y-2">
                                     <h4 className="font-semibold flex items-center gap-2"><Apple className="h-4 w-4" /> Ingredients</h4>
-                                    <ul className="space-y-2">
+                                    <ul className="space-y-1">
                                         {meal.recipe.ingredients.map((ingredient, i) => (
-                                            <li key={i} className="flex justify-between items-center">
-                                              <span className="flex items-center"><Dot className="h-4 w-4" />{ingredient}</span>
-                                              <Button variant="ghost" size="icon">
-                                                  <ShoppingCart className="h-4 w-4 text-muted-foreground"/>
-                                              </Button>
+                                            <li key={i} className="flex items-center">
+                                              <Dot className="h-4 w-4" />{ingredient}
                                             </li>
                                         ))}
                                     </ul>
