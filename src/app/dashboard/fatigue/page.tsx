@@ -1,20 +1,21 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from 'next/link';
+import { useState, useEffect, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Muscle } from "@/components/muscle-fatigue-diagram";
-import { Hand, Eye, Loader2, BrainCircuit } from "lucide-react";
-
+import { Hand, Loader2, BrainCircuit, Lightbulb } from "lucide-react";
+import { generateRecoveryTips } from "@/ai/flows/generate-recovery-tips";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 type FatigueData = Partial<Record<Muscle, number>>;
+type RecoveryTip = { title: string; description: string };
 
 const FATIGUE_STORAGE_KEY = 'muscleFatigueData';
-const GENDER_STORAGE_KEY = 'userGender';
 
 const initialFatigueData: FatigueData = {
   shoulders: 35,
@@ -53,28 +54,54 @@ const fatigueLegend = [
 export default function FatigueTrackerPage() {
   const [fatigueData, setFatigueData] = useState<FatigueData>({});
   const [isClient, setIsClient] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [recoveryTips, setRecoveryTips] = useState<RecoveryTip[] | null>(null);
+  const [isTipsDialogOpen, setIsTipsDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // This effect runs only on the client-side
     setIsClient(true);
-
-    const savedFatigueData = localStorage.getItem(FATIGUE_STORAGE_KEY);
-    if (savedFatigueData) {
-        setFatigueData(JSON.parse(savedFatigueData));
-    } else {
+    const loadFatigueData = () => {
+      const savedFatigueData = localStorage.getItem(FATIGUE_STORAGE_KEY);
+      if (savedFatigueData) {
+        try {
+            const parsedData = JSON.parse(savedFatigueData);
+            setFatigueData(parsedData);
+        } catch {
+            setFatigueData(initialFatigueData);
+        }
+      } else {
         setFatigueData(initialFatigueData);
+      }
     }
-    
+    loadFatigueData();
+    window.addEventListener('storage', loadFatigueData);
+    return () => window.removeEventListener('storage', loadFatigueData);
   }, []);
 
-  useEffect(() => {
-    if(isClient) {
-        localStorage.setItem(FATIGUE_STORAGE_KEY, JSON.stringify(fatigueData));
+  const handleGetRecoveryTips = () => {
+    const mostFatigued = Object.entries(fatigueData)
+        .filter(([, value]) => value > 50)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 3)
+        .map(([muscle]) => muscleGroupDetails[muscle as Muscle].name);
+    
+    if (mostFatigued.length === 0) {
+        toast({
+            title: "You're not significantly fatigued!",
+            description: "No need for special recovery tips right now. Keep up the great work!",
+        });
+        return;
     }
-  }, [fatigueData, isClient]);
+
+    startTransition(async () => {
+        const result = await generateRecoveryTips({ fatiguedMuscles: mostFatigued });
+        setRecoveryTips(result.tips);
+        setIsTipsDialogOpen(true);
+    });
+  }
 
   const highFatigueMuscle = isClient ? Object.entries(fatigueData).find(([, value]) => value > 70) : undefined;
-  
 
   const getProgressColor = (value: number) => {
     if (value >= 80) return "bg-red-500";
@@ -139,8 +166,45 @@ export default function FatigueTrackerPage() {
                 )}
                 </CardContent>
             </Card>
+
+            <Button onClick={handleGetRecoveryTips} disabled={isPending} className="w-full">
+                {isPending ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating...
+                    </>
+                ) : (
+                    <>
+                        <BrainCircuit className="mr-2 h-4 w-4" />
+                        Get Fast Recovery Tips
+                    </>
+                )}
+            </Button>
         </div>
       </div>
+       <Dialog open={isTipsDialogOpen} onOpenChange={setIsTipsDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Lightbulb className="text-primary"/> AI Recovery Tips</DialogTitle>
+              <DialogDescription>
+                Here are some personalized tips to help you recover based on your fatigue levels.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                {recoveryTips?.map(tip => (
+                    <div key={tip.title} className="p-4 rounded-lg bg-muted/50">
+                        <h3 className="font-semibold">{tip.title}</h3>
+                        <p className="text-sm text-muted-foreground">{tip.description}</p>
+                    </div>
+                ))}
+            </div>
+             <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                  Close
+                </Button>
+              </DialogClose>
+          </DialogContent>
+        </Dialog>
     </div>
   );
 }

@@ -4,3 +4,4 @@ config();
 import '@/ai/flows/generate-workout-plan.ts';
 import '@/ai/flows/generate-diet-plan.ts';
 import '@/ai/flows/generate-exercise-media.ts';
+import '@/ai/flows/generate-recovery-tips.ts';

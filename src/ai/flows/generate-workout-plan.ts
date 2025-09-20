@@ -38,6 +38,7 @@ const ExerciseSchema = z.object({
   reps: z.string().describe('The number of repetitions per set.'),
   rest: z.string().describe('The rest time between sets.'),
   videoUrl: z.string().describe('URL of an video showing the exercise.'),
+  muscleGroups: z.array(z.string()).describe("A list of the primary muscle groups targeted by the exercise (e.g., ['chest', 'triceps', 'shoulders']). Use one of 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'"),
 });
 
 const DailyWorkoutSchema = z.object({
@@ -76,6 +77,7 @@ const workoutPrompt = ai.definePrompt({
               sets: z.string(),
               reps: z.string(),
               rest: z.string(),
+              muscleGroups: z.array(z.string()),
           })).optional(),
       })),
     }),
@@ -89,7 +91,8 @@ Equipment: {{{equipment}}} equipment
 Body Focus: {{#if bodyFocus}}{{{bodyFocus}}}{{else}}Full body{{/if}}
 
 Provide a catchy title for the whole week, a short description, and a weekly schedule.
-For each of the 7 days, provide a day number, a title for the day's workout, a short description, and a list of specific exercises with sets, reps, and rest times.
+For each of the 7 days, provide a day number, a title for the day's workout, a short description, and a list of specific exercises with sets, reps, rest times, and the primary muscle groups targeted.
+The muscle groups should be from this list: 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'.
 If a day is a rest day, the 'exercises' array should be empty.
 The exercises should be appropriate for the selected equipment availability. Do not include video URLs.`,
 });

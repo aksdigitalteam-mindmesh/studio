@@ -26,12 +26,16 @@ type Exercise = {
   reps: string;
   rest: string;
   videoUrl: string;
+  muscleGroups?: string[];
 };
 
 type WorkoutPlan = {
   title: string;
   description: string;
-  exercises: Exercise[];
+  weeklySchedule: {
+    day: number;
+    exercises: Exercise[];
+  }[];
 };
 
 type CompletedWorkout = {
@@ -142,23 +146,32 @@ function WorkoutLog() {
   const [completedExercises, setCompletedExercises] = useState<string[]>([]);
   const [completedWorkouts, setCompletedWorkouts] = useState<CompletedWorkout[]>([]);
   const { toast } = useToast();
+  
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // Sunday - 0, Monday - 1, ...
+  const currentDay = dayOfWeek === 0 ? 7 : dayOfWeek; // Adjust to 1-7 (Mon-Sun)
+  
+  const [activeDay, setActiveDay] = useState(currentDay);
+  
+  const activeWorkoutDay = workoutPlan?.weeklySchedule.find(d => d.day === activeDay);
+
 
   useEffect(() => {
     const storedPlan = localStorage.getItem("latestWorkoutPlan");
     if (storedPlan) {
       const plan = JSON.parse(storedPlan);
       setWorkoutPlan(plan);
-      const storedCompletion = localStorage.getItem(`workoutCompletion_${plan.title}`);
+      const storedCompletion = localStorage.getItem(`workoutCompletion_${plan.title}_${activeDay}`);
       if (storedCompletion) setCompletedExercises(JSON.parse(storedCompletion));
     }
     setCompletedWorkouts(getCompletedWorkouts());
-  }, []);
+  }, [activeDay]);
 
   useEffect(() => {
     if (workoutPlan) {
-      localStorage.setItem(`workoutCompletion_${workoutPlan.title}`, JSON.stringify(completedExercises));
+      localStorage.setItem(`workoutCompletion_${workoutPlan.title}_${activeDay}`, JSON.stringify(completedExercises));
     }
-  }, [completedExercises, workoutPlan]);
+  }, [completedExercises, workoutPlan, activeDay]);
 
   const handleToggleExercise = (exerciseName: string) => {
     setCompletedExercises((prev) =>
@@ -167,14 +180,14 @@ function WorkoutLog() {
   };
   
   const handleCompleteWorkout = () => {
-    if (workoutPlan) {
-      saveCompletedWorkoutAction(workoutPlan.title);
-      toast({ title: "Workout Completed!", description: `Great job! "${workoutPlan.title}" has been added to your log.` });
+    if (activeWorkoutDay && activeWorkoutDay.exercises) {
+      saveCompletedWorkoutAction(activeWorkoutDay.title, completedExercises);
+      toast({ title: "Workout Completed!", description: `Great job! "${activeWorkoutDay.title}" has been added to your log.` });
       setCompletedWorkouts(getCompletedWorkouts());
     }
   };
 
-  const completionPercentage = workoutPlan ? (completedExercises.length / workoutPlan.exercises.length) * 100 : 0;
+  const completionPercentage = activeWorkoutDay?.exercises ? (completedExercises.length / activeWorkoutDay.exercises.length) * 100 : 0;
 
   if (!workoutPlan) {
     return (
@@ -197,38 +210,57 @@ function WorkoutLog() {
         <h1 className="text-3xl font-bold font-headline md:text-4xl">{workoutPlan.title}</h1>
         <p className="text-muted-foreground">{workoutPlan.description}</p>
       </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Workout Progress</CardTitle>
-          <CardDescription>{completedExercises.length} of {workoutPlan.exercises.length} exercises completed.</CardDescription>
-        </CardHeader>
-        <CardContent><Progress value={completionPercentage} /></CardContent>
+
+       <Card>
+        <CardHeader><CardTitle>Week View</CardTitle></CardHeader>
+        <CardContent className="flex justify-around">
+            {workoutPlan.weeklySchedule.map(day => (
+                <Button key={day.day} variant={activeDay === day.day ? "default" : "outline"} size="icon" onClick={() => setActiveDay(day.day)}>
+                    {day.day}
+                </Button>
+            ))}
+        </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        {workoutPlan.exercises.map((exercise) => (
-          <Card key={exercise.name}>
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                 <div className="relative h-20 w-32 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                   {exercise.videoUrl && exercise.videoUrl !== 'error' ? (
-                     <video src={exercise.videoUrl} loop autoPlay muted playsInline className="h-full w-full object-cover"></video>
-                   ) : (<Dumbbell className="h-8 w-8 text-muted-foreground" />)}
-                 </div>
-                 <div>
-                   <h3 className="font-semibold">{exercise.name}</h3>
-                   <p className="text-sm text-muted-foreground">{exercise.sets} sets x {exercise.reps} reps</p>
-                   <p className="text-xs text-muted-foreground">Rest: {exercise.rest}</p>
-                 </div>
-              </div>
-              <Checkbox checked={completedExercises.includes(exercise.name)} onCheckedChange={() => handleToggleExercise(exercise.name)} className="h-6 w-6" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {activeWorkoutDay && (
+        <>
+            <Card>
+                <CardHeader>
+                <CardTitle>Day {activeDay}: {activeWorkoutDay.title}</CardTitle>
+                <CardDescription>{completedExercises.length} of {activeWorkoutDay.exercises?.length || 0} exercises completed.</CardDescription>
+                </CardHeader>
+                <CardContent><Progress value={completionPercentage} /></CardContent>
+            </Card>
 
-      <Button onClick={handleCompleteWorkout} size="lg" className="w-full"><CheckCircle className="mr-2 h-5 w-5" /> Mark Workout as Complete</Button>
+            <div className="space-y-4">
+                {activeWorkoutDay.exercises && activeWorkoutDay.exercises.map((exercise) => (
+                <Card key={exercise.name}>
+                    <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="relative h-20 w-32 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                        {exercise.videoUrl && exercise.videoUrl !== 'error' ? (
+                            <video src={exercise.videoUrl} loop autoPlay muted playsInline className="h-full w-full object-cover"></video>
+                        ) : (<Dumbbell className="h-8 w-8 text-muted-foreground" />)}
+                        </div>
+                        <div>
+                        <h3 className="font-semibold">{exercise.name}</h3>
+                        <p className="text-sm text-muted-foreground">{exercise.sets} sets x {exercise.reps} reps</p>
+                        <p className="text-xs text-muted-foreground">Rest: {exercise.rest}</p>
+                        </div>
+                    </div>
+                    <Checkbox checked={completedExercises.includes(exercise.name)} onCheckedChange={() => handleToggleExercise(exercise.name)} className="h-6 w-6" />
+                    </CardContent>
+                </Card>
+                ))}
+            </div>
+
+            {activeWorkoutDay.exercises && activeWorkoutDay.exercises.length > 0 ? (
+                <Button onClick={handleCompleteWorkout} size="lg" className="w-full"><CheckCircle className="mr-2 h-5 w-5" /> Mark Workout as Complete</Button>
+            ) : (
+                <div className="text-center py-8 text-muted-foreground">This is a rest day. Enjoy your recovery!</div>
+            )}
+        </>
+      )}
       
       <Card>
         <CardHeader>

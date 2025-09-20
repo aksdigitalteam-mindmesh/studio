@@ -16,7 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { generateWorkoutPlanAction } from "@/lib/actions";
-import { saveCompletedWorkoutAction } from "@/lib/workout-log-actions";
 import { workoutPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
 import { Loader2, VideoOff, CheckCircle, ShieldAlert, Calendar, Dumbbell, Star } from "lucide-react";
@@ -25,7 +24,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useUsageTracker } from "@/hooks/use-usage-tracker";
-import { Badge } from "@/components/ui/badge";
 
 type Exercise = {
   name: string;
@@ -33,6 +31,7 @@ type Exercise = {
   reps: string;
   rest: string;
   videoUrl: string;
+  muscleGroups?: string[];
 };
 
 type DailyWorkout = {
@@ -313,6 +312,7 @@ export default function WorkoutGeneratorPage() {
                                             <AccordionContent>
                                                 <div className="prose dark:prose-invert prose-sm max-w-none pl-4 border-l-2 ml-5">
                                                     <p><strong>Rest:</strong> {exercise.rest}</p>
+                                                    <p><strong>Muscles:</strong> {exercise.muscleGroups?.join(', ')}</p>
                                                     {exercise.videoUrl === 'error' && (
                                                         <Alert variant="destructive" className="mt-2">
                                                         <AlertTitle>Video Generation Failed</AlertTitle>
