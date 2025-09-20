@@ -26,7 +26,7 @@ export default function DashboardNav() {
             const isActive = (pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href)));
             if (index === middleIndex) {
               return (
-                <div key={link.href} className="relative flex justify-end pr-4">
+                <div key={link.href} className="relative flex justify-center">
                    <Link href={link.href}>
                     <div className={cn(
                       "absolute -top-10 flex h-20 w-20 items-center justify-center rounded-full border-4 border-background transition-all duration-300",
