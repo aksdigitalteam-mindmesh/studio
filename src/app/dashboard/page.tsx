@@ -159,6 +159,7 @@ export default function DashboardPage() {
 
     const caloriesLeft = CALORIE_GOAL - eatenCalories + burnedCalories;
     const eatenProgress = (eatenCalories / CALORIE_GOAL) * 100;
+    const burnedProgress = (burnedCalories / CALORIE_GOAL) * 100;
 
   return (
     <div className="w-full flex flex-col font-sans pb-24">
@@ -188,6 +189,15 @@ export default function DashboardPage() {
                 className="text-white"
                 strokeDasharray={`${eatenProgress}, 100`}
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                strokeWidth="2"
+                strokeLinecap="round"
+                transform="rotate(-90 18 18)"
+              />
+              <path
+                className="text-orange-400"
+                strokeDasharray={`${burnedProgress}, 100`}
+                d="M18 5.0845 a 12.9155 12.9155 0 0 1 0 25.831 a 12.9155 12.9155 0 0 1 0 -25.831"
                 fill="none"
                 strokeWidth="2"
                 strokeLinecap="round"
@@ -382,5 +392,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
