@@ -81,11 +81,6 @@ export default function DashboardPage() {
             setWorkoutPlan(JSON.parse(storedPlan));
         }
 
-        const savedWater = localStorage.getItem('waterGlasses');
-        if (savedWater) {
-          setWaterGlasses(JSON.parse(savedWater));
-        }
-
         // --- Calorie & Macro Calculation Logic ---
         const calculateNutrition = () => {
             const savedMeals = localStorage.getItem("dailyMeals");
@@ -121,6 +116,15 @@ export default function DashboardPage() {
         };
         
         calculateNutrition();
+        const savedWater = localStorage.getItem('waterGlasses');
+        if (savedWater) {
+          try {
+            setWaterGlasses(JSON.parse(savedWater));
+          } catch {
+             setWaterGlasses(Array(8).fill(false));
+          }
+        }
+
 
         // Listen for storage changes to update calories
         const handleStorageChange = () => {
@@ -322,17 +326,17 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div>
                             <p className="font-semibold">Carbs</p>
-                            <Progress value={carbProgress} className="mt-2 h-1"/>
+                            <Progress value={carbProgress} indicatorClassName="bg-green-500" className="mt-2 h-1"/>
                             <p className="text-sm text-muted-foreground mt-1">{Math.round(macros.carbs)}/{MACRO_GOALS.carbs}g</p>
                         </div>
                         <div>
                             <p className="font-semibold">Protein</p>
-                            <Progress value={proteinProgress} className="mt-2 h-1"/>
+                            <Progress value={proteinProgress} indicatorClassName="bg-blue-500" className="mt-2 h-1"/>
                             <p className="text-sm text-muted-foreground mt-1">{Math.round(macros.protein)}/{MACRO_GOALS.protein}g</p>
                         </div>
                         <div>
                             <p className="font-semibold">Fat</p>
-                            <Progress value={fatProgress} className="mt-2 h-1"/>
+                            <Progress value={fatProgress} indicatorClassName="bg-red-500" className="mt-2 h-1"/>
                             <p className="text-sm text-muted-foreground mt-1">{Math.round(macros.fat)}/{MACRO_GOALS.fat}g</p>
                         </div>
                     </div>
@@ -394,7 +398,7 @@ export default function DashboardPage() {
       {/* Floating Action Button */}
       <div className="fixed bottom-24 right-6 z-50">
         <Button 
-          className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90 shadow-lg animate-pulse"
+          className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90 shadow-lg animate-pulse-shadow"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
             {isMenuOpen ? <X className="w-8 h-8"/> : <Plus className="w-8 h-8"/>}
