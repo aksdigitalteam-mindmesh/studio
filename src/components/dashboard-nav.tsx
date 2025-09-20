@@ -23,8 +23,8 @@ export default function DashboardNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-sm">
-        <div className="grid h-16 grid-cols-3 items-center">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background/95 backdrop-blur-sm">
+        <div className="grid h-full grid-cols-3 items-center">
             <div className="flex justify-around">
             {leftLinks.map((link) => {
                 const isActive = (pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href)));
@@ -44,14 +44,14 @@ export default function DashboardNav() {
             })}
             </div>
 
-            <div className="relative flex justify-center">
-                <Link href={middleLink.href}>
-                <div className={cn(
-                    "absolute -top-8 flex h-16 w-16 items-center justify-center rounded-full border-4 border-background transition-all duration-300",
-                    (pathname === middleLink.href || pathname.startsWith(middleLink.href)) ? "bg-primary text-primary-foreground shadow-[0_0_15px_2px] shadow-primary/70" : "bg-muted text-muted-foreground"
-                )}>
-                    <middleLink.icon className="h-7 w-7" />
-                </div>
+             <div className="flex justify-center -mr-16">
+                <Link href={middleLink.href} className="relative">
+                    <div className={cn(
+                        "absolute -top-8 flex h-16 w-16 items-center justify-center rounded-full border-4 border-background transition-all duration-300",
+                        (pathname === middleLink.href || pathname.startsWith(middleLink.href)) ? "bg-primary text-primary-foreground shadow-[0_0_15px_2px] shadow-primary/70" : "bg-muted text-muted-foreground"
+                    )}>
+                        <middleLink.icon className="h-7 w-7" />
+                    </div>
                 </Link>
             </div>
 
