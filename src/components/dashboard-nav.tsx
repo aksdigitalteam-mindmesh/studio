@@ -19,10 +19,10 @@ export default function DashboardNav() {
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background/95 backdrop-blur-sm">
-        <div className="grid h-full grid-cols-[1fr_auto_1fr] items-center">
+        <div className="grid h-full grid-cols-2 items-center">
             <div className="flex justify-around">
             {navLinks.slice(0, 2).map((link) => {
-                const isActive = (pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href)));
+                const isActive = (link.href === '/dashboard' && pathname === '/dashboard') || (link.href !== '/dashboard' && pathname.startsWith(link.href));
                 return (
                 <Link
                     key={link.href}
@@ -39,11 +39,9 @@ export default function DashboardNav() {
             })}
             </div>
 
-            <div className="w-20" />
-
             <div className="flex justify-around">
             {navLinks.slice(2).map((link) => {
-                const isActive = (pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href)));
+                const isActive = pathname.startsWith(link.href);
                 return (
                 <Link
                     key={link.href}
@@ -64,8 +62,10 @@ export default function DashboardNav() {
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50">
         <Link href="/dashboard/programs" className="relative">
             <div className={cn(
-                "absolute -top-8 flex h-16 w-16 items-center justify-center rounded-full border-4 border-background transition-all duration-300 animate-pulse-shadow",
-                 pathname.startsWith("/dashboard/programs") ? "bg-primary text-primary-foreground shadow-[0_0_15px_2px] shadow-primary/70" : "bg-muted text-muted-foreground"
+                "absolute -top-8 flex h-16 w-16 items-center justify-center rounded-full border-4 border-background transition-all duration-300",
+                 pathname.startsWith("/dashboard/programs") 
+                    ? "bg-primary text-primary-foreground animate-pulse-shadow shadow-[0_0_15px_2px] shadow-primary/70" 
+                    : "bg-muted text-muted-foreground"
             )}>
                 <Bot className="h-7 w-7" />
             </div>
