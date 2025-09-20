@@ -13,7 +13,7 @@ export default function DashboardNav() {
     { href: "/dashboard", label: "Home", icon: Flame },
     { href: "/dashboard/workout", label: "Activity", icon: Activity },
     { href: "/dashboard/recipes", label: "Recipes", icon: Bookmark },
-    { href: "/dashboard/profile", label: "Profile", icon: User },
+    { href: "/dashboard/fatigue", label: "Fatigue", icon: User },
   ];
   
   const centralNavLink = { href: "/dashboard/programs", label: "AI", icon: Info };
