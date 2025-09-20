@@ -19,11 +19,12 @@ import { generateWorkoutPlanAction } from "@/lib/actions";
 import { saveCompletedWorkoutAction } from "@/lib/workout-log-actions";
 import { workoutPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
-import { Loader2, VideoOff, CheckCircle } from "lucide-react";
+import { Loader2, VideoOff, CheckCircle, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useUsageTracker } from "@/hooks/use-usage-tracker";
 
 type Exercise = {
   name: string;
@@ -43,6 +44,7 @@ export default function WorkoutGeneratorPage() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<WorkoutPlan | null>(null);
   const { toast } = useToast();
+  const { canUse, recordUsage, usagesLeft } = useUsageTracker();
 
   const form = useForm<z.infer<typeof workoutPlanSchema>>({
     resolver: zodResolver(workoutPlanSchema),
@@ -55,6 +57,15 @@ export default function WorkoutGeneratorPage() {
   });
 
   function onSubmit(values: z.infer<typeof workoutPlanSchema>) {
+    if (!canUse()) {
+        toast({
+          variant: "destructive",
+          title: "Usage Limit Reached",
+          description: "You have used all your AI generations for this week.",
+        });
+        return;
+    }
+
     setResult(null);
     startTransition(async () => {
       const response = await generateWorkoutPlanAction(values);
@@ -66,8 +77,8 @@ export default function WorkoutGeneratorPage() {
         });
       }
       if (response.data) {
+        recordUsage(); // Record usage only on success
         setResult(response.data);
-        // Also save to local storage for the dashboard page
         try {
           localStorage.setItem('latestWorkoutPlan', JSON.stringify(response.data));
         } catch (e) {
@@ -92,6 +103,8 @@ export default function WorkoutGeneratorPage() {
     }
   };
 
+  const isAtLimit = !canUse();
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 gap-8">
@@ -101,6 +114,13 @@ export default function WorkoutGeneratorPage() {
             <CardDescription>Tell us what you're looking for in a workout.</CardDescription>
           </CardHeader>
           <CardContent>
+            {isAtLimit && (
+                 <Alert variant="destructive" className="mb-6">
+                    <ShieldAlert className="h-4 w-4" />
+                    <AlertTitle>Weekly Limit Reached</AlertTitle>
+                    <AlertDescription>You have used all {usagesLeft > 0 ? 'but have' : ''} your AI generations for the week. Please check back later.</AlertDescription>
+                </Alert>
+            )}
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -178,7 +198,7 @@ export default function WorkoutGeneratorPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" disabled={isPending} className="w-full">
+                <Button type="submit" disabled={isPending || isAtLimit} className="w-full">
                   {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

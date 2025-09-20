@@ -18,13 +18,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { generateDietPlanAction } from "@/lib/actions";
 import { dietPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
-import { Loader2, Apple, ChefHat, Dot, ShoppingCart, Bookmark } from "lucide-react";
+import { Loader2, Apple, ChefHat, Dot, ShoppingCart, Bookmark, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import type { Meal } from "@/lib/types";
 import { saveRecipesFromPlan } from "@/lib/recipe-actions";
+import { useUsageTracker } from "@/hooks/use-usage-tracker";
+
 
 type DietPlan = {
   title: string;
@@ -40,6 +43,8 @@ export default function DietGeneratorPage() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<DietPlan | null>(null);
   const { toast } = useToast();
+  const { canUse, recordUsage, usagesLeft } = useUsageTracker();
+
 
   const form = useForm<z.infer<typeof dietPlanSchema>>({
     resolver: zodResolver(dietPlanSchema),
@@ -53,6 +58,14 @@ export default function DietGeneratorPage() {
   });
 
   function onSubmit(values: z.infer<typeof dietPlanSchema>) {
+     if (!canUse()) {
+        toast({
+          variant: "destructive",
+          title: "Usage Limit Reached",
+          description: "You have used all your AI generations for this week.",
+        });
+        return;
+    }
     setResult(null);
     startTransition(async () => {
       const response = await generateDietPlanAction(values);
@@ -64,6 +77,7 @@ export default function DietGeneratorPage() {
         });
       }
       if (response.data) {
+        recordUsage(); // Record usage only on success
         setResult(response.data as DietPlan);
       }
     });
@@ -86,6 +100,8 @@ export default function DietGeneratorPage() {
     }
   };
 
+  const isAtLimit = !canUse();
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 gap-8">
@@ -95,6 +111,13 @@ export default function DietGeneratorPage() {
             <CardDescription>Provide your information to get a tailored diet plan.</CardDescription>
           </CardHeader>
           <CardContent>
+             {isAtLimit && (
+                 <Alert variant="destructive" className="mb-6">
+                    <ShieldAlert className="h-4 w-4" />
+                    <AlertTitle>Weekly Limit Reached</AlertTitle>
+                    <AlertDescription>You have used all your AI generations for the week. Please check back later.</AlertDescription>
+                </Alert>
+            )}
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -162,7 +185,7 @@ export default function DietGeneratorPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" disabled={isPending} className="w-full">
+                <Button type="submit" disabled={isPending || isAtLimit} className="w-full">
                   {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -9,11 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PremiumBadge } from "@/components/premium-badge";
 import WorkoutGeneratorPage from "../workout-generator/page";
 import DietGeneratorPage from "../diet-generator/page";
-import { Lock, Loader2 } from "lucide-react";
+import { Lock, Loader2, Info } from "lucide-react";
 import { usePremiumStatus } from "@/hooks/use-premium-status";
+import { useUsageTracker } from "@/hooks/use-usage-tracker";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
 
 function ProgramsPageContent() {
   const { isPremium, isLoading } = usePremiumStatus();
+  const { usagesLeft } = useUsageTracker();
 
   if (isLoading) {
     return (
@@ -61,18 +65,28 @@ function ProgramsPageContent() {
 
         </Card>
       ) : (
-        <Tabs defaultValue="workout" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="workout">Workout Generator</TabsTrigger>
-            <TabsTrigger value="diet">Diet Generator</TabsTrigger>
-          </TabsList>
-          <TabsContent value="workout">
-            <WorkoutGeneratorPage />
-          </TabsContent>
-          <TabsContent value="diet">
-            <DietGeneratorPage />
-          </TabsContent>
-        </Tabs>
+        <>
+            <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>Weekly AI Usage</AlertTitle>
+                <AlertDescription>
+                    You have <strong>{usagesLeft} of 6</strong> AI generations remaining this week. The count will reset in 7 days after your first use.
+                </AlertDescription>
+            </Alert>
+
+            <Tabs defaultValue="workout" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="workout">Workout Generator</TabsTrigger>
+                <TabsTrigger value="diet">Diet Generator</TabsTrigger>
+            </TabsList>
+            <TabsContent value="workout">
+                <WorkoutGeneratorPage />
+            </TabsContent>
+            <TabsContent value="diet">
+                <DietGeneratorPage />
+            </TabsContent>
+            </Tabs>
+        </>
       )}
     </div>
   );
