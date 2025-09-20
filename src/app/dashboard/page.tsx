@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -36,6 +37,11 @@ type Meal = {
   id: number;
   name: string;
   calories: number;
+  macros?: {
+    protein: string;
+    carbs: string;
+    fat: string;
+  };
 };
 
 const mealCategories = [
@@ -47,6 +53,11 @@ const mealCategories = [
 
 const CALORIE_GOAL = 2458;
 const WORKOUT_BURN_CALORIES = 350; // default calories burned per workout
+const MACRO_GOALS = {
+    carbs: 307,
+    protein: 123,
+    fat: 82,
+};
 
 
 export default function DashboardPage() {
@@ -58,6 +69,7 @@ export default function DashboardPage() {
 
     const [eatenCalories, setEatenCalories] = useState(0);
     const [burnedCalories, setBurnedCalories] = useState(0);
+    const [macros, setMacros] = useState({ carbs: 0, protein: 0, fat: 0 });
     const user = { displayName: 'Fitness Pro', photoURL: 'https://placehold.co/128x128.png' };
 
 
@@ -74,13 +86,30 @@ export default function DashboardPage() {
           setWaterGlasses(JSON.parse(savedWater));
         }
 
-        // --- Calorie Calculation Logic ---
-        const calculateCalories = () => {
-            // Eaten calories from meals
+        // --- Calorie & Macro Calculation Logic ---
+        const calculateNutrition = () => {
             const savedMeals = localStorage.getItem("dailyMeals");
             const meals: Meal[] = savedMeals ? JSON.parse(savedMeals) : [];
-            const totalEaten = meals.reduce((acc, meal) => acc + meal.calories, 0);
+            
+            let totalEaten = 0;
+            const totalMacros = { carbs: 0, protein: 0, fat: 0 };
+
+            meals.forEach(meal => {
+                totalEaten += meal.calories;
+                if (meal.macros) {
+                    totalMacros.protein += parseFloat(meal.macros.protein) || 0;
+                    totalMacros.carbs += parseFloat(meal.macros.carbs) || 0;
+                    totalMacros.fat += parseFloat(meal.macros.fat) || 0;
+                } else {
+                    // Assign default macro values if not present
+                    totalMacros.protein += 15; // default
+                    totalMacros.carbs += 20; // default
+                    totalMacros.fat += 10; // default
+                }
+            });
+
             setEatenCalories(totalEaten);
+            setMacros(totalMacros);
 
             // Burned calories from workouts
             const savedWorkouts = localStorage.getItem("completedWorkouts");
@@ -91,11 +120,11 @@ export default function DashboardPage() {
             setBurnedCalories(totalBurned);
         };
         
-        calculateCalories();
+        calculateNutrition();
 
         // Listen for storage changes to update calories
         const handleStorageChange = () => {
-            calculateCalories();
+            calculateNutrition();
             const newSavedWater = localStorage.getItem('waterGlasses');
             if (newSavedWater) {
               setWaterGlasses(JSON.parse(newSavedWater));
@@ -152,6 +181,10 @@ export default function DashboardPage() {
     const caloriesLeft = CALORIE_GOAL - eatenCalories + burnedCalories;
     const eatenProgress = (eatenCalories / CALORIE_GOAL) * 100;
     const burnedProgress = (burnedCalories / CALORIE_GOAL) * 100;
+
+    const carbProgress = (macros.carbs / MACRO_GOALS.carbs) * 100;
+    const proteinProgress = (macros.protein / MACRO_GOALS.protein) * 100;
+    const fatProgress = (macros.fat / MACRO_GOALS.fat) * 100;
 
   return (
     <div className="w-full flex flex-col font-sans pb-24">
@@ -289,18 +322,18 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div>
                             <p className="font-semibold">Carbs</p>
-                            <Progress value={0} className="mt-2 h-1"/>
-                            <p className="text-sm text-muted-foreground mt-1">0/307g</p>
+                            <Progress value={carbProgress} className="mt-2 h-1"/>
+                            <p className="text-sm text-muted-foreground mt-1">{Math.round(macros.carbs)}/{MACRO_GOALS.carbs}g</p>
                         </div>
                         <div>
                             <p className="font-semibold">Protein</p>
-                            <Progress value={0} className="mt-2 h-1"/>
-                            <p className="text-sm text-muted-foreground mt-1">0/123g</p>
+                            <Progress value={proteinProgress} className="mt-2 h-1"/>
+                            <p className="text-sm text-muted-foreground mt-1">{Math.round(macros.protein)}/{MACRO_GOALS.protein}g</p>
                         </div>
                         <div>
                             <p className="font-semibold">Fat</p>
-                            <Progress value={0} className="mt-2 h-1"/>
-                            <p className="text-sm text-muted-foreground mt-1">0/82g</p>
+                            <Progress value={fatProgress} className="mt-2 h-1"/>
+                            <p className="text-sm text-muted-foreground mt-1">{Math.round(macros.fat)}/{MACRO_GOALS.fat}g</p>
                         </div>
                     </div>
                 </CardContent>
@@ -408,3 +441,5 @@ export default function DashboardPage() {
       )}
     </div>
   );
+
+    
