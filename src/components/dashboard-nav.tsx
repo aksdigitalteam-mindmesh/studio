@@ -19,14 +19,14 @@ export default function DashboardNav() {
 
   return (
     <>
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-40 h-20 bg-background rounded-t-[100%] z-40 pointer-events-none" />
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-32 h-16 bg-background rounded-t-[100%] z-40 pointer-events-none" />
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-sm">
         <div className="grid h-16 grid-cols-3 items-center justify-around">
           {navLinks.map((link, index) => {
             const isActive = (pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href)));
             if (index === middleIndex) {
               return (
-                <div key={link.href} className="relative flex justify-center">
+                <div key={link.href} className="relative flex justify-center" style={{ transform: 'translateX(100px)'}}>
                    <Link href={link.href}>
                     <div className={cn(
                       "absolute -top-10 flex h-20 w-20 items-center justify-center rounded-full border-4 border-background transition-all duration-300",
