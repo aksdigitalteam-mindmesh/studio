@@ -16,7 +16,6 @@ import { useToast } from '@/hooks/use-toast';
 import { PremiumBadge } from '@/components/premium-badge';
 import { usePremiumStatus } from '@/hooks/use-premium-status';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { FormControl, FormItem } from '@/components/ui/form';
 
 function ProfilePageContent() {
   const { toast } = useToast();
@@ -175,18 +174,14 @@ function ProfilePageContent() {
               <span className="font-medium">Gender</span>
             </div>
             <RadioGroup value={gender} onValueChange={setGender} className="flex gap-4">
-                <FormItem className="flex items-center space-x-2 space-y-0">
-                    <FormControl>
-                        <RadioGroupItem value="male" id="male" />
-                    </FormControl>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="male" id="male" />
                     <Label htmlFor="male" className="font-normal">Male</Label>
-                </FormItem>
-                <FormItem className="flex items-center space-x-2 space-y-0">
-                    <FormControl>
-                        <RadioGroupItem value="female" id="female" />
-                    </FormControl>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="female" id="female" />
                     <Label htmlFor="female" className="font-normal">Female</Label>
-                </FormItem>
+                </div>
             </RadioGroup>
           </div>
           <div className="flex items-center justify-between">
@@ -316,5 +311,3 @@ export default function ProfilePage() {
         </Suspense>
     )
 }
-
-    
