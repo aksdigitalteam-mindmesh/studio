@@ -89,10 +89,13 @@ export default {
           },
         },
         'pulse-shadow': {
-          '0%, 100%': {
-            'box-shadow': '0 0 0 0 hsl(var(--primary) / 0.7)',
+          '0%': {
+            'box-shadow': '0 0 0 5px hsl(var(--primary) / 0.4)',
           },
-          '50%': {
+          '75%': {
+            'box-shadow': '0 0 0 12px hsl(var(--primary) / 0)',
+          },
+          '100%': {
             'box-shadow': '0 0 0 12px hsl(var(--primary) / 0)',
           },
         },
@@ -100,7 +103,7 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'pulse-shadow': 'pulse-shadow 4s infinite',
+        'pulse-shadow': 'pulse-shadow 3s ease-out',
       },
     },
   },
