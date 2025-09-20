@@ -19,7 +19,6 @@ export default function DashboardNav() {
 
   return (
     <>
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-24 h-12 bg-background rounded-t-[100%] z-40 pointer-events-none" />
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-sm">
         <div className="grid h-16 grid-cols-3 items-center justify-around">
           {navLinks.map((link, index) => {
@@ -29,10 +28,10 @@ export default function DashboardNav() {
                 <div key={link.href} className="relative flex justify-center">
                    <Link href={link.href}>
                     <div className={cn(
-                      "absolute -top-10 flex h-20 w-20 items-center justify-center rounded-full border-4 border-background transition-all duration-300",
+                      "absolute -top-8 flex h-16 w-16 items-center justify-center rounded-full border-4 border-background transition-all duration-300",
                        isActive ? "bg-primary text-primary-foreground shadow-[0_0_15px_2px] shadow-primary/70" : "bg-muted text-muted-foreground"
                     )}>
-                      <link.icon className="h-8 w-8" />
+                      <link.icon className="h-7 w-7" />
                     </div>
                    </Link>
                 </div>
