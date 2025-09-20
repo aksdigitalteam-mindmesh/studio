@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { format, addDays, subDays, isToday, isYesterday, startOfToday } from 'date-fns';
 import { WaterGlass } from "@/components/water-glass";
+import { useAuth } from "@/hooks/use-auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
 type Exercise = {
@@ -49,6 +51,7 @@ const WORKOUT_BURN_CALORIES = 350; // default calories burned per workout
 
 
 export default function DashboardPage() {
+    const { user } = useAuth();
     const [waterGlasses, setWaterGlasses] = useState(Array(8).fill(false));
     const [isClient, setIsClient] = useState(false);
     const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
@@ -156,12 +159,22 @@ export default function DashboardPage() {
        <div className="relative text-primary-foreground bg-gradient-to-r from-primary to-green-400">
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/0" />
         <div className="relative z-10">
-          <header className="flex items-center justify-end p-4">
+          <header className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-2">
+                <Avatar className="h-10 w-10 border-2 border-white/50">
+                  <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || ''} />
+                  <AvatarFallback><User /></AvatarFallback>
+                </Avatar>
+                <div>
+                    <p className="text-xs">Welcome back,</p>
+                    <p className="font-bold">{user?.displayName?.split(' ')[0] || 'User'}</p>
+                </div>
+            </div>
             <div className="flex items-center gap-4">
               <Link href="/dashboard/profile">
-                <User className="cursor-pointer" />
+                <Button variant="ghost" size="icon"><User className="cursor-pointer" /></Button>
               </Link>
-              <Bell />
+              <Button variant="ghost" size="icon"><Bell /></Button>
             </div>
           </header>
 
@@ -308,7 +321,7 @@ export default function DashboardPage() {
                 <CardHeader className="flex flex-row items-center justify-between p-4">
                     <div className="flex flex-col">
                         <CardTitle className="text-lg">Water</CardTitle>
-                        <CardDescription>{isClient ? `${filledGlasses} / ${waterGlasses.length} glasses` : 'Loading...'}</CardDescription>
+                        {isClient && <CardDescription>{`${filledGlasses} / ${waterGlasses.length} glasses`}</CardDescription>}
                     </div>
                     <Button variant="ghost" size="icon"><MoreVertical /></Button>
                 </CardHeader>

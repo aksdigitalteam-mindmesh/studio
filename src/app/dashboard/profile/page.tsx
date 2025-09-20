@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, ShoppingCart, Sparkles, Loader2 } from 'lucide-react';
+import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, ShoppingCart, Sparkles, Loader2, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -16,10 +16,12 @@ import { useToast } from '@/hooks/use-toast';
 import { PremiumBadge } from '@/components/premium-badge';
 import { usePremiumStatus } from '@/hooks/use-premium-status';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useAuth } from '@/hooks/use-auth';
 
 function ProfilePageContent() {
   const { toast } = useToast();
-  const { isPremium, isLoading } = usePremiumStatus();
+  const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
+  const { user, signOutUser, loading: isAuthLoading } = useAuth();
 
   const [gender, setGender] = useState(() => {
     if (typeof window === 'undefined') return 'male';
@@ -127,16 +129,16 @@ function ProfilePageContent() {
   }, [scheduleNotification]);
 
 
-  const user = {
-    name: 'Alex Doe',
-    email: 'alex.doe@example.com',
-    avatar: 'https://placehold.co/128x128.png',
+  const userData = {
+    name: user?.displayName || 'Fitness Enthusiast',
+    email: user?.email || 'No email found',
+    avatar: user?.photoURL || 'https://placehold.co/128x128.png',
     age: 28,
     height: '175 cm',
     weight: '72 kg',
   };
   
-  if (isLoading) {
+  if (isPremiumLoading || isAuthLoading) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -148,14 +150,14 @@ function ProfilePageContent() {
     <div className="space-y-8 p-4 md:p-8 pb-24">
       <div className="flex flex-col items-center space-y-4">
         <Avatar className="h-32 w-32 border-4 border-primary/50">
-          <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="person portrait" />
+          <AvatarImage src={userData.avatar} alt={userData.name} data-ai-hint="person portrait" />
           <AvatarFallback>
             <User className="h-16 w-16" />
           </AvatarFallback>
         </Avatar>
         <div className="text-center">
-          <h1 className="text-3xl font-bold font-headline">{user.name}</h1>
-          <p className="text-muted-foreground">{user.email}</p>
+          <h1 className="text-3xl font-bold font-headline">{userData.name}</h1>
+          <p className="text-muted-foreground">{userData.email}</p>
         </div>
         <Badge variant={isPremium ? 'default' : 'secondary'} className={isPremium ? 'bg-gradient-to-r from-accent to-orange-400 text-accent-foreground' : ''}>
           {isPremium ? <Crown className="mr-2 h-4 w-4" /> : <Shield className="mr-2 h-4 w-4" />}
@@ -189,21 +191,21 @@ function ProfilePageContent() {
               <Cake className="h-5 w-5" />
               <span className="font-medium">Age</span>
             </div>
-            <span className="font-semibold">{user.age}</span>
+            <span className="font-semibold">{userData.age}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-muted-foreground">
               <Ruler className="h-5 w-5" />
               <span className="font-medium">Height</span>
             </div>
-            <span className="font-semibold">{user.height}</span>
+            <span className="font-semibold">{userData.height}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-muted-foreground">
               <Weight className="h-5 w-5" />
               <span className="font-medium">Weight</span>
             </div>
-            <span className="font-semibold">{user.weight}</span>
+            <span className="font-semibold">{userData.weight}</span>
           </div>
         </CardContent>
       </Card>
@@ -288,10 +290,14 @@ function ProfilePageContent() {
           <CardHeader>
               <CardTitle>Account Settings</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="grid gap-4">
             <Button variant="outline" className="w-full justify-between">
                 <span>Manage Subscription</span>
                 <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+            </Button>
+            <Button variant="destructive" className="w-full justify-between" onClick={signOutUser}>
+                <span>Sign Out</span>
+                <LogOut className="h-4 w-4" />
             </Button>
           </CardContent>
       </Card>
