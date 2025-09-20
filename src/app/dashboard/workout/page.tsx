@@ -267,7 +267,7 @@ function HubView({ setView }: { setView: (view: View) => void }) {
         setIsMounted(true);
     }, []);
 
-    const bubbleCommonClass = "w-32 h-32 rounded-full flex flex-col items-center justify-center text-primary-foreground shadow-lg transition-opacity duration-1000";
+    const bubbleCommonClass = "w-32 h-32 rounded-full flex flex-col items-center justify-center text-primary-foreground shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl";
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] text-center overflow-hidden">
@@ -281,7 +281,7 @@ function HubView({ setView }: { setView: (view: View) => void }) {
                     className={cn(
                         bubbleCommonClass,
                         "absolute bg-gradient-to-br from-purple-500 to-indigo-600 hover:shadow-purple-400/40 hover:scale-105",
-                        isMounted ? "opacity-100" : "opacity-0"
+                        isMounted ? "opacity-100 -translate-y-4" : "opacity-0"
                     )}
                     style={{ top: '0', left: '50%', transform: 'translateX(-50%)', transitionDelay: '200ms' }}
                 >
@@ -294,9 +294,9 @@ function HubView({ setView }: { setView: (view: View) => void }) {
                     className={cn(
                         bubbleCommonClass,
                         "absolute bg-gradient-to-br from-green-400 to-emerald-500 hover:shadow-green-400/40 hover:scale-105",
-                         isMounted ? "opacity-100" : "opacity-0"
+                         isMounted ? "opacity-100 translate-y-4" : "opacity-0"
                     )}
-                    style={{ bottom: '0', left: '10%', transitionDelay: '400ms' }}
+                    style={{ bottom: '0', left: '0', transitionDelay: '400ms' }}
                 >
                     <BarChart3 className="h-10 w-10" />
                     <span className="font-bold mt-2 text-sm">Progress</span>
@@ -307,9 +307,9 @@ function HubView({ setView }: { setView: (view: View) => void }) {
                     className={cn(
                         bubbleCommonClass,
                         "absolute bg-gradient-to-br from-blue-500 to-cyan-500 hover:shadow-blue-400/40 hover:scale-105",
-                        isMounted ? "opacity-100" : "opacity-0"
+                        isMounted ? "opacity-100 translate-y-4" : "opacity-0"
                     )}
-                    style={{ bottom: '0', right: '10%', transitionDelay: '600ms' }}
+                    style={{ bottom: '0', right: '0', transitionDelay: '600ms' }}
                 >
                     <Dumbbell className="h-10 w-10" />
                     <span className="font-bold mt-2 text-sm">Workout</span>
