@@ -7,12 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
 import type { Muscle } from "@/components/muscle-fatigue-diagram";
 import { Hand, Eye, Loader2, BrainCircuit } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 
 type FatigueData = Partial<Record<Muscle, number>>;
@@ -56,9 +52,7 @@ const fatigueLegend = [
 
 export default function FatigueTrackerPage() {
   const [fatigueData, setFatigueData] = useState<FatigueData>({});
-  const [gender, setGender] = useState<'male' | 'female'>('male');
   const [isClient, setIsClient] = useState(false);
-  const [selectedMuscle, setSelectedMuscle] = useState<Muscle | null>(null);
 
   useEffect(() => {
     // This effect runs only on the client-side
@@ -71,10 +65,6 @@ export default function FatigueTrackerPage() {
         setFatigueData(initialFatigueData);
     }
     
-    const savedGender = localStorage.getItem(GENDER_STORAGE_KEY) as 'male' | 'female' | null;
-    if(savedGender) {
-        setGender(savedGender);
-    }
   }, []);
 
   useEffect(() => {
@@ -85,15 +75,6 @@ export default function FatigueTrackerPage() {
 
   const highFatigueMuscle = isClient ? Object.entries(fatigueData).find(([, value]) => value > 70) : undefined;
   
-  const handleMuscleClick = (muscle: Muscle) => {
-    setSelectedMuscle(muscle);
-  };
-  
-  const handlePopoverClose = (open: boolean) => {
-    if(!open) {
-        setSelectedMuscle(null);
-    }
-  }
 
   const getProgressColor = (value: number) => {
     if (value >= 80) return "bg-red-500";
@@ -120,63 +101,7 @@ export default function FatigueTrackerPage() {
         </Alert>
       )}
       
-      <div className="grid gap-8 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-             <div className="flex justify-between items-center">
-                <div>
-                    <CardTitle>Muscle Recovery Status</CardTitle>
-                    <CardDescription>Tap a muscle for details. Body type from profile.</CardDescription>
-                </div>
-             </div>
-          </CardHeader>
-          <CardContent>
-            {!isClient ? (
-             <div className="flex justify-center items-center h-full min-h-[450px]">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-             </div>
-            ) : (
-             <Popover open={!!selectedMuscle} onOpenChange={handlePopoverClose}>
-                 <PopoverTrigger asChild>
-                    <div>
-                        <MuscleFatigueDiagram 
-                            fatiguedMuscles={fatigueData} 
-                            gender={gender}
-                            onMuscleClick={handleMuscleClick}
-                            selectedMuscle={selectedMuscle}
-                        />
-                    </div>
-                 </PopoverTrigger>
-                 {selectedMuscle && (
-                    <PopoverContent className="w-80">
-                        <div className="grid gap-4">
-                            <div className="space-y-2">
-                                <h4 className="font-medium leading-none">{muscleGroupDetails[selectedMuscle].name}</h4>
-                                <p className="text-sm text-muted-foreground">
-                                    Current fatigue level and recovery suggestions.
-                                </p>
-                            </div>
-                            <div className="grid gap-2">
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label>Fatigue</Label>
-                                    <Progress value={fatigueData[selectedMuscle]} indicatorClassName={getProgressColor(fatigueData[selectedMuscle] || 0)} className="col-span-2 h-2" />
-                                </div>
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label>Last Trained</Label>
-                                    <span className="col-span-2 text-sm text-muted-foreground">{muscleGroupDetails[selectedMuscle].lastTrained}</span>
-                                </div>
-                            </div>
-                            <Button asChild size="sm">
-                               <Link href="/dashboard/programs"><BrainCircuit className="mr-2 h-4 w-4" /> AI Recovery Suggestion</Link>
-                            </Button>
-                        </div>
-                    </PopoverContent>
-                 )}
-             </Popover>
-            )}
-          </CardContent>
-        </Card>
-        
+      <div className="grid gap-8 lg:grid-cols-1">
         <div className="space-y-4">
              <Card>
                 <CardHeader>
@@ -219,5 +144,3 @@ export default function FatigueTrackerPage() {
     </div>
   );
 }
-
-    
