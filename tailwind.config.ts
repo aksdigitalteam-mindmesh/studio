@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -89,21 +90,19 @@ export default {
           },
         },
         'pulse-shadow': {
-          '0%': {
-            'box-shadow': '0 0 0 5px hsl(var(--primary) / 0.4)',
+          '0%, 100%': {
+            'box-shadow': '0 0 0 0 hsl(var(--primary) / 0)',
           },
-          '75%': {
-            'box-shadow': '0 0 0 12px hsl(var(--primary) / 0)',
-          },
-          '100%': {
-            'box-shadow': '0 0 0 12px hsl(var(--primary) / 0)',
+          '50%': {
+            'box-shadow': '0 0 0 10px hsl(var(--primary) / 0.4)',
           },
         },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'pulse-shadow': 'pulse-shadow 3s ease-out',
+        'pulse-shadow': 'pulse-shadow 3s 1',
+        'pulse': 'pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },

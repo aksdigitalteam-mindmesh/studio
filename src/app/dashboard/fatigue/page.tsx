@@ -7,15 +7,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Muscle } from "@/components/muscle-fatigue-diagram";
-import { Hand, Loader2, BrainCircuit, Lightbulb } from "lucide-react";
+import { Hand, Loader2, BrainCircuit, Lightbulb, Droplets, MoreVertical } from "lucide-react";
 import { generateRecoveryTips } from "@/ai/flows/generate-recovery-tips";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { WaterGlass } from "@/components/water-glass";
+
 
 type FatigueData = Partial<Record<Muscle, number>>;
 type RecoveryTip = { title: string; description: string };
 
 const FATIGUE_STORAGE_KEY = 'muscleFatigueData';
+const WATER_STORAGE_KEY = 'waterGlassesFatigue';
+const FATIGUE_NOTIFICATION_THRESHOLD = 80;
 
 const initialFatigueData: FatigueData = {
   shoulders: 35,
@@ -58,6 +62,7 @@ export default function FatigueTrackerPage() {
   const [recoveryTips, setRecoveryTips] = useState<RecoveryTip[] | null>(null);
   const [isTipsDialogOpen, setIsTipsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const [waterGlasses, setWaterGlasses] = useState(() => Array(8).fill(false));
 
   useEffect(() => {
     setIsClient(true);
@@ -67,17 +72,75 @@ export default function FatigueTrackerPage() {
         try {
             const parsedData = JSON.parse(savedFatigueData);
             setFatigueData(parsedData);
+            checkFatigueAndNotify(parsedData);
         } catch {
             setFatigueData(initialFatigueData);
         }
       } else {
         setFatigueData(initialFatigueData);
       }
-    }
+    };
+    
+    const loadWaterData = () => {
+        const savedWater = localStorage.getItem(WATER_STORAGE_KEY);
+        if (savedWater) {
+            setWaterGlasses(JSON.parse(savedWater));
+        }
+    };
+
     loadFatigueData();
-    window.addEventListener('storage', loadFatigueData);
-    return () => window.removeEventListener('storage', loadFatigueData);
+    loadWaterData();
+
+    window.addEventListener('storage', (event) => {
+        if (event.key === FATIGUE_STORAGE_KEY) {
+            loadFatigueData();
+        }
+        if (event.key === WATER_STORAGE_KEY) {
+            loadWaterData();
+        }
+    });
+
+    return () => {
+      window.removeEventListener('storage', loadFatigueData);
+      window.removeEventListener('storage', loadWaterData);
+    }
   }, []);
+
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem(WATER_STORAGE_KEY, JSON.stringify(waterGlasses));
+    }
+  }, [waterGlasses, isClient]);
+
+  const checkFatigueAndNotify = (currentFatigue: FatigueData) => {
+    const highFatigueMuscles = Object.entries(currentFatigue)
+      .filter(([, value]) => value >= FATIGUE_NOTIFICATION_THRESHOLD);
+
+    if (highFatigueMuscles.length > 0) {
+      if (Notification.permission === 'granted') {
+        const muscleName = muscleGroupDetails[highFatigueMuscles[0][0] as Muscle].name;
+        new Notification('High Fatigue Alert!', {
+          body: `Your ${muscleName} are at ${highFatigueMuscles[0][1]}% fatigue. Time to rest and recover!`,
+          icon: '/logo.svg'
+        });
+      }
+    }
+  };
+
+  const handleWaterClick = (index: number) => {
+    const newGlasses = [...waterGlasses];
+    const isFilling = !newGlasses[index];
+    for (let i = 0; i < newGlasses.length; i++) {
+      if (isFilling) {
+        if (i <= index) newGlasses[i] = true;
+      } else {
+          if (i >= index) newGlasses[i] = false;
+      }
+    }
+    setWaterGlasses(newGlasses);
+  };
+  const filledGlasses = waterGlasses.filter(Boolean).length;
+
 
   const handleGetRecoveryTips = () => {
     const mostFatigued = Object.entries(fatigueData)
@@ -130,6 +193,24 @@ export default function FatigueTrackerPage() {
       
       <div className="grid gap-8 lg:grid-cols-1">
         <div className="space-y-4">
+
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between p-4">
+                    <div className="flex flex-col">
+                        <CardTitle className="text-lg flex items-center gap-2"><Droplets className="text-primary"/>Water Intake</CardTitle>
+                        <CardDescription>{filledGlasses} / {waterGlasses.length} glasses</CardDescription>
+                    </div>
+                    <Button variant="ghost" size="icon"><MoreVertical /></Button>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+                    {waterGlasses.map((filled, index) => (
+                        <WaterGlass key={index} filled={filled} onClick={() => handleWaterClick(index)} />
+                    ))}
+                    </div>
+                </CardContent>
+            </Card>
+
              <Card>
                 <CardHeader>
                     <CardTitle>Fatigue Legend</CardTitle>
