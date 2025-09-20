@@ -179,6 +179,17 @@ export default function DashboardPage() {
         <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-b from-green-400 to-primary text-primary-foreground">
           <div className="relative w-56 h-56">
             <svg className="w-full h-full" viewBox="0 0 36 36">
+              <defs>
+                  <linearGradient id="eatenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style={{stopColor: "rgb(255, 0, 0)"}} />
+                      <stop offset="50%" style={{stopColor: "rgb(255, 165, 0)"}} />
+                      <stop offset="100%" style={{stopColor: "rgb(0, 0, 255)"}} />
+                  </linearGradient>
+                  <linearGradient id="burnedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style={{stopColor: "rgb(0, 0, 255)"}} />
+                      <stop offset="100%" style={{stopColor: "rgb(128, 0, 128)"}} />
+                  </linearGradient>
+              </defs>
               <path
                 className="text-white/30"
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -186,7 +197,7 @@ export default function DashboardPage() {
                 strokeWidth="2"
               />
                <path
-                className="text-white"
+                stroke="url(#eatenGradient)"
                 strokeDasharray={`${eatenProgress}, 100`}
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
@@ -195,7 +206,7 @@ export default function DashboardPage() {
                 transform="rotate(-90 18 18)"
               />
               <path
-                className="text-orange-400"
+                stroke="url(#burnedGradient)"
                 strokeDasharray={`${burnedProgress}, 100`}
                 d="M18 5.0845 a 12.9155 12.9155 0 0 1 0 25.831 a 12.9155 12.9155 0 0 1 0 -25.831"
                 fill="none"
@@ -392,6 +403,8 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
 
