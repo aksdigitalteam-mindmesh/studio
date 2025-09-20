@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { format, addDays, subDays, isToday, isYesterday, startOfToday } from 'date-fns';
 import { WaterGlass } from "@/components/water-glass";
-import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
@@ -51,7 +50,6 @@ const WORKOUT_BURN_CALORIES = 350; // default calories burned per workout
 
 
 export default function DashboardPage() {
-    const { user } = useAuth();
     const [waterGlasses, setWaterGlasses] = useState(Array(8).fill(false));
     const [isClient, setIsClient] = useState(false);
     const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
@@ -60,6 +58,8 @@ export default function DashboardPage() {
 
     const [eatenCalories, setEatenCalories] = useState(0);
     const [burnedCalories, setBurnedCalories] = useState(0);
+    const user = { displayName: 'Fitness Pro', photoURL: 'https://placehold.co/128x128.png' };
+
 
     useEffect(() => {
         setIsClient(true);

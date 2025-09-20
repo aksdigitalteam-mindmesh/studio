@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, ShoppingCart, Sparkles, Loader2, LogOut } from 'lucide-react';
+import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, ShoppingCart, Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -16,12 +16,10 @@ import { useToast } from '@/hooks/use-toast';
 import { PremiumBadge } from '@/components/premium-badge';
 import { usePremiumStatus } from '@/hooks/use-premium-status';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useAuth } from '@/hooks/use-auth';
 
 function ProfilePageContent() {
   const { toast } = useToast();
   const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
-  const { user, signOutUser, loading: isAuthLoading } = useAuth();
 
   const [gender, setGender] = useState(() => {
     if (typeof window === 'undefined') return 'male';
@@ -130,15 +128,15 @@ function ProfilePageContent() {
 
 
   const userData = {
-    name: user?.displayName || 'Fitness Enthusiast',
-    email: user?.email || 'No email found',
-    avatar: user?.photoURL || 'https://placehold.co/128x128.png',
+    name: 'Fitness Enthusiast',
+    email: 'user@example.com',
+    avatar: 'https://placehold.co/128x128.png',
     age: 28,
     height: '175 cm',
     weight: '72 kg',
   };
   
-  if (isPremiumLoading || isAuthLoading) {
+  if (isPremiumLoading) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -294,10 +292,6 @@ function ProfilePageContent() {
             <Button variant="outline" className="w-full justify-between">
                 <span>Manage Subscription</span>
                 <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
-            </Button>
-            <Button variant="destructive" className="w-full justify-between" onClick={signOutUser}>
-                <span>Sign Out</span>
-                <LogOut className="h-4 w-4" />
             </Button>
           </CardContent>
       </Card>
