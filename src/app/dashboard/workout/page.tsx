@@ -267,7 +267,7 @@ function HubView({ setView }: { setView: (view: View) => void }) {
         setIsMounted(true);
     }, []);
 
-    const bubbleCommonClass = "w-40 h-40 rounded-full flex flex-col items-center justify-center text-primary-foreground shadow-lg transition-opacity duration-1000";
+    const bubbleCommonClass = "w-32 h-32 rounded-full flex flex-col items-center justify-center text-primary-foreground shadow-lg transition-opacity duration-1000";
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] text-center overflow-hidden">
@@ -275,7 +275,7 @@ function HubView({ setView }: { setView: (view: View) => void }) {
             <p className={cn("text-muted-foreground mb-12 transition-opacity duration-500 delay-200", isMounted ? "opacity-100" : "opacity-0")}>
                 Track your workouts and monitor your progress.
             </p>
-            <div className="relative w-full max-w-sm h-80 flex items-center justify-center">
+            <div className="relative w-full max-w-xs h-72 flex items-center justify-center">
                  <Link
                     href="/dashboard/programs"
                     className={cn(
@@ -285,8 +285,8 @@ function HubView({ setView }: { setView: (view: View) => void }) {
                     )}
                     style={{ top: '0', left: '50%', transform: 'translateX(-50%)', transitionDelay: '200ms' }}
                 >
-                    <BrainCircuit className="h-12 w-12" />
-                    <span className="font-bold mt-2">AI Coach</span>
+                    <BrainCircuit className="h-10 w-10" />
+                    <span className="font-bold mt-2 text-sm">AI Coach</span>
                 </Link>
 
                 <button
@@ -296,10 +296,10 @@ function HubView({ setView }: { setView: (view: View) => void }) {
                         "absolute bg-gradient-to-br from-green-400 to-emerald-500 hover:shadow-green-400/40 hover:scale-105",
                          isMounted ? "opacity-100" : "opacity-0"
                     )}
-                    style={{ bottom: '0', left: '0', transitionDelay: '400ms' }}
+                    style={{ bottom: '0', left: '10%', transitionDelay: '400ms' }}
                 >
-                    <BarChart3 className="h-12 w-12" />
-                    <span className="font-bold mt-2">Progress</span>
+                    <BarChart3 className="h-10 w-10" />
+                    <span className="font-bold mt-2 text-sm">Progress</span>
                 </button>
 
                 <button
@@ -309,10 +309,10 @@ function HubView({ setView }: { setView: (view: View) => void }) {
                         "absolute bg-gradient-to-br from-blue-500 to-cyan-500 hover:shadow-blue-400/40 hover:scale-105",
                         isMounted ? "opacity-100" : "opacity-0"
                     )}
-                    style={{ bottom: '0', right: '0', transitionDelay: '600ms' }}
+                    style={{ bottom: '0', right: '10%', transitionDelay: '600ms' }}
                 >
-                    <Dumbbell className="h-12 w-12" />
-                    <span className="font-bold mt-2">Workout</span>
+                    <Dumbbell className="h-10 w-10" />
+                    <span className="font-bold mt-2 text-sm">Workout</span>
                 </button>
             </div>
         </div>
@@ -351,5 +351,3 @@ function ActivityPage() {
 export default function WorkoutPage() {
     return <ActivityPage />
 }
-
-    
