@@ -1,0 +1,32 @@
+mutation CreateDietPlan ($name: String!, $userId: UUID!, $calorieTarget: Int, $description: String) @auth(level: USER) {
+  dietPlan_insert(data: {name: $name, userId: $userId, calorieTarget: $calorieTarget, description: $description}) {
+    id
+  }
+}
+
+query GetMeals @auth(level: PUBLIC) {
+  meals {
+    id
+    name
+    description
+    ingredients
+    mealType
+  }
+}
+
+mutation AddExerciseToWorkoutPlan($workoutPlanId: UUID!, $exerciseId: UUID!, $duration: Int, $order: Int!, $reps: Int!, $sets: Int!, $weight: Float) @auth(level: USER) {
+  workoutPlanExercise_insert(data: {workoutPlanId: $workoutPlanId, exerciseId: $exerciseId, duration: $duration, order: $order, reps: $reps, sets: $sets, weight: $weight}) {
+    workoutPlanId
+    exerciseId
+  }
+}
+
+query ListWorkoutPlansForUser($userId: UUID!) @auth(level: USER) {
+  workoutPlans(where: {userId: {eq: $userId}}) {
+    id
+    name
+    description
+    goal
+    createdAt
+  }
+}

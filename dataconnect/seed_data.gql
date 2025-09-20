@@ -1,0 +1,42 @@
+mutation SeedData @auth(level: USER) {
+  user_upsertMany(data: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      displayName: "Bob User",
+      createdAt: "2024-04-29T12:00:00Z",
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      displayName: "Alice User",
+      createdAt: "2024-04-29T13:00:00Z",
+    }
+  ])
+  exercise_upsertMany(data: [
+    {
+      id: "a5f70b77-7f50-4410-932f-ef98fbc1889f",
+      name: "Bench Press",
+      muscleGroup: "Chest",
+      type: "Strength",
+    },
+    {
+      id: "8e1405c4-3c18-4746-b09c-6911889c64b2",
+      name: "Squats",
+      muscleGroup: "Legs",
+      type: "Strength",
+    }
+  ])
+  meal_upsertMany(data: [
+    {
+      id: "a7b58f9a-e5a4-4e3b-b956-4c9c8f520f56",
+      name: "Breakfast",
+      mealType: "Breakfast",
+      ingredients: "Eggs, toast, bacon",
+    },
+    {
+      id: "0147893b-92e3-42e8-a54f-6d0d96e7b528",
+      name: "Lunch",
+      mealType: "Lunch",
+      ingredients: "Salad, chicken, vegetables",
+    }
+  ])
+}
