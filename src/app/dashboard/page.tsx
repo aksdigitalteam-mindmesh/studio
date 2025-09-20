@@ -9,7 +9,7 @@ import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVerti
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { format, addDays, subDays, isToday, isYesterday } from 'date-fns';
+import { format, addDays, subDays, isToday, isYesterday, startOfToday } from 'date-fns';
 
 const WaterGlassComponent = ({ filled, onClick }: { filled: boolean, onClick: () => void }) => (
   <button onClick={onClick} className="relative w-16 h-20 bg-gray-200/50 dark:bg-gray-700/50 rounded-t-lg overflow-hidden flex items-center justify-center group">
@@ -47,12 +47,27 @@ type WorkoutPlan = {
   exercises: Exercise[];
 };
 
+type CompletedWorkout = {
+  title: string;
+  date: string;
+};
+
+type Meal = {
+  id: number;
+  name: string;
+  calories: number;
+};
+
 const mealCategories = [
   { name: 'Breakfast', recommended: '492 - 737', image: 'https://placehold.co/100x100.png', hint: 'juice glass' },
   { name: 'Lunch', recommended: '737 - 983', image: 'https://placehold.co/100x100.png', hint: 'salad bowl' },
   { name: 'Dinner', recommended: '737 - 983', image: 'https://placehold.co/100x100.png', hint: 'spaghetti plate' },
   { name: 'Snacks', recommended: '0 - 246', image: 'https://placehold.co/100x100.png', hint: 'banana fruit' },
 ];
+
+const CALORIE_GOAL = 2458;
+const WORKOUT_BURN_CALORIES = 350; // default calories burned per workout
+
 
 export default function DashboardPage() {
     const [waterGlasses, setWaterGlasses] = useState(() => {
@@ -64,11 +79,44 @@ export default function DashboardPage() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [currentDate, setCurrentDate] = useState(new Date());
 
+    const [eatenCalories, setEatenCalories] = useState(0);
+    const [burnedCalories, setBurnedCalories] = useState(0);
+
     useEffect(() => {
         const storedPlan = localStorage.getItem('latestWorkoutPlan');
         if (storedPlan) {
             setWorkoutPlan(JSON.parse(storedPlan));
         }
+
+        // --- Calorie Calculation Logic ---
+        const calculateCalories = () => {
+            // Eaten calories from meals
+            const savedMeals = localStorage.getItem("dailyMeals");
+            const meals: Meal[] = savedMeals ? JSON.parse(savedMeals) : [];
+            const totalEaten = meals.reduce((acc, meal) => acc + meal.calories, 0);
+            setEatenCalories(totalEaten);
+
+            // Burned calories from workouts
+            const savedWorkouts = localStorage.getItem("completedWorkouts");
+            const completedWorkouts: CompletedWorkout[] = savedWorkouts ? JSON.parse(savedWorkouts) : [];
+            const today = startOfToday();
+            const todayWorkouts = completedWorkouts.filter(workout => isToday(new Date(workout.date)));
+            const totalBurned = todayWorkouts.length * WORKOUT_BURN_CALORIES;
+            setBurnedCalories(totalBurned);
+        };
+        
+        calculateCalories();
+
+        // Listen for storage changes to update calories
+        const handleStorageChange = () => {
+            calculateCalories();
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
     }, []);
 
     useEffect(() => {
@@ -97,7 +145,7 @@ export default function DashboardPage() {
       { href: "/dashboard/calories", bg: "bg-red-100", image: "https://placehold.co/100x100.png", hint: "spaghetti plate", label: "Dinner" },
       { href: "/dashboard/calories", bg: "bg-yellow-100", image: "https://placehold.co/100x100.png", hint: "banana fruit", label: "Snacks" },
       { href: "/dashboard/workout", bg: "bg-purple-100", image: "https://placehold.co/100x100.png", hint: "person lifting weights", label: "Exercise" },
-      { href: "/dashboard/water", bg: "bg-sky-100", image: "https://placehold.co/100x100.png", hint: "water glass", label: "Water" },
+      { href: "/dashboard/calories", bg: "bg-sky-100", image: "https://placehold.co/100x100.png", hint: "water glass", label: "Water" },
     ];
 
     const nextDay = () => setCurrentDate(addDays(currentDate, 1));
@@ -108,6 +156,9 @@ export default function DashboardPage() {
       if (isYesterday(currentDate)) return `YESTERDAY, ${format(currentDate, 'dd MMM').toUpperCase()}`;
       return format(currentDate, 'EEEE, dd MMM').toUpperCase();
     })();
+
+    const caloriesLeft = CALORIE_GOAL - eatenCalories + burnedCalories;
+    const eatenProgress = (eatenCalories / CALORIE_GOAL) * 100;
 
   return (
     <div className="w-full flex flex-col font-sans pb-24">
@@ -133,19 +184,28 @@ export default function DashboardPage() {
                 fill="none"
                 strokeWidth="2"
               />
+               <path
+                className="text-white"
+                strokeDasharray={`${eatenProgress}, 100`}
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                strokeWidth="2"
+                strokeLinecap="round"
+                transform="rotate(-90 18 18)"
+              />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-5xl font-bold">2458</span>
+              <span className="text-5xl font-bold">{Math.round(caloriesLeft)}</span>
               <span className="text-sm tracking-wider">KCAL LEFT</span>
             </div>
           </div>
           <div className="flex justify-between w-full max-w-sm mt-4">
             <div className="text-center">
-              <p className="text-2xl font-bold">0</p>
+              <p className="text-2xl font-bold">{eatenCalories}</p>
               <p className="text-xs">EATEN</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold">0</p>
+              <p className="text-2xl font-bold">{burnedCalories}</p>
               <p className="text-xs">BURNED</p>
             </div>
           </div>
@@ -322,3 +382,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
