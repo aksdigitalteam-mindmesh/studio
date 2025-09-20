@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, LineChart, Dumbbell, User, Flame } from "lucide-react";
+import { Bot, LineChart, Dumbbell, User, Flame, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function DashboardNav() {
@@ -12,19 +12,19 @@ export default function DashboardNav() {
   const navLinks = [
     { href: "/dashboard", label: "Home", icon: Flame },
     { href: "/dashboard/workout", label: "Activity", icon: Dumbbell },
+    { href: "/dashboard/recipes", label: "Recipes", icon: Bookmark },
     { href: "/dashboard/fatigue", label: "Fatigue", icon: User },
   ];
 
   const middleIndex = Math.floor(navLinks.length / 2);
   const leftLinks = navLinks.slice(0, middleIndex);
-  const rightLinks = navLinks.slice(middleIndex + 1);
-  const middleLink = navLinks[middleIndex];
+  const rightLinks = navLinks.slice(middleIndex);
 
 
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background/95 backdrop-blur-sm">
-        <div className="grid h-full grid-cols-3 items-center">
+        <div className="grid h-full grid-cols-2 items-center">
             <div className="flex justify-around">
             {leftLinks.map((link) => {
                 const isActive = (pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href)));
@@ -42,17 +42,6 @@ export default function DashboardNav() {
                 </Link>
                 );
             })}
-            </div>
-
-             <div className="flex justify-center -mr-16">
-                <Link href={middleLink.href} className="relative">
-                    <div className={cn(
-                        "absolute -top-8 flex h-16 w-16 items-center justify-center rounded-full border-4 border-background transition-all duration-300",
-                        (pathname === middleLink.href || pathname.startsWith(middleLink.href)) ? "bg-primary text-primary-foreground shadow-[0_0_15px_2px] shadow-primary/70" : "bg-muted text-muted-foreground"
-                    )}>
-                        <middleLink.icon className="h-7 w-7" />
-                    </div>
-                </Link>
             </div>
 
             <div className="flex justify-around">
@@ -75,6 +64,16 @@ export default function DashboardNav() {
             </div>
         </div>
       </nav>
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50">
+        <Link href="/dashboard/programs" className="relative">
+            <div className={cn(
+                "absolute -top-8 flex h-16 w-16 items-center justify-center rounded-full border-4 border-background transition-all duration-300",
+                 pathname.startsWith("/dashboard/programs") ? "bg-primary text-primary-foreground shadow-[0_0_15px_2px] shadow-primary/70" : "bg-muted text-muted-foreground"
+            )}>
+                <Bot className="h-7 w-7" />
+            </div>
+        </Link>
+      </div>
     </>
   );
 }
