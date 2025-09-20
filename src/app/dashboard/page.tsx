@@ -359,7 +359,7 @@ export default function DashboardPage() {
       {/* Floating Action Button */}
       <div className="fixed bottom-24 right-6 z-50">
         <Button 
-          className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90 shadow-lg"
+          className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90 shadow-lg animate-pulse-shadow"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
             {isMenuOpen ? <X className="w-8 h-8"/> : <Plus className="w-8 h-8"/>}
@@ -407,11 +407,5 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
-
-    
-
-    
 
     

@@ -88,12 +88,23 @@ export default {
             height: '0',
           },
         },
+        'pulse-shadow': {
+          '0%, 100%': {
+            'box-shadow': '0 0 0 0 hsl(var(--primary) / 0.7)',
+          },
+          '50%': {
+            'box-shadow': '0 0 0 12px hsl(var(--primary) / 0)',
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'pulse-shadow': 'pulse-shadow 2.5s infinite',
       },
     },
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
+
+    
