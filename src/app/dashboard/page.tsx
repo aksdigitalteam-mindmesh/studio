@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -50,11 +49,8 @@ const WORKOUT_BURN_CALORIES = 350; // default calories burned per workout
 
 
 export default function DashboardPage() {
-    const [waterGlasses, setWaterGlasses] = useState(() => {
-        if (typeof window === 'undefined') return Array(8).fill(false);
-        const savedWater = localStorage.getItem('waterGlasses');
-        return savedWater ? JSON.parse(savedWater) : Array(8).fill(false);
-    });
+    const [waterGlasses, setWaterGlasses] = useState(Array(8).fill(false));
+    const [isClient, setIsClient] = useState(false);
     const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -63,9 +59,16 @@ export default function DashboardPage() {
     const [burnedCalories, setBurnedCalories] = useState(0);
 
     useEffect(() => {
+        setIsClient(true);
+
         const storedPlan = localStorage.getItem('latestWorkoutPlan');
         if (storedPlan) {
             setWorkoutPlan(JSON.parse(storedPlan));
+        }
+
+        const savedWater = localStorage.getItem('waterGlasses');
+        if (savedWater) {
+          setWaterGlasses(JSON.parse(savedWater));
         }
 
         // --- Calorie Calculation Logic ---
@@ -90,6 +93,10 @@ export default function DashboardPage() {
         // Listen for storage changes to update calories
         const handleStorageChange = () => {
             calculateCalories();
+            const newSavedWater = localStorage.getItem('waterGlasses');
+            if (newSavedWater) {
+              setWaterGlasses(JSON.parse(newSavedWater));
+            }
         };
 
         window.addEventListener('storage', handleStorageChange);
@@ -100,8 +107,10 @@ export default function DashboardPage() {
     }, []);
 
     useEffect(() => {
-        localStorage.setItem('waterGlasses', JSON.stringify(waterGlasses));
-    }, [waterGlasses]);
+        if(isClient) {
+            localStorage.setItem('waterGlasses', JSON.stringify(waterGlasses));
+        }
+    }, [waterGlasses, isClient]);
 
     const handleWaterClick = (index: number) => {
         const newGlasses = [...waterGlasses];
@@ -299,13 +308,13 @@ export default function DashboardPage() {
                 <CardHeader className="flex flex-row items-center justify-between p-4">
                     <div className="flex flex-col">
                         <CardTitle className="text-lg">Water</CardTitle>
-                        <CardDescription>{filledGlasses} / {waterGlasses.length} glasses</CardDescription>
+                        <CardDescription>{isClient ? `${filledGlasses} / ${waterGlasses.length} glasses` : 'Loading...'}</CardDescription>
                     </div>
                     <Button variant="ghost" size="icon"><MoreVertical /></Button>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                     <div className="grid grid-cols-4 gap-2">
-                    {waterGlasses.map((filled, index) => (
+                    {isClient && waterGlasses.map((filled, index) => (
                         <WaterGlass key={index} filled={filled} onClick={() => handleWaterClick(index)} />
                     ))}
                     </div>
@@ -386,4 +395,3 @@ export default function DashboardPage() {
       )}
     </div>
   );
-}
