@@ -21,7 +21,10 @@ const GenerateWorkoutPlanInputSchema = z.object({
     .describe('Desired workout intensity level.'),
   duration: z
     .number()
-    .describe('Preferred workout duration in minutes.'),
+    .describe('Preferred workout duration in minutes per session.'),
+  equipment: z
+    .enum(['with', 'without'])
+    .describe('Whether the user has access to gym equipment.'),
   bodyFocus: z
     .string()
     .optional()
@@ -37,10 +40,17 @@ const ExerciseSchema = z.object({
   videoUrl: z.string().describe('URL of an video showing the exercise.'),
 });
 
+const DailyWorkoutSchema = z.object({
+    day: z.number().describe("The day of the week for the workout (1-7)."),
+    title: z.string().describe("A title for the day's workout (e.g., 'Upper Body Strength', 'Rest Day')."),
+    description: z.string().describe("A brief description of the day's focus."),
+    exercises: z.array(ExerciseSchema).optional().describe('A list of personalized exercises for the day. Empty for rest days.'),
+});
+
 const GenerateWorkoutPlanOutputSchema = z.object({
-  title: z.string().describe("A catchy and motivating title for the workout plan."),
-  description: z.string().describe("A brief, encouraging description of the workout's focus."),
-  exercises: z.array(ExerciseSchema).describe('A list of personalized exercises.'),
+  title: z.string().describe("A catchy and motivating title for the 7-day workout plan."),
+  description: z.string().describe("A brief, encouraging description of the overall workout plan."),
+  weeklySchedule: z.array(DailyWorkoutSchema).describe('A schedule of workouts for 7 days.'),
 });
 export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutputSchema>;
 
@@ -57,24 +67,31 @@ const workoutPrompt = ai.definePrompt({
     schema: z.object({
       title: z.string(),
       description: z.string(),
-      exercises: z.array(
-        z.object({
-          name: z.string(),
-          sets: z.string(),
-          reps: z.string(),
-          rest: z.string(),
-        })
-      ),
+      weeklySchedule: z.array(z.object({
+          day: z.number(),
+          title: z.string(),
+          description: z.string(),
+          exercises: z.array(z.object({
+              name: z.string(),
+              sets: z.string(),
+              reps: z.string(),
+              rest: z.string(),
+          })).optional(),
+      })),
     }),
   },
-  prompt: `You are a certified personal trainer. Generate a personalized workout plan based on the user's fitness goals, desired intensity, workout duration, and any specific body parts they want to focus on.
+  prompt: `You are a certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences. Include rest days.
 
 Fitness Goals: {{{fitnessGoals}}}
 Intensity: {{{intensity}}}
-Duration: {{{duration}}} minutes
-Body Focus: {{#if bodyFocus}}{{{bodyFocus}}}{{else}}No specific body focus{{/if}}
+Duration per session: {{{duration}}} minutes
+Equipment: {{{equipment}}} equipment
+Body Focus: {{#if bodyFocus}}{{{bodyFocus}}}{{else}}Full body{{/if}}
 
-Provide a catchy title, a short description, and a list of specific exercises with sets, reps, and rest times. Do not include videos.`,
+Provide a catchy title for the whole week, a short description, and a weekly schedule.
+For each of the 7 days, provide a day number, a title for the day's workout, a short description, and a list of specific exercises with sets, reps, and rest times.
+If a day is a rest day, the 'exercises' array should be empty.
+The exercises should be appropriate for the selected equipment availability. Do not include video URLs.`,
 });
 
 const generateWorkoutPlanFlow = ai.defineFlow(
@@ -89,20 +106,28 @@ const generateWorkoutPlanFlow = ai.defineFlow(
       throw new Error('Failed to generate workout plan text');
     }
 
-    const exercisesWithVideos = [];
+    const scheduleWithVideos = [];
 
-    for (const exercise of output.exercises) {
-      const videoResult = await generateExerciseMedia({ exerciseName: exercise.name });
-      exercisesWithVideos.push({
-        ...exercise,
-        videoUrl: videoResult.videoUrl,
-      });
+    for (const day of output.weeklySchedule) {
+        if (day.exercises && day.exercises.length > 0) {
+            const exercisesWithVideos = [];
+            for (const exercise of day.exercises) {
+                const videoResult = await generateExerciseMedia({ exerciseName: exercise.name });
+                exercisesWithVideos.push({
+                    ...exercise,
+                    videoUrl: videoResult.videoUrl,
+                });
+            }
+            scheduleWithVideos.push({ ...day, exercises: exercisesWithVideos });
+        } else {
+            scheduleWithVideos.push(day); // Rest day
+        }
     }
 
     return {
       title: output.title,
       description: output.description,
-      exercises: exercisesWithVideos,
+      weeklySchedule: scheduleWithVideos,
     };
   }
 );

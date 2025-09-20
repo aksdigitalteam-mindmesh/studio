@@ -19,12 +19,13 @@ import { generateWorkoutPlanAction } from "@/lib/actions";
 import { saveCompletedWorkoutAction } from "@/lib/workout-log-actions";
 import { workoutPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
-import { Loader2, VideoOff, CheckCircle, ShieldAlert } from "lucide-react";
+import { Loader2, VideoOff, CheckCircle, ShieldAlert, Calendar, Dumbbell, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useUsageTracker } from "@/hooks/use-usage-tracker";
+import { Badge } from "@/components/ui/badge";
 
 type Exercise = {
   name: string;
@@ -34,10 +35,17 @@ type Exercise = {
   videoUrl: string;
 };
 
+type DailyWorkout = {
+    day: number;
+    title: string;
+    description: string;
+    exercises?: Exercise[];
+};
+
 type WorkoutPlan = {
   title: string;
   description: string;
-  exercises: Exercise[];
+  weeklySchedule: DailyWorkout[];
 };
 
 export default function WorkoutGeneratorPage() {
@@ -49,9 +57,10 @@ export default function WorkoutGeneratorPage() {
   const form = useForm<z.infer<typeof workoutPlanSchema>>({
     resolver: zodResolver(workoutPlanSchema),
     defaultValues: {
-      fitnessGoals: "",
+      fitnessGoals: "Build muscle and increase strength",
       intensity: "medium",
-      duration: 30,
+      duration: 45,
+      equipment: "with",
       bodyFocus: "",
     },
   });
@@ -93,12 +102,12 @@ export default function WorkoutGeneratorPage() {
     });
   }
   
-  const handleCompleteWorkout = () => {
+  const handleSavePlan = () => {
     if (result) {
-      saveCompletedWorkoutAction(result.title);
+      localStorage.setItem('latestWorkoutPlan', JSON.stringify(result));
       toast({
-        title: "Workout Completed!",
-        description: `Great job! "${result.title}" has been added to your log.`,
+        title: "Workout Plan Saved!",
+        description: `Your new workout plan is now active on your dashboard.`,
       });
     }
   };
@@ -118,7 +127,7 @@ export default function WorkoutGeneratorPage() {
                  <Alert variant="destructive" className="mb-6">
                     <ShieldAlert className="h-4 w-4" />
                     <AlertTitle>Weekly Limit Reached</AlertTitle>
-                    <AlertDescription>You have used all {usagesLeft > 0 ? 'but have' : ''} your AI generations for the week. Please check back later.</AlertDescription>
+                    <AlertDescription>You have used all your AI generations for the week. Please check back later.</AlertDescription>
                 </Alert>
             )}
             <Form {...form}>
@@ -151,6 +160,36 @@ export default function WorkoutGeneratorPage() {
                 />
                 <FormField
                   control={form.control}
+                  name="equipment"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Equipment</FormLabel>
+                       <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="with" />
+                            </FormControl>
+                            <FormLabel className="font-normal">With Equipment</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="without" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Without Equipment</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="intensity"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
@@ -159,7 +198,7 @@ export default function WorkoutGeneratorPage() {
                         <RadioGroup
                           onValueChange={field.onChange}
                           defaultValue={field.value}
-                          className="flex flex-col space-y-1"
+                          className="flex space-x-4"
                         >
                           <FormItem className="flex items-center space-x-3 space-y-0">
                             <FormControl>
@@ -204,7 +243,7 @@ export default function WorkoutGeneratorPage() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Generating...
                     </>
-                  ) : "Generate Workout"}
+                  ) : "Generate 7-Day Workout"}
                 </Button>
               </form>
             </Form>
@@ -214,7 +253,7 @@ export default function WorkoutGeneratorPage() {
         <Card className="flex flex-col min-h-[400px]">
             <CardHeader>
                 <CardTitle>Your Personalized Workout</CardTitle>
-                <CardDescription>Your AI-generated workout plan will appear here.</CardDescription>
+                <CardDescription>Your AI-generated 7-day workout plan will appear here.</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
             {isPending && (
@@ -226,47 +265,72 @@ export default function WorkoutGeneratorPage() {
             )}
             {result && (
                 <div className="space-y-4">
-                  <div className="text-center">
+                  <div className="text-center p-4 bg-secondary rounded-lg">
                     <h2 className="text-2xl font-bold font-headline">{result.title}</h2>
-                    <p className="text-muted-foreground">{result.description}</p>
+                    <p className="text-muted-foreground mt-2">{result.description}</p>
                   </div>
-                   <Button onClick={handleCompleteWorkout} className="w-full">
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Mark Workout as Complete
+                   <Button onClick={handleSavePlan} className="w-full">
+                      <Star className="mr-2 h-4 w-4" />
+                      Set as My Active Workout Plan
                     </Button>
-                  <Accordion type="single" collapsible className="w-full">
-                    {result.exercises.map((exercise, index) => (
-                       <AccordionItem value={`item-${index}`} key={index}>
+                  <Accordion type="single" collapsible className="w-full" defaultValue="day-1">
+                    {result.weeklySchedule.map((day) => (
+                       <AccordionItem value={`day-${day.day}`} key={day.day}>
                          <AccordionTrigger>
                            <div className="flex items-center gap-4">
-                             <div className="relative h-16 w-28 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                               {exercise.videoUrl !== 'error' ? (
-                                 <video src={exercise.videoUrl} loop autoPlay muted playsInline className="h-full w-full object-cover"></video>
-                               ) : (
-                                  <div className="flex flex-col items-center text-destructive">
-                                    <VideoOff className="h-6 w-6" />
-                                    <span className="text-xs">No video</span>
-                                  </div>
-                               )}
+                             <div className="bg-primary/10 p-3 rounded-full">
+                               <Calendar className="h-6 w-6 text-primary" />
                              </div>
                              <div>
-                               <p className="font-semibold text-left">{exercise.name}</p>
-                               <p className="text-sm text-muted-foreground text-left">{exercise.sets} sets, {exercise.reps} reps</p>
+                               <p className="font-semibold text-left">Day {day.day}: {day.title}</p>
+                               <p className="text-sm text-muted-foreground text-left">{day.description}</p>
                              </div>
                            </div>
                          </AccordionTrigger>
                          <AccordionContent>
-                           <div className="prose dark:prose-invert prose-sm max-w-none">
-                              <p><strong>Rest:</strong> {exercise.rest}</p>
-                               {exercise.videoUrl === 'error' && (
-                                <Alert variant="destructive" className="mt-2">
-                                  <AlertTitle>Video Generation Failed</AlertTitle>
-                                  <AlertDescription>
-                                    We couldn't generate a video for this exercise. Please try generating the plan again.
-                                  </AlertDescription>
-                                </Alert>
-                               )}
-                           </div>
+                           {day.exercises && day.exercises.length > 0 ? (
+                                <Accordion type="single" collapsible className="w-full">
+                                    {day.exercises.map((exercise, index) => (
+                                         <AccordionItem value={`exercise-${index}`} key={index}>
+                                            <AccordionTrigger>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="relative h-16 w-28 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                                                    {exercise.videoUrl !== 'error' ? (
+                                                        <video src={exercise.videoUrl} loop autoPlay muted playsInline className="h-full w-full object-cover"></video>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center text-destructive">
+                                                            <VideoOff className="h-6 w-6" />
+                                                            <span className="text-xs">No video</span>
+                                                        </div>
+                                                    )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-left">{exercise.name}</p>
+                                                        <p className="text-sm text-muted-foreground text-left">{exercise.sets} sets, {exercise.reps} reps</p>
+                                                    </div>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <div className="prose dark:prose-invert prose-sm max-w-none pl-4 border-l-2 ml-5">
+                                                    <p><strong>Rest:</strong> {exercise.rest}</p>
+                                                    {exercise.videoUrl === 'error' && (
+                                                        <Alert variant="destructive" className="mt-2">
+                                                        <AlertTitle>Video Generation Failed</AlertTitle>
+                                                        <AlertDescription>
+                                                            We couldn't generate a video for this exercise.
+                                                        </AlertDescription>
+                                                        </Alert>
+                                                    )}
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
+                           ) : (
+                             <div className="text-center p-4 text-muted-foreground">
+                                <p>Rest Day - a great time to recover!</p>
+                            </div>
+                           )}
                          </AccordionContent>
                        </AccordionItem>
                     ))}

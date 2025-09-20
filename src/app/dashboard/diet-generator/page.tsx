@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { generateDietPlanAction } from "@/lib/actions";
 import { dietPlanSchema } from "@/lib/schemas";
 import { useState, useTransition } from "react";
-import { Loader2, Apple, ChefHat, Dot, ShoppingCart, Bookmark, ShieldAlert } from "lucide-react";
+import { Loader2, Apple, ChefHat, Dot, ShoppingCart, Bookmark, ShieldAlert, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -29,22 +29,26 @@ import { saveRecipesFromPlan } from "@/lib/recipe-actions";
 import { useUsageTracker } from "@/hooks/use-usage-tracker";
 import { addIngredientsToShoppingList } from "@/lib/shopping-list-actions";
 
+type DailyPlan = {
+  day: number;
+  meals: Meal[];
+  dailyTotals: {
+    calories: number;
+    macros: { protein: string, carbs: string, fat: string };
+  };
+};
 
 type DietPlan = {
   title: string;
   summary: string;
-  dailyTotals: {
-    calorieRecommendation: number;
-    macroRecommendation: string;
-  };
-  meals: Meal[];
+  dailyPlans: DailyPlan[];
 };
 
 export default function DietGeneratorPage() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<DietPlan | null>(null);
   const { toast } = useToast();
-  const { canUse, recordUsage, usagesLeft } = useUsageTracker();
+  const { canUse, recordUsage } = useUsageTracker();
 
 
   const form = useForm<z.infer<typeof dietPlanSchema>>({
@@ -53,6 +57,7 @@ export default function DietGeneratorPage() {
       fitnessGoals: "Lose weight and build lean muscle",
       calorieTarget: 2200,
       macroRatio: "40% protein, 30% carbs, 30% fat",
+      cuisine: "Mediterranean",
       dietaryRestrictions: "None",
       foodPreferences: "I enjoy spicy food, chicken, and vegetables.",
     },
@@ -86,7 +91,8 @@ export default function DietGeneratorPage() {
 
   const handleSavePlan = () => {
     if (result) {
-      const saved = saveRecipesFromPlan(result.meals);
+      const allMeals = result.dailyPlans.flatMap(day => day.meals);
+      const saved = saveRecipesFromPlan(allMeals);
       if(saved.length > 0) {
         toast({
             title: "Plan Saved!",
@@ -103,7 +109,7 @@ export default function DietGeneratorPage() {
 
   const handleAddToShoppingList = () => {
     if (result) {
-      const allIngredients = result.meals.flatMap(meal => meal.recipe.ingredients);
+      const allIngredients = result.dailyPlans.flatMap(day => day.meals.flatMap(meal => meal.recipe.ingredients));
       const addedCount = addIngredientsToShoppingList(allIngredients);
       toast({
         title: "Shopping List Updated",
@@ -120,7 +126,7 @@ export default function DietGeneratorPage() {
         <Card>
           <CardHeader>
             <CardTitle>Your Details</CardTitle>
-            <CardDescription>Provide your information to get a tailored diet plan.</CardDescription>
+            <CardDescription>Provide your information to get a tailored 7-day diet plan.</CardDescription>
           </CardHeader>
           <CardContent>
              {isAtLimit && (
@@ -173,6 +179,19 @@ export default function DietGeneratorPage() {
                 />
                  <FormField
                   control={form.control}
+                  name="cuisine"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preferred Cuisine (optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Italian, Mexican, Indian" {...field} />
+                      </FormControl>
+                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
                   name="dietaryRestrictions"
                   render={({ field }) => (
                     <FormItem>
@@ -203,7 +222,7 @@ export default function DietGeneratorPage() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Generating...
                     </>
-                  ) : "Generate Diet Plan"}
+                  ) : "Generate 7-Day Diet Plan"}
                 </Button>
               </form>
             </Form>
@@ -226,16 +245,12 @@ export default function DietGeneratorPage() {
                     <div className="text-center p-4 bg-secondary rounded-lg">
                         <h2 className="text-2xl font-bold font-headline">{result.title}</h2>
                         <p className="text-muted-foreground mt-2">{result.summary}</p>
-                        <div className="flex justify-center items-center gap-4 mt-4 text-sm">
-                            <Badge variant="outline">{result.dailyTotals.calorieRecommendation} kcal</Badge>
-                            <Badge variant="outline">{result.dailyTotals.macroRecommendation}</Badge>
-                        </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <Button onClick={handleSavePlan} variant="outline">
                         <Bookmark className="mr-2 h-4 w-4" />
-                        Save Plan
+                        Save All Recipes
                       </Button>
                       <Button onClick={handleAddToShoppingList}>
                         <ShoppingCart className="mr-2 h-4 w-4" />
@@ -243,55 +258,82 @@ export default function DietGeneratorPage() {
                       </Button>
                     </div>
 
-                    <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
-                      {result.meals.map((meal, index) => (
-                        <AccordionItem value={`item-${index}`} key={index}>
+                    <Accordion type="single" collapsible className="w-full" defaultValue="day-1">
+                      {result.dailyPlans.map((dayPlan) => (
+                        <AccordionItem value={`day-${dayPlan.day}`} key={dayPlan.day}>
                           <AccordionTrigger>
-                            <div className="flex items-center gap-4">
-                              <div className="bg-primary/10 p-3 rounded-full">
-                                <ChefHat className="h-6 w-6 text-primary" />
+                            <div className="flex items-center gap-4 w-full">
+                               <div className="bg-primary/10 p-3 rounded-full">
+                                <Calendar className="h-6 w-6 text-primary" />
                               </div>
-                              <div>
-                                <p className="font-semibold text-left">{meal.name}</p>
-                                <p className="text-sm text-muted-foreground text-left">{meal.description}</p>
+                              <div className="flex-grow text-left">
+                                <p className="font-semibold">Day {dayPlan.day}</p>
+                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <span>{dayPlan.dailyTotals.calories} kcal</span>
+                                    <Dot/>
+                                    <span>P: {dayPlan.dailyTotals.macros.protein}</span>
+                                    <Dot/>
+                                    <span>C: {dayPlan.dailyTotals.macros.carbs}</span>
+                                     <Dot/>
+                                    <span>F: {dayPlan.dailyTotals.macros.fat}</span>
+                                </div>
                               </div>
                             </div>
                           </AccordionTrigger>
                           <AccordionContent>
-                             <div className="space-y-4 pl-4 border-l-2 border-primary/20 ml-5">
-                                <div className="space-y-2">
-                                    <h4 className="font-semibold flex items-center gap-2"><Apple className="h-4 w-4" /> Ingredients</h4>
-                                    <ul className="space-y-1">
-                                        {meal.recipe.ingredients.map((ingredient, i) => (
-                                            <li key={i} className="flex items-center">
-                                              <Dot className="h-4 w-4" />{ingredient}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <div className="space-y-2">
-                                    <h4 className="font-semibold flex items-center gap-2"><ChefHat className="h-4 w-4" /> Instructions</h4>
-                                    <ol className="list-decimal list-inside space-y-1">
-                                      {meal.recipe.instructions.map((step, i) => (
-                                        <li key={i}>{step}</li>
-                                      ))}
-                                    </ol>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2 text-center text-xs pt-2">
-                                    <div className="p-2 bg-muted rounded-md">
-                                        <p className="font-semibold">Calories</p>
-                                        <p>{meal.calories} kcal</p>
-                                    </div>
-                                    <div className="p-2 bg-muted rounded-md">
-                                        <p className="font-semibold">Protein</p>
-                                        <p>{meal.macros.protein}</p>
-                                    </div>
-                                     <div className="p-2 bg-muted rounded-md">
-                                        <p className="font-semibold">Carbs</p>
-                                        <p>{meal.macros.carbs}</p>
-                                    </div>
-                                </div>
-                             </div>
+                             <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
+                                {dayPlan.meals.map((meal, index) => (
+                                    <AccordionItem value={`item-${index}`} key={index}>
+                                    <AccordionTrigger>
+                                        <div className="flex items-center gap-4">
+                                        <div className="bg-primary/10 p-3 rounded-full">
+                                            <ChefHat className="h-6 w-6 text-primary" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-left">{meal.name}</p>
+                                            <p className="text-sm text-muted-foreground text-left">{meal.description}</p>
+                                        </div>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="space-y-4 pl-4 border-l-2 border-primary/20 ml-5">
+                                            <div className="space-y-2">
+                                                <h4 className="font-semibold flex items-center gap-2"><Apple className="h-4 w-4" /> Ingredients</h4>
+                                                <ul className="space-y-1">
+                                                    {meal.recipe.ingredients.map((ingredient, i) => (
+                                                        <li key={i} className="flex items-center">
+                                                        <Dot className="h-4 w-4" />{ingredient}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <h4 className="font-semibold flex items-center gap-2"><ChefHat className="h-4 w-4" /> Instructions</h4>
+                                                <ol className="list-decimal list-inside space-y-1">
+                                                {meal.recipe.instructions.map((step, i) => (
+                                                    <li key={i}>{step}</li>
+                                                ))}
+                                                </ol>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-2 text-center text-xs pt-2">
+                                                <div className="p-2 bg-muted rounded-md">
+                                                    <p className="font-semibold">Calories</p>
+                                                    <p>{meal.calories} kcal</p>
+                                                </div>
+                                                <div className="p-2 bg-muted rounded-md">
+                                                    <p className="font-semibold">Protein</p>
+                                                    <p>{meal.macros.protein}</p>
+                                                </div>
+                                                <div className="p-2 bg-muted rounded-md">
+                                                    <p className="font-semibold">Carbs</p>
+                                                    <p>{meal.macros.carbs}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                                </Accordion>
                           </AccordionContent>
                         </AccordionItem>
                       ))}

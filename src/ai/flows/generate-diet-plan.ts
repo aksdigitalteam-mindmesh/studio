@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Generates a personalized diet plan for paid members.
+ * @fileOverview Generates a personalized 7-day diet plan for paid members.
  *
  * - generateDietPlan - A function that generates a diet plan based on user input.
  * - GenerateDietPlanInput - The input type for the generateDietPlan function.
@@ -21,6 +21,10 @@ const GenerateDietPlanInputSchema = z.object({
     .describe(
       'The desired macro ratio (protein, carbs, fat) in percentage, e.g., 30% protein, 40% carbs, 30% fat.'
     ),
+  cuisine: z
+    .string()
+    .optional()
+    .describe('The preferred cuisine, e.g., Italian, Mexican, Indian.'),
   dietaryRestrictions: z
     .string()
     .optional()
@@ -49,14 +53,23 @@ const MealSchema = z.object({
   }),
 });
 
-const GenerateDietPlanOutputSchema = z.object({
-    title: z.string().describe("A catchy and motivating title for the diet plan."),
-    summary: z.string().describe("A brief, encouraging summary of the diet plan and its benefits."),
-    dailyTotals: z.object({
-        calorieRecommendation: z.number().describe('Total recommended daily calorie intake for the plan.'),
-        macroRecommendation: z.string().describe('Recommended daily macro breakdown (protein, carbs, fat) in grams or percentages.'),
+const DailyPlanSchema = z.object({
+  day: z.number().describe("The day number of the plan (1-7)."),
+  meals: z.array(MealSchema).describe('A list of meals for the day, including detailed recipes and nutritional info.'),
+  dailyTotals: z.object({
+        calories: z.number().describe('Total estimated calories for the day.'),
+        macros: z.object({
+          protein: z.string().describe("Total protein for the day in grams."),
+          carbs: z.string().describe("Total carbs for the day in grams."),
+          fat: z.string().describe("Total fat for the day in grams."),
+        }),
     }),
-    meals: z.array(MealSchema).describe('A list of meals for one full day, including detailed recipes and nutritional info.'),
+});
+
+const GenerateDietPlanOutputSchema = z.object({
+    title: z.string().describe("A catchy and motivating title for the 7-day diet plan."),
+    summary: z.string().describe("A brief, encouraging summary of the diet plan and its benefits."),
+    dailyPlans: z.array(DailyPlanSchema).describe("A list of daily meal plans for 7 days."),
 });
 
 export type GenerateDietPlanOutput = z.infer<typeof GenerateDietPlanOutputSchema>;
@@ -71,22 +84,22 @@ const prompt = ai.definePrompt({
   name: 'generateDietPlanPrompt',
   input: {schema: GenerateDietPlanInputSchema},
   output: {schema: GenerateDietPlanOutputSchema},
-  prompt: `You are a certified nutritionist and expert recipe creator. A paid member wants to generate a personalized one-day diet plan with calorie and macro recommendations to optimize their nutrition for their fitness goals.
+  prompt: `You are a certified nutritionist and expert recipe creator. A paid member wants to generate a personalized 7-day diet plan with calorie and macro recommendations to optimize their nutrition for their fitness goals.
 
   Fitness Goals: {{{fitnessGoals}}}
-  Calorie Target: {{{calorieTarget}}} calories
+  Calorie Target: ~{{{calorieTarget}}} calories per day
   Macro Ratio: {{{macroRatio}}}
+  Cuisine Preference: {{#if cuisine}}{{{cuisine}}}{{else}}None{{/if}}
   Dietary Restrictions: {{{dietaryRestrictions}}}
   Food Preferences: {{{foodPreferences}}}
 
-  Generate a detailed one-day diet plan including specific meals (Breakfast, Lunch, Dinner, and an optional Snack).
-  For each meal, provide:
-  1. A short, appealing description.
-  2. A detailed recipe with a list of ingredients and step-by-step instructions.
-  3. An estimation of calories, and macros (protein, carbs, fat) in grams.
+  Generate a detailed 7-day diet plan. For each day, provide:
+  1. A full day of meals (Breakfast, Lunch, Dinner, and a Snack).
+  2. For each meal, provide a short description, a detailed recipe (ingredients and instructions), and an estimation of calories and macros (protein, carbs, fat).
+  3. A daily summary of total calories and macros.
 
-  The entire diet plan MUST align with the total daily calorie target and macro ratio. It also must respect all dietary restrictions and food preferences.
-  Create a catchy title and a brief, encouraging summary for the overall plan.
+  The entire diet plan MUST align with the total daily calorie target and macro ratio. It also must respect all dietary restrictions, food preferences, and cuisine styles.
+  Create a catchy title and a brief, encouraging summary for the overall 7-day plan. Ensure the meals are varied and interesting across the 7 days.
 `,
 });
 
