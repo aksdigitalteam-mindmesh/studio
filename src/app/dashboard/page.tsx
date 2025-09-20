@@ -112,9 +112,7 @@ export default function DashboardPage() {
   return (
     <div className="w-full flex flex-col font-sans pb-24">
       {/* Header */}
-      <header className="flex items-center justify-between p-4 bg-gradient-to-r from-primary to-green-400 text-primary-foreground">
-        <Button className="bg-accent hover:bg-accent/90 rounded-full text-accent-foreground font-bold">SAVE 50%</Button>
-        <h1 className="text-2xl font-bold">Lifesum</h1>
+      <header className="flex items-center justify-end p-4 bg-gradient-to-r from-primary to-green-400 text-primary-foreground">
         <div className="flex items-center gap-4">
           <Link href="/dashboard/profile">
             <User className="cursor-pointer" />
@@ -324,5 +322,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
