@@ -27,7 +27,7 @@ export default function DashboardNav() {
                 const isActive = (link.href === '/dashboard' && pathname === '/dashboard') || (link.href !== '/dashboard' && pathname.startsWith(link.href));
                 return (
                 <Link
-                    key={link.href}
+                    key={link.label}
                     href={link.href}
                     className={cn(
                     "flex flex-col items-center justify-center gap-1 rounded-full p-2 text-muted-foreground transition-colors hover:text-primary",
@@ -66,7 +66,7 @@ export default function DashboardNav() {
                 const isActive = pathname.startsWith(link.href);
                 return (
                 <Link
-                    key={link.href}
+                    key={link.label}
                     href={link.href}
                     className={cn(
                     "flex flex-col items-center justify-center gap-1 rounded-full p-2 text-muted-foreground transition-colors hover:text-primary",
