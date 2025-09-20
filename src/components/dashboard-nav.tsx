@@ -26,11 +26,11 @@ export default function DashboardNav() {
             const isActive = (pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href)));
             if (index === middleIndex) {
               return (
-                <div key={link.href} className="relative flex justify-center">
+                <div key={link.href} className="relative flex justify-end pr-4">
                    <Link href={link.href}>
                     <div className={cn(
                       "absolute -top-10 flex h-20 w-20 items-center justify-center rounded-full border-4 border-background transition-all duration-300",
-                       isActive ? "bg-primary text-primary-foreground animate-pulse shadow-[0_0_15px_2px] shadow-primary/70" : "bg-muted text-muted-foreground"
+                       isActive ? "bg-primary text-primary-foreground shadow-[0_0_15px_2px] shadow-primary/70" : "bg-muted text-muted-foreground"
                     )}>
                       <link.icon className="h-8 w-8" />
                     </div>
