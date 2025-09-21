@@ -82,7 +82,7 @@ const workoutPrompt = ai.definePrompt({
       })),
     }),
   },
-  prompt: `You are a certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences. Include rest days.
+  prompt: `You are a certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences. The plan must include exactly one rest day.
 
 Fitness Goals: {{{fitnessGoals}}}
 Intensity: {{{intensity}}}
