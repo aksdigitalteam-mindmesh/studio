@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import type { Meal, Recipe } from "@/lib/types";
@@ -81,7 +82,7 @@ export function getDiscoverableRecipes(): Recipe[] {
         {
             slug: "salmon-and-veggies",
             title: "Salmon and Veggies",
-            category: "Dinner",
+            category: "Main Course",
             image: "https://placehold.co/600x400.png",
             hint: "salmon vegetables",
             description: "A healthy and satisfying dinner, rich in omega-3s.",
