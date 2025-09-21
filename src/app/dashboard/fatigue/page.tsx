@@ -11,12 +11,15 @@ import { Hand, Loader2, BrainCircuit, Lightbulb, Droplets, MoreVertical } from "
 import { generateRecoveryTips } from "@/ai/flows/generate-recovery-tips";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { format, isSameDay } from "date-fns";
 
 type FatigueData = Partial<Record<Muscle, number>>;
 type RecoveryTip = { title: string; description: string };
+type WaterLog = { [date: string]: boolean[] };
+
 
 const FATIGUE_STORAGE_KEY = 'muscleFatigueData';
-const WATER_STORAGE_KEY = 'waterGlasses'; // Using the key from home dashboard
+const WATER_STORAGE_KEY = 'waterLog'; // Using the key from home dashboard
 const FATIGUE_NOTIFICATION_THRESHOLD = 80;
 
 const initialFatigueData: FatigueData = {
@@ -60,13 +63,15 @@ export default function FatigueTrackerPage() {
   const [recoveryTips, setRecoveryTips] = useState<RecoveryTip[] | null>(null);
   const [isTipsDialogOpen, setIsTipsDialogOpen] = useState(false);
   const { toast } = useToast();
-  const [waterGlasses, setWaterGlasses] = useState(() => Array(8).fill(false));
+  const [waterGlasses, setWaterGlasses] = useState<boolean[]>([]);
 
   const loadWaterData = () => {
-      const savedWater = localStorage.getItem(WATER_STORAGE_KEY);
-      if (savedWater) {
+      const savedWaterLog = localStorage.getItem(WATER_STORAGE_KEY);
+      if (savedWaterLog) {
           try {
-            setWaterGlasses(JSON.parse(savedWater));
+            const log: WaterLog = JSON.parse(savedWaterLog);
+            const todayKey = format(new Date(), 'yyyy-MM-dd');
+            setWaterGlasses(log[todayKey] || Array(8).fill(false));
           } catch {
             setWaterGlasses(Array(8).fill(false));
           }
@@ -268,3 +273,5 @@ export default function FatigueTrackerPage() {
     </div>
   );
 }
+
+    

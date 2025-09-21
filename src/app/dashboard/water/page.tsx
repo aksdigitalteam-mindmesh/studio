@@ -6,24 +6,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WaterGlass } from "@/components/water-glass";
 import { Loader2, MoreVertical } from "lucide-react";
+import { format } from "date-fns";
 
-const WATER_STORAGE_KEY = "waterGlasses";
+const WATER_STORAGE_KEY = "waterLog";
+const WATER_GOAL = 8;
+
+type WaterLog = {
+    [date: string]: boolean[]; // date is 'yyyy-MM-dd'
+};
 
 export default function WaterPage() {
-  const [waterGlasses, setWaterGlasses] = useState<boolean[]>([]);
+  const [waterLog, setWaterLog] = useState<WaterLog>({});
   const [isClient, setIsClient] = useState(false);
 
-  // Function to load data from localStorage
   const loadWaterData = () => {
-    const savedWater = localStorage.getItem(WATER_STORAGE_KEY);
-    if (savedWater) {
+    const savedLog = localStorage.getItem(WATER_STORAGE_KEY);
+    if (savedLog) {
         try {
-            setWaterGlasses(JSON.parse(savedWater));
+            setWaterLog(JSON.parse(savedLog));
         } catch {
-            setWaterGlasses(Array(8).fill(false));
+            setWaterLog({});
         }
     } else {
-        setWaterGlasses(Array(8).fill(false));
+        setWaterLog({});
     }
   };
 
@@ -31,25 +36,21 @@ export default function WaterPage() {
     setIsClient(true);
     loadWaterData();
 
-    // Listen for storage changes to sync across tabs
     const handleStorageChange = (event: StorageEvent) => {
         if (event.key === WATER_STORAGE_KEY) {
             loadWaterData();
         }
     };
     window.addEventListener('storage', handleStorageChange);
-
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  useEffect(() => {
-    if (isClient) {
-        localStorage.setItem(WATER_STORAGE_KEY, JSON.stringify(waterGlasses));
-    }
-  }, [waterGlasses, isClient]);
-
   const handleWaterClick = (index: number) => {
-    const newGlasses = [...waterGlasses];
+    const dateKey = format(new Date(), 'yyyy-MM-dd');
+    const newLog = { ...waterLog };
+    const currentGlasses = newLog[dateKey] || Array(WATER_GOAL).fill(false);
+    const newGlasses = [...currentGlasses];
+
     const isFilling = !newGlasses[index];
     for (let i = 0; i < newGlasses.length; i++) {
       if (isFilling) {
@@ -58,10 +59,16 @@ export default function WaterPage() {
         if (i >= index) newGlasses[i] = false;
       }
     }
-    setWaterGlasses(newGlasses);
+    newLog[dateKey] = newGlasses;
+    setWaterLog(newLog);
+    localStorage.setItem(WATER_STORAGE_KEY, JSON.stringify(newLog));
+    // Dispatch a storage event so the dashboard updates
+    window.dispatchEvent(new Event('storage'));
   };
 
-  const filledGlasses = waterGlasses.filter(Boolean).length;
+  const todayKey = format(new Date(), 'yyyy-MM-dd');
+  const todaysGlasses = waterLog[todayKey] || Array(WATER_GOAL).fill(false);
+  const filledGlasses = todaysGlasses.filter(Boolean).length;
 
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
@@ -73,8 +80,8 @@ export default function WaterPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
             <div className="flex flex-col">
-                <CardTitle className="text-lg">Water</CardTitle>
-                <CardDescription>{filledGlasses} / {waterGlasses.length} glasses</CardDescription>
+                <CardTitle className="text-lg">Today's Water Intake</CardTitle>
+                <CardDescription>{filledGlasses} / {WATER_GOAL} glasses</CardDescription>
             </div>
             <Button variant="ghost" size="icon"><MoreVertical /></Button>
         </CardHeader>
@@ -85,7 +92,7 @@ export default function WaterPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-4 gap-4 sm:grid-cols-8">
-                {waterGlasses.map((filled, index) => (
+                {todaysGlasses.map((filled, index) => (
                     <WaterGlass key={index} filled={filled} onClick={() => handleWaterClick(index)} />
                 ))}
                 </div>
@@ -107,3 +114,5 @@ export default function WaterPage() {
     </div>
   );
 }
+
+    

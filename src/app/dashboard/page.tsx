@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -9,7 +9,7 @@ import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, MoreVerti
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { format, addDays, subDays, isToday, isYesterday, startOfToday } from 'date-fns';
+import { format, addDays, subDays, isToday, isYesterday, startOfDay, isSameDay } from 'date-fns';
 import { WaterGlass } from "@/components/water-glass";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -41,15 +41,20 @@ type CompletedWorkout = {
 
 type Meal = {
   id: number;
-  name: string;
+  name:string;
   calories: number;
-  date: string;
+  date: string; // ISO string
   macros?: {
     protein: string;
     carbs: string;
     fat: string;
   };
 };
+
+type WaterLog = {
+    [date: string]: boolean[]; // date is 'yyyy-MM-dd'
+};
+
 
 const mealCategories = [
   { name: 'Breakfast', recommended: '492 - 737', image: 'https://placehold.co/100x100.png', hint: 'juice glass' },
@@ -65,10 +70,12 @@ const MACRO_GOALS = {
     protein: 123,
     fat: 82,
 };
+const WATER_GOAL = 8;
+const WATER_STORAGE_KEY = "waterLog"; // Changed from waterGlasses
 
 
 export default function DashboardPage() {
-    const [waterGlasses, setWaterGlasses] = useState(Array(8).fill(false));
+    const [waterLog, setWaterLog] = useState<WaterLog>({});
     const [isClient, setIsClient] = useState(false);
     const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -80,85 +87,72 @@ export default function DashboardPage() {
     const user = { displayName: 'Fitness Pro', photoURL: 'https://placehold.co/128x128.png' };
 
 
+    const loadDataForDate = useCallback((date: Date) => {
+        if (typeof window === 'undefined') return;
+        
+        const dateKey = format(date, 'yyyy-MM-dd');
+
+        // --- Calorie & Macro Calculation ---
+        const savedMeals = localStorage.getItem("dailyMeals");
+        const allMeals: Meal[] = savedMeals ? JSON.parse(savedMeals) : [];
+        const relevantMeals = allMeals.filter(meal => isSameDay(new Date(meal.date), date));
+        
+        let totalEaten = 0;
+        const totalMacros = { carbs: 0, protein: 0, fat: 0 };
+
+        relevantMeals.forEach(meal => {
+            totalEaten += meal.calories;
+             if (meal.macros) {
+                totalMacros.protein += parseFloat(meal.macros.protein) || 0;
+                totalMacros.carbs += parseFloat(meal.macros.carbs) || 0;
+                totalMacros.fat += parseFloat(meal.macros.fat) || 0;
+            } else {
+                totalMacros.protein += 15;
+                totalMacros.carbs += 20;
+                totalMacros.fat += 10;
+            }
+        });
+        setEatenCalories(totalEaten);
+        setMacros(totalMacros);
+
+        // --- Burned Calories ---
+        const savedWorkouts = localStorage.getItem("completedWorkouts");
+        const completedWorkouts: CompletedWorkout[] = savedWorkouts ? JSON.parse(savedWorkouts) : [];
+        const dateWorkouts = completedWorkouts.filter(workout => isSameDay(new Date(workout.date), date));
+        setBurnedCalories(dateWorkouts.length * WORKOUT_BURN_CALORIES);
+
+        // --- Hydration ---
+        const savedWaterLog = localStorage.getItem(WATER_STORAGE_KEY);
+        const log: WaterLog = savedWaterLog ? JSON.parse(savedWaterLog) : {};
+        setWaterLog(log);
+
+    }, []);
+
     useEffect(() => {
         setIsClient(true);
+        loadDataForDate(currentDate);
 
         const storedPlan = localStorage.getItem('latestWorkoutPlan');
         if (storedPlan) {
             setWorkoutPlan(JSON.parse(storedPlan));
         }
 
-        // --- Calorie & Macro Calculation Logic ---
-        const calculateNutrition = () => {
-            const savedMeals = localStorage.getItem("dailyMeals");
-            const allMeals: Meal[] = savedMeals ? JSON.parse(savedMeals) : [];
-            const todaysMeals = allMeals.filter(meal => isToday(new Date(meal.date)));
-            
-            let totalEaten = 0;
-            const totalMacros = { carbs: 0, protein: 0, fat: 0 };
-
-            todaysMeals.forEach(meal => {
-                totalEaten += meal.calories;
-                if (meal.macros) {
-                    totalMacros.protein += parseFloat(meal.macros.protein) || 0;
-                    totalMacros.carbs += parseFloat(meal.macros.carbs) || 0;
-                    totalMacros.fat += parseFloat(meal.macros.fat) || 0;
-                } else {
-                    // Assign default macro values if not present
-                    totalMacros.protein += 15; // default
-                    totalMacros.carbs += 20; // default
-                    totalMacros.fat += 10; // default
-                }
-            });
-
-            setEatenCalories(totalEaten);
-            setMacros(totalMacros);
-
-            // Burned calories from workouts
-            const savedWorkouts = localStorage.getItem("completedWorkouts");
-            const completedWorkouts: CompletedWorkout[] = savedWorkouts ? JSON.parse(savedWorkouts) : [];
-            const today = startOfToday();
-            const todayWorkouts = completedWorkouts.filter(workout => isToday(new Date(workout.date)));
-            const totalBurned = todayWorkouts.length * WORKOUT_BURN_CALORIES;
-            setBurnedCalories(totalBurned);
-        };
-        
-        calculateNutrition();
-        const savedWater = localStorage.getItem('waterGlasses');
-        if (savedWater) {
-          try {
-            setWaterGlasses(JSON.parse(savedWater));
-          } catch {
-             setWaterGlasses(Array(8).fill(false));
-          }
-        }
-
-
-        // Listen for storage changes to update calories
         const handleStorageChange = () => {
-            calculateNutrition();
-            const newSavedWater = localStorage.getItem('waterGlasses');
-            if (newSavedWater) {
-              setWaterGlasses(JSON.parse(newSavedWater));
-            }
+            loadDataForDate(currentDate);
         };
 
         window.addEventListener('storage', handleStorageChange);
-
         return () => {
             window.removeEventListener('storage', handleStorageChange);
         };
-    }, []);
-
-    useEffect(() => {
-        if(isClient) {
-            localStorage.setItem('waterGlasses', JSON.stringify(waterGlasses));
-        }
-    }, [waterGlasses, isClient]);
-
+    }, [currentDate, loadDataForDate]);
+    
     const handleWaterClick = (index: number) => {
-        const newGlasses = [...waterGlasses];
-        // If the user clicks a glass, fill all glasses up to that one, or empty all glasses from that one on
+        const dateKey = format(currentDate, 'yyyy-MM-dd');
+        const newLog = { ...waterLog };
+        const currentGlasses = newLog[dateKey] || Array(WATER_GOAL).fill(false);
+        const newGlasses = [...currentGlasses];
+        
         const isFilling = !newGlasses[index];
         for (let i = 0; i < newGlasses.length; i++) {
           if (isFilling) {
@@ -167,10 +161,14 @@ export default function DashboardPage() {
              if (i >= index) newGlasses[i] = false;
           }
         }
-        setWaterGlasses(newGlasses);
+        newLog[dateKey] = newGlasses;
+        setWaterLog(newLog);
+        localStorage.setItem(WATER_STORAGE_KEY, JSON.stringify(newLog));
     };
 
-    const filledGlasses = waterGlasses.filter(Boolean).length;
+    const dateKey = format(currentDate, 'yyyy-MM-dd');
+    const waterGlassesForDate = waterLog[dateKey] || Array(WATER_GOAL).fill(false);
+    const filledGlasses = waterGlassesForDate.filter(Boolean).length;
     
     const menuItems = [
       { href: "/dashboard/calories", bg: "bg-orange-100", image: "https://placehold.co/100x100.png", hint: "juice glass", label: "Breakfast" },
@@ -198,8 +196,8 @@ export default function DashboardPage() {
     const proteinProgress = (macros.protein / MACRO_GOALS.protein) * 100;
     const fatProgress = (macros.fat / MACRO_GOALS.fat) * 100;
     
-    const dayOfWeek = new Date().getDay(); // Sunday - 0, Monday - 1, ...
-    const currentDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek; // Adjust to 1-7 (Mon-Sun)
+    const dayOfWeekForWorkout = currentDate.getDay(); // Sunday - 0, Monday - 1, ...
+    const currentDayOfWeek = dayOfWeekForWorkout === 0 ? 7 : dayOfWeekForWorkout; // Adjust to 1-7 (Mon-Sun)
     const todaysWorkout = workoutPlan?.weeklySchedule?.find(day => day.day === currentDayOfWeek);
 
   return (
@@ -374,13 +372,13 @@ export default function DashboardPage() {
                 <CardHeader className="flex flex-row items-center justify-between p-4">
                     <div className="flex flex-col">
                         <CardTitle className="text-lg">Water</CardTitle>
-                        {isClient && <CardDescription>{`${filledGlasses} / ${waterGlasses.length} glasses`}</CardDescription>}
+                        {isClient && <CardDescription>{`${filledGlasses} / ${WATER_GOAL} glasses`}</CardDescription>}
                     </div>
                     <Button variant="ghost" size="icon"><MoreVertical /></Button>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                     <div className="grid grid-cols-4 gap-2">
-                    {isClient && waterGlasses.map((filled, index) => (
+                    {isClient && waterGlassesForDate.map((filled, index) => (
                         <WaterGlass key={index} filled={filled} onClick={() => handleWaterClick(index)} />
                     ))}
                     </div>
@@ -463,7 +461,3 @@ export default function DashboardPage() {
   );
 
     
-
-
-    
-
