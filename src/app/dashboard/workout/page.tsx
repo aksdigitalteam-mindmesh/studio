@@ -155,22 +155,29 @@ function WorkoutLog() {
   
   const [activeDay, setActiveDay] = useState(currentDay);
   
-  const activeWorkoutDay = workoutPlan?.weeklySchedule?.find(d => d.day === activeDay);
+  const activeWorkoutDay = workoutPlan?.weeklySchedule ? workoutPlan.weeklySchedule.find(d => d.day === activeDay) : undefined;
 
 
   useEffect(() => {
     const storedPlan = localStorage.getItem("latestWorkoutPlan");
     if (storedPlan) {
-      const plan = JSON.parse(storedPlan);
-      setWorkoutPlan(plan);
-      const storedCompletion = localStorage.getItem(`workoutCompletion_${plan.title}_${activeDay}`);
-      if (storedCompletion) setCompletedExercises(JSON.parse(storedCompletion));
+      try {
+        const plan = JSON.parse(storedPlan);
+        setWorkoutPlan(plan);
+        if(plan.title) {
+          const storedCompletion = localStorage.getItem(`workoutCompletion_${plan.title}_${activeDay}`);
+          if (storedCompletion) setCompletedExercises(JSON.parse(storedCompletion));
+        }
+      } catch (error) {
+        console.error("Failed to parse workout plan:", error);
+        setWorkoutPlan(null);
+      }
     }
     setCompletedWorkouts(getCompletedWorkouts());
   }, [activeDay]);
 
   useEffect(() => {
-    if (workoutPlan) {
+    if (workoutPlan && workoutPlan.title) {
       localStorage.setItem(`workoutCompletion_${workoutPlan.title}_${activeDay}`, JSON.stringify(completedExercises));
     }
   }, [completedExercises, workoutPlan, activeDay]);
@@ -213,16 +220,18 @@ function WorkoutLog() {
         <p className="text-muted-foreground">{workoutPlan.description}</p>
       </div>
 
-       <Card>
-        <CardHeader><CardTitle>Week View</CardTitle></CardHeader>
-        <CardContent className="flex justify-around">
-            {workoutPlan.weeklySchedule.map(day => (
-                <Button key={day.day} variant={activeDay === day.day ? "default" : "outline"} size="icon" onClick={() => setActiveDay(day.day)}>
-                    {day.day}
-                </Button>
-            ))}
-        </CardContent>
-      </Card>
+       {workoutPlan.weeklySchedule && (
+        <Card>
+            <CardHeader><CardTitle>Week View</CardTitle></CardHeader>
+            <CardContent className="flex justify-around">
+                {workoutPlan.weeklySchedule.map(day => (
+                    <Button key={day.day} variant={activeDay === day.day ? "default" : "outline"} size="icon" onClick={() => setActiveDay(day.day)}>
+                        {day.day}
+                    </Button>
+                ))}
+            </CardContent>
+        </Card>
+       )}
 
       {activeWorkoutDay && (
         <>
@@ -386,4 +395,5 @@ export default function WorkoutPage() {
     return <ActivityPage />
 }
 
+    
     
