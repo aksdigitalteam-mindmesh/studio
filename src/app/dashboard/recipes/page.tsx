@@ -2,14 +2,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Bookmark } from "lucide-react";
+import { Search, Bookmark, BrainCircuit } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { getSavedRecipes, getDiscoverableRecipes } from "@/lib/recipe-actions";
 import type { Recipe } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 
 export default function RecipesPage() {
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
@@ -46,6 +47,23 @@ export default function RecipesPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Diet Plan</CardTitle>
+          <CardDescription>Generate a personalized diet plan using our AI coach.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild className="w-full">
+            <Link href="/dashboard/programs?tab=diet">
+              <BrainCircuit className="mr-2 h-4 w-4" />
+              Generate Your Diet Plan
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Separator />
       
       {/* Saved Recipes */}
       <div className="space-y-4">

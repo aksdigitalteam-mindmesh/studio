@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,11 +13,22 @@ import { Lock, Loader2, Info } from "lucide-react";
 import { usePremiumStatus } from "@/hooks/use-premium-status";
 import { useUsageTracker } from "@/hooks/use-usage-tracker";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useSearchParams } from "next/navigation";
 
 
 function ProgramsPageContent() {
   const { isPremium, isLoading } = usePremiumStatus();
   const { usagesLeft } = useUsageTracker();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") || "workout";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && (tab === 'workout' || tab === 'diet')) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   if (isLoading) {
     return (
@@ -74,7 +85,7 @@ function ProgramsPageContent() {
                 </AlertDescription>
             </Alert>
 
-            <Tabs defaultValue="workout" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="workout">Workout Generator</TabsTrigger>
                 <TabsTrigger value="diet">Diet Generator</TabsTrigger>
