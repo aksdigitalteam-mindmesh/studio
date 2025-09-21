@@ -74,7 +74,7 @@ export default function RecipesPage() {
         {filteredSavedRecipes.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredSavedRecipes.map((recipe) => (
-                <Link href={`/dashboard/recipes/${recipe.slug}`} key={recipe.slug}>
+                <Link href={`/dashboard/recipes/${recipe.slug}`} key={`saved-${recipe.slug}`}>
                     <Card className="overflow-hidden h-full transition-transform transform hover:scale-105 duration-300">
                     <CardHeader className="p-0">
                         <Image src={recipe.image || "https://placehold.co/600x400.png"} alt={recipe.title} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={recipe.hint} />
@@ -100,7 +100,7 @@ export default function RecipesPage() {
          {filteredDiscoverRecipes.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredDiscoverRecipes.map((recipe) => (
-                <Link href={`/dashboard/recipes/${recipe.slug}`} key={recipe.slug}>
+                <Link href={`/dashboard/recipes/${recipe.slug}`} key={`discover-${recipe.slug}`}>
                     <Card className="overflow-hidden h-full transition-transform transform hover:scale-105 duration-300">
                     <CardHeader className="p-0">
                         <Image src={recipe.image || "https://placehold.co/600x400.png"} alt={recipe.title} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={recipe.hint} />
