@@ -2,17 +2,21 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { getRecipeBySlug } from "@/lib/recipe-actions";
+import { getRecipeBySlug, deleteRecipe } from "@/lib/recipe-actions";
 import type { Recipe } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Apple, ChefHat, Dot, ArrowLeft } from "lucide-react";
+import { Apple, ChefHat, Dot, ArrowLeft, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 function RecipeDetails({ slug }: { slug: string }) {
     const [recipe, setRecipe] = useState<Recipe | null>(null);
+    const router = useRouter();
+    const { toast } = useToast();
 
     useEffect(() => {
         const foundRecipe = getRecipeBySlug(slug);
@@ -20,6 +24,19 @@ function RecipeDetails({ slug }: { slug: string }) {
             setRecipe(foundRecipe);
         }
     }, [slug]);
+
+    const handleDelete = () => {
+        if (recipe) {
+            deleteRecipe(recipe.slug);
+            toast({
+                title: "Recipe Removed",
+                description: `"${recipe.title}" has been removed from your saved list.`,
+            });
+            router.push("/dashboard/recipes");
+        }
+    };
+    
+    const isSavedRecipe = recipe?.slug.includes("-discover") === false;
 
     if (!recipe) {
         return (
@@ -38,11 +55,19 @@ function RecipeDetails({ slug }: { slug: string }) {
 
     return (
         <div className="space-y-8 p-4 md:p-8 pb-24">
-             <Button asChild variant="outline" className="mb-4">
-                <Link href="/dashboard/recipes">
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to Recipes
-                </Link>
-            </Button>
+             <div className="flex justify-between items-center mb-4">
+                <Button asChild variant="outline">
+                    <Link href="/dashboard/recipes">
+                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Recipes
+                    </Link>
+                </Button>
+
+                {isSavedRecipe && (
+                    <Button variant="destructive" onClick={handleDelete}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Remove Recipe
+                    </Button>
+                )}
+            </div>
             
             <Card className="overflow-hidden">
                 <CardHeader className="p-0 relative h-64">
