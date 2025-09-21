@@ -432,9 +432,9 @@ export default function DashboardPage() {
             
             <div className="relative w-[300px] h-[300px] mt-12">
               {menuItems.map((item, index) => {
-                 const angle = (index / 6) * 2 * Math.PI - Math.PI / 2;
-                 const x = Math.cos(angle) * 120;
-                 const y = Math.sin(angle) * 120;
+                 const angle = (index / 4) * 2 * Math.PI - Math.PI / 2;
+                 const x = Math.cos(angle) * 130;
+                 const y = Math.sin(angle) * 130;
                 return (
                  <Link 
                     href={item.href} 
@@ -457,6 +457,8 @@ export default function DashboardPage() {
       )}
     </div>
   );
+
+    
 
     
 
