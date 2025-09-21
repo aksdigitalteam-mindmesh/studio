@@ -4,31 +4,48 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Bookmark, BrainCircuit } from "lucide-react";
+import { Search, Bookmark, BrainCircuit, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { getSavedRecipes, getDiscoverableRecipes } from "@/lib/recipe-actions";
+import { getSavedRecipes, getDiscoverableRecipes, deleteRecipe } from "@/lib/recipe-actions";
 import type { Recipe } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export default function RecipesPage() {
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
   const [discoverRecipes, setDiscoverRecipes] = useState<Recipe[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
 
-  useEffect(() => {
+  const refreshRecipes = () => {
     setSavedRecipes(getSavedRecipes());
     setDiscoverRecipes(getDiscoverableRecipes());
+  };
+
+  useEffect(() => {
+    refreshRecipes();
   }, []);
   
+  const handleDeleteRecipe = (e: React.MouseEvent, slug: string) => {
+    e.preventDefault(); // Prevent Link navigation
+    e.stopPropagation(); // Stop event bubbling
+    deleteRecipe(slug);
+    toast({
+      title: "Recipe Removed",
+      description: "The recipe has been removed from your saved list.",
+    });
+    refreshRecipes(); // Refresh the list from localStorage
+  };
+
   const filteredSavedRecipes = savedRecipes.filter(recipe => 
     recipe.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredDiscoverRecipes = discoverRecipes.filter(recipe => 
     recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) && 
-    !savedRecipes.some(saved => saved.title === recipe.title) // Exclude saved recipes from discover list
+    !savedRecipes.some(saved => saved.slug === recipe.slug) // Exclude saved recipes from discover list
   );
 
   return (
@@ -75,9 +92,18 @@ export default function RecipesPage() {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredSavedRecipes.map((recipe, index) => (
                 <Link href={`/dashboard/recipes/${recipe.slug}`} key={`saved-${recipe.slug}-${index}`}>
-                    <Card className="overflow-hidden h-full transition-transform transform hover:scale-105 duration-300">
-                    <CardHeader className="p-0">
+                    <Card className="overflow-hidden h-full transition-transform transform hover:scale-105 duration-300 group">
+                    <CardHeader className="p-0 relative">
                         <Image src={recipe.image || "https://placehold.co/600x400.png"} alt={recipe.title} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={recipe.hint} />
+                         <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => handleDeleteRecipe(e, recipe.slug)}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Remove recipe</span>
+                        </Button>
                     </CardHeader>
                     <CardContent className="p-4">
                         <p className="text-sm font-semibold text-primary">{recipe.category}</p>
@@ -99,8 +125,8 @@ export default function RecipesPage() {
         <h2 className="text-2xl font-bold font-headline">Discover New Recipes</h2>
          {filteredDiscoverRecipes.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredDiscoverRecipes.map((recipe) => (
-                <Link href={`/dashboard/recipes/${recipe.slug}`} key={`discover-${recipe.slug}`}>
+                {filteredDiscoverRecipes.map((recipe, index) => (
+                <Link href={`/dashboard/recipes/${recipe.slug}`} key={`discover-${recipe.slug}-${index}`}>
                     <Card className="overflow-hidden h-full transition-transform transform hover:scale-105 duration-300">
                     <CardHeader className="p-0">
                         <Image src={recipe.image || "https://placehold.co/600x400.png"} alt={recipe.title} width={600} height={400} className="w-full h-48 object-cover" data-ai-hint={recipe.hint} />

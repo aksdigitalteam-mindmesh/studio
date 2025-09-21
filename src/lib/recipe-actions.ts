@@ -27,31 +27,32 @@ export function getSavedRecipes(): Recipe[] {
 export function saveRecipesFromPlan(meals: Meal[]): Recipe[] {
   if (typeof window === "undefined") return [];
   const existingRecipes = getSavedRecipes();
-  const newRecipes: Recipe[] = meals.map(meal => ({
-      slug: slugify(meal.name),
-      title: meal.name,
-      category: meal.name,
-      description: meal.description,
-      ingredients: meal.recipe.ingredients,
-      instructions: meal.recipe.instructions,
-      calories: meal.calories,
-      macros: meal.macros,
-  }));
+  
+  const recipesToSave = meals
+    .map(meal => ({
+        slug: slugify(meal.name),
+        title: meal.name,
+        category: meal.name, // e.g., Breakfast, Lunch
+        description: meal.description,
+        ingredients: meal.recipe.ingredients,
+        instructions: meal.recipe.instructions,
+        calories: meal.calories,
+        macros: meal.macros,
+    }))
+    .filter(newRecipe => 
+        !existingRecipes.some(existing => 
+            existing.title === newRecipe.title &&
+            JSON.stringify(existing.ingredients.sort()) === JSON.stringify(newRecipe.ingredients.sort())
+        )
+    );
 
-  // Prevent duplicates by checking title and ingredients.
-  const recipesToSave = newRecipes.filter(
-    newRecipe => !existingRecipes.some(existing => 
-        existing.title === newRecipe.title && 
-        JSON.stringify(existing.ingredients.sort()) === JSON.stringify(newRecipe.ingredients.sort())
-    )
-  );
-
-  if(recipesToSave.length > 0){
+  if (recipesToSave.length > 0) {
     const updatedRecipes = [...existingRecipes, ...recipesToSave];
     localStorage.setItem(RECIPES_STORAGE_KEY, JSON.stringify(updatedRecipes));
   }
   return recipesToSave;
 }
+
 
 export function getRecipeBySlug(slug: string): Recipe | undefined {
     const recipes = getSavedRecipes();
@@ -59,10 +60,17 @@ export function getRecipeBySlug(slug: string): Recipe | undefined {
     return [...recipes, ...discoverableRecipes].find(recipe => recipe.slug === slug);
 }
 
+export function deleteRecipe(slug: string): void {
+  if (typeof window === "undefined") return;
+  const existingRecipes = getSavedRecipes();
+  const updatedRecipes = existingRecipes.filter(recipe => recipe.slug !== slug);
+  localStorage.setItem(RECIPES_STORAGE_KEY, JSON.stringify(updatedRecipes));
+}
+
 export function getDiscoverableRecipes(): Recipe[] {
     return [
         {
-            slug: "avocado-toast",
+            slug: "avocado-toast-discover",
             title: "Avocado Toast",
             category: "Breakfast",
             image: "https://placehold.co/600x400.png",
@@ -74,7 +82,7 @@ export function getDiscoverableRecipes(): Recipe[] {
             macros: { protein: '10g', carbs: '30g', fat: '18g' }
         },
         {
-            slug: "chicken-salad",
+            slug: "chicken-salad-discover",
             title: "Chicken Salad",
             category: "Lunch",
             image: "https://placehold.co/600x400.png",
@@ -86,7 +94,7 @@ export function getDiscoverableRecipes(): Recipe[] {
             macros: { protein: '40g', carbs: '10g', fat: '20g' }
         },
         {
-            slug: "salmon-and-veggies",
+            slug: "salmon-veggies-discover",
             title: "Salmon and Veggies",
             category: "Main Course",
             image: "https://placehold.co/600x400.png",
@@ -98,7 +106,7 @@ export function getDiscoverableRecipes(): Recipe[] {
             macros: { protein: '45g', carbs: '15g', fat: '35g' }
         },
         {
-            slug: "protein-smoothie",
+            slug: "protein-smoothie-discover",
             title: "Protein Smoothie",
             category: "Snack",
             image: "https://placehold.co/600x400.png",
