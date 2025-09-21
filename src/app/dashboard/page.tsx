@@ -22,10 +22,16 @@ type Exercise = {
   videoUrl: string;
 };
 
+type DailyWorkout = {
+    day: number;
+    title: string;
+    exercises?: Exercise[];
+};
+
 type WorkoutPlan = {
   title: string;
   description: string;
-  exercises: Exercise[];
+  weeklySchedule: DailyWorkout[];
 };
 
 type CompletedWorkout = {
@@ -189,6 +195,10 @@ export default function DashboardPage() {
     const carbProgress = (macros.carbs / MACRO_GOALS.carbs) * 100;
     const proteinProgress = (macros.protein / MACRO_GOALS.protein) * 100;
     const fatProgress = (macros.fat / MACRO_GOALS.fat) * 100;
+    
+    const dayOfWeek = new Date().getDay(); // Sunday - 0, Monday - 1, ...
+    const currentDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek; // Adjust to 1-7 (Mon-Sun)
+    const todaysWorkout = workoutPlan?.weeklySchedule?.find(day => day.day === currentDayOfWeek);
 
   return (
     <div className="w-full flex flex-col font-sans pb-24">
@@ -283,22 +293,26 @@ export default function DashboardPage() {
       </div>
       <div className="bg-background rounded-t-3xl -mt-6 p-4 space-y-4">
             {/* Today's Workout */}
-            {workoutPlan ? (
+            {workoutPlan && todaysWorkout ? (
               <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><Dumbbell className="text-primary"/> Today's Workout</CardTitle>
-                    <CardDescription>{workoutPlan.title}</CardDescription>
+                    <CardDescription>{todaysWorkout.title}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ul className="space-y-2">
-                        {workoutPlan.exercises.slice(0, 3).map(ex => (
+                        {todaysWorkout.exercises && todaysWorkout.exercises.length > 0 ? (
+                          todaysWorkout.exercises.slice(0, 3).map(ex => (
                             <li key={ex.name} className="text-sm text-muted-foreground flex items-center justify-between">
                                 <span>{ex.name} ({ex.sets} x {ex.reps})</span>
                                 <PlayCircle className="h-5 w-5 text-primary/50" />
                             </li>
-                        ))}
-                         {workoutPlan.exercises.length > 3 && (
-                             <li className="text-sm text-muted-foreground">...and {workoutPlan.exercises.length - 3} more</li>
+                          ))
+                        ) : (
+                          <li className="text-sm text-muted-foreground">Rest day!</li>
+                        )}
+                         {todaysWorkout.exercises && todaysWorkout.exercises.length > 3 && (
+                             <li className="text-sm text-muted-foreground">...and {todaysWorkout.exercises.length - 3} more</li>
                          )}
                     </ul>
                     <Button asChild variant="secondary" className="w-full mt-4">
@@ -445,5 +459,8 @@ export default function DashboardPage() {
       )}
     </div>
   );
+
+    
+
 
     
