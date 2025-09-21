@@ -318,7 +318,7 @@ export default function DashboardPage() {
                          )}
                     </ul>
                     <Button asChild variant="secondary" className="w-full mt-4">
-                        <Link href="/dashboard/workout">View Full Workout</Link>
+                        <Link href="/dashboard/workout?view=workout">View Full Workout</Link>
                     </Button>
                 </CardContent>
               </Card>
@@ -466,3 +466,4 @@ export default function DashboardPage() {
 
 
     
+

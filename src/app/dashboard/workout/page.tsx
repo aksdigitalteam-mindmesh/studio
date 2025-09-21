@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,6 +18,7 @@ import type { ChartConfig } from "@/components/ui/chart";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
 
 
 // --- Types ---
@@ -369,7 +370,15 @@ function HubView({ setView }: { setView: (view: View) => void }) {
 
 // --- Main Page Component ---
 function ActivityPage() {
-  const [view, setView] = useState<View>("hub");
+  const searchParams = useSearchParams();
+  const initialView = searchParams.get("view") as View | null;
+  const [view, setView] = useState<View>(initialView || "hub");
+
+   useEffect(() => {
+    if (initialView) {
+      setView(initialView);
+    }
+  }, [initialView]);
 
   const PageContent = () => {
     switch (view) {
@@ -396,8 +405,13 @@ function ActivityPage() {
 }
 
 export default function WorkoutPage() {
-    return <ActivityPage />
+    return (
+        <Suspense>
+            <ActivityPage />
+        </Suspense>
+    )
 }
     
     
+
 
