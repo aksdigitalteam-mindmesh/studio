@@ -7,6 +7,7 @@ import type { Meal, Recipe } from "@/lib/types";
 const RECIPES_STORAGE_KEY = "savedRecipes";
 
 function slugify(text: string) {
+  const randomString = Math.random().toString(36).substring(2, 7);
   return text
     .toString()
     .toLowerCase()
@@ -14,7 +15,7 @@ function slugify(text: string) {
     .replace(/[^\w\-]+/g, '')
     .replace(/\-\-+/g, '-')
     .replace(/^-+/, '')
-    .replace(/-+$/, '');
+    .replace(/-+$/, '') + '-' + randomString;
 }
 
 export function getSavedRecipes(): Recipe[] {
@@ -37,13 +38,16 @@ export function saveRecipesFromPlan(meals: Meal[]): Recipe[] {
       macros: meal.macros,
   }));
 
-  // Avoid duplicates - simple check based on title
+  // Avoid duplicates - simple check based on title. This is a bit naive if names are not unique from AI.
+  // A better check might involve deep comparison of ingredients/instructions if needed.
   const recipesToSave = newRecipes.filter(
-    newRecipe => !existingRecipes.some(existing => existing.title === newRecipe.title)
+    newRecipe => !existingRecipes.some(existing => existing.title === newRecipe.title && JSON.stringify(existing.ingredients) === JSON.stringify(newRecipe.ingredients))
   );
 
-  const updatedRecipes = [...existingRecipes, ...recipesToSave];
-  localStorage.setItem(RECIPES_STORAGE_KEY, JSON.stringify(updatedRecipes));
+  if(recipesToSave.length > 0){
+    const updatedRecipes = [...existingRecipes, ...recipesToSave];
+    localStorage.setItem(RECIPES_STORAGE_KEY, JSON.stringify(updatedRecipes));
+  }
   return recipesToSave;
 }
 
