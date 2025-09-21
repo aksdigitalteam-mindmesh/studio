@@ -73,12 +73,17 @@ function ProgressTracker() {
   });
   const [targetWeight, setTargetWeight] = useState(70);
   const [currentWeight, setCurrentWeight] = useState("");
+  const [completedWorkouts, setCompletedWorkouts] = useState<CompletedWorkout[]>([]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(WEIGHT_STORAGE_KEY, JSON.stringify(weightData));
     }
   }, [weightData]);
+
+  useEffect(() => {
+      setCompletedWorkouts(getCompletedWorkouts());
+  }, []);
 
   const handleAddWeight = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +116,31 @@ function ProgressTracker() {
           </ChartContainer>
         </CardContent>
       </Card>
+      
+       <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Flame className="text-primary"/> Workout Log</CardTitle>
+          <CardDescription>A history of your completed workouts.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {completedWorkouts.length > 0 ? (
+            <ul className="space-y-4 max-h-64 overflow-y-auto">
+              {completedWorkouts.slice().reverse().map((workout, index) => (
+                <li key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <Dumbbell className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="font-semibold">{workout.title}</p>
+                      <p className="text-sm text-muted-foreground">{format(new Date(workout.date), "MMMM dd, yyyy")}</p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (<div className="text-center text-muted-foreground py-8"><p>You haven't logged any workouts yet.</p></div>)}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-2">
          <Card>
           <CardHeader><CardTitle>Log Your Weight</CardTitle></CardHeader>
@@ -146,7 +176,6 @@ function ProgressTracker() {
 function WorkoutLog() {
   const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
   const [completedExercises, setCompletedExercises] = useState<string[]>([]);
-  const [completedWorkouts, setCompletedWorkouts] = useState<CompletedWorkout[]>([]);
   const { toast } = useToast();
   
   const today = new Date();
@@ -173,7 +202,6 @@ function WorkoutLog() {
         setWorkoutPlan(null);
       }
     }
-    setCompletedWorkouts(getCompletedWorkouts());
   }, [activeDay]);
 
   useEffect(() => {
@@ -192,11 +220,8 @@ function WorkoutLog() {
     if (activeWorkoutDay && activeWorkoutDay.exercises) {
       saveCompletedWorkoutAction(activeWorkoutDay.title, completedExercises);
       toast({ title: "Workout Completed!", description: `Great job! "${activeWorkoutDay.title}" has been added to your log.` });
-      setCompletedWorkouts(getCompletedWorkouts());
     }
   };
-
-  const completionPercentage = activeWorkoutDay?.exercises ? (completedExercises.length / activeWorkoutDay.exercises.length) * 100 : 0;
 
   if (!workoutPlan) {
     return (
@@ -212,6 +237,8 @@ function WorkoutLog() {
       </Card>
     );
   }
+
+  const completionPercentage = activeWorkoutDay?.exercises ? (completedExercises.length / activeWorkoutDay.exercises.length) * 100 : 0;
 
   return (
     <div className="space-y-8">
@@ -273,29 +300,6 @@ function WorkoutLog() {
         </>
       )}
       
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Flame className="text-primary"/> Workout Log</CardTitle>
-          <CardDescription>A history of your completed workouts.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {completedWorkouts.length > 0 ? (
-            <ul className="space-y-4 max-h-64 overflow-y-auto">
-              {completedWorkouts.slice().reverse().map((workout, index) => (
-                <li key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <Dumbbell className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="font-semibold">{workout.title}</p>
-                      <p className="text-sm text-muted-foreground">{format(new Date(workout.date), "MMMM dd, yyyy")}</p>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (<div className="text-center text-muted-foreground py-8"><p>You haven't logged any workouts yet.</p></div>)}
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -394,6 +398,6 @@ function ActivityPage() {
 export default function WorkoutPage() {
     return <ActivityPage />
 }
+    
+    
 
-    
-    
