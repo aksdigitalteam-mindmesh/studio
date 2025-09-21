@@ -38,10 +38,12 @@ export function saveRecipesFromPlan(meals: Meal[]): Recipe[] {
       macros: meal.macros,
   }));
 
-  // Avoid duplicates - simple check based on title. This is a bit naive if names are not unique from AI.
-  // A better check might involve deep comparison of ingredients/instructions if needed.
+  // Prevent duplicates by checking title and ingredients.
   const recipesToSave = newRecipes.filter(
-    newRecipe => !existingRecipes.some(existing => existing.title === newRecipe.title && JSON.stringify(existing.ingredients) === JSON.stringify(newRecipe.ingredients))
+    newRecipe => !existingRecipes.some(existing => 
+        existing.title === newRecipe.title && 
+        JSON.stringify(existing.ingredients.sort()) === JSON.stringify(newRecipe.ingredients.sort())
+    )
   );
 
   if(recipesToSave.length > 0){
