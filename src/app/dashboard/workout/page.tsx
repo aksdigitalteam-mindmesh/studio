@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
@@ -34,6 +35,7 @@ type WorkoutPlan = {
   description: string;
   weeklySchedule: {
     day: number;
+    title: string;
     exercises: Exercise[];
   }[];
 };
@@ -153,7 +155,7 @@ function WorkoutLog() {
   
   const [activeDay, setActiveDay] = useState(currentDay);
   
-  const activeWorkoutDay = workoutPlan?.weeklySchedule.find(d => d.day === activeDay);
+  const activeWorkoutDay = workoutPlan?.weeklySchedule?.find(d => d.day === activeDay);
 
 
   useEffect(() => {
@@ -383,3 +385,5 @@ function ActivityPage() {
 export default function WorkoutPage() {
     return <ActivityPage />
 }
+
+    
