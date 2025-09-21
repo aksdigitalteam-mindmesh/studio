@@ -43,6 +43,7 @@ type Meal = {
   id: number;
   name: string;
   calories: number;
+  date: string;
   macros?: {
     protein: string;
     carbs: string;
@@ -90,12 +91,13 @@ export default function DashboardPage() {
         // --- Calorie & Macro Calculation Logic ---
         const calculateNutrition = () => {
             const savedMeals = localStorage.getItem("dailyMeals");
-            const meals: Meal[] = savedMeals ? JSON.parse(savedMeals) : [];
+            const allMeals: Meal[] = savedMeals ? JSON.parse(savedMeals) : [];
+            const todaysMeals = allMeals.filter(meal => isToday(new Date(meal.date)));
             
             let totalEaten = 0;
             const totalMacros = { carbs: 0, protein: 0, fat: 0 };
 
-            meals.forEach(meal => {
+            todaysMeals.forEach(meal => {
                 totalEaten += meal.calories;
                 if (meal.macros) {
                     totalMacros.protein += parseFloat(meal.macros.protein) || 0;

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,29 +8,38 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { PlusCircle, Trash2 } from "lucide-react";
+import { isToday, startOfToday } from "date-fns";
 
 interface Meal {
   id: number;
   name: string;
   calories: number;
+  date: string;
 }
 
 const STORAGE_KEY = "dailyMeals";
 
 export default function CaloriesPage() {
-  const [meals, setMeals] = useState<Meal[]>(() => {
-    if (typeof window === 'undefined') return [];
-    const savedMeals = localStorage.getItem(STORAGE_KEY);
-    return savedMeals ? JSON.parse(savedMeals) : [];
-  });
+  const [allMeals, setAllMeals] = useState<Meal[]>([]);
   const [mealName, setMealName] = useState("");
   const [calories, setCalories] = useState("");
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(meals));
-  }, [meals]);
+    if (typeof window !== 'undefined') {
+        const savedMeals = localStorage.getItem(STORAGE_KEY);
+        setAllMeals(savedMeals ? JSON.parse(savedMeals) : []);
+    }
+  }, []);
 
-  const totalCalories = meals.reduce((acc, meal) => acc + meal.calories, 0);
+  useEffect(() => {
+    if (allMeals.length > 0 || localStorage.getItem(STORAGE_KEY)) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allMeals));
+    }
+  }, [allMeals]);
+
+  const todaysMeals = allMeals.filter(meal => isToday(new Date(meal.date)));
+
+  const totalCalories = todaysMeals.reduce((acc, meal) => acc + meal.calories, 0);
   const calorieGoal = 2000;
   const progress = (totalCalories / calorieGoal) * 100;
 
@@ -40,15 +50,16 @@ export default function CaloriesPage() {
         id: Date.now(),
         name: mealName.trim(),
         calories: parseInt(calories),
+        date: startOfToday().toISOString(),
       };
-      setMeals([...meals, newMeal]);
+      setAllMeals([...allMeals, newMeal]);
       setMealName("");
       setCalories("");
     }
   };
 
   const handleDeleteMeal = (id: number) => {
-    setMeals(meals.filter(meal => meal.id !== id));
+    setAllMeals(allMeals.filter(meal => meal.id !== id));
   }
 
   return (
@@ -111,8 +122,8 @@ export default function CaloriesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {meals.length > 0 ? (
-                meals.map((meal) => (
+              {todaysMeals.length > 0 ? (
+                todaysMeals.map((meal) => (
                   <TableRow key={meal.id}>
                     <TableCell className="font-medium">{meal.name}</TableCell>
                     <TableCell className="text-right">{meal.calories} kcal</TableCell>
