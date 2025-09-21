@@ -176,7 +176,6 @@ export default function DashboardPage() {
       { href: "/dashboard/calories", bg: "bg-red-100", image: "https://placehold.co/100x100.png", hint: "spaghetti plate", label: "Dinner" },
       { href: "/dashboard/calories", bg: "bg-yellow-100", image: "https://placehold.co/100x100.png", hint: "banana fruit", label: "Snacks" },
       { href: "/dashboard/workout", bg: "bg-purple-100", image: "https://placehold.co/100x100.png", hint: "person lifting weights", label: "Exercise" },
-      { href: "/dashboard/calories", bg: "bg-sky-100", image: "https://placehold.co/100x100.png", hint: "water glass", label: "Water" },
     ];
 
     const nextDay = () => setCurrentDate(addDays(currentDate, 1));
@@ -459,5 +458,7 @@ export default function DashboardPage() {
       )}
     </div>
   );
+
+    
 
     
