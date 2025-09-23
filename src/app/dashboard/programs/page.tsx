@@ -45,7 +45,7 @@ function ProgramsPageContent() {
           <h1 className="text-3xl font-bold font-headline md:text-4xl">AI Programs</h1>
           <p className="text-muted-foreground">Your personal AI coach for fitness and nutrition.</p>
         </div>
-        <PremiumBadge />
+        {isPremium && <PremiumBadge />}
       </div>
 
       {!isPremium ? (

@@ -2,16 +2,18 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Muscle } from "@/components/muscle-fatigue-diagram";
-import { Hand, Loader2, BrainCircuit, Lightbulb, Droplets, MoreVertical } from "lucide-react";
+import { Hand, Loader2, BrainCircuit, Lightbulb, Droplets, MoreVertical, Lock } from "lucide-react";
 import { generateRecoveryTips } from "@/ai/flows/generate-recovery-tips";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format, isSameDay } from "date-fns";
+import { usePremiumStatus } from "@/hooks/use-premium-status";
 
 type FatigueData = Partial<Record<Muscle, number>>;
 type RecoveryTip = { title: string; description: string };
@@ -64,6 +66,7 @@ export default function FatigueTrackerPage() {
   const [isTipsDialogOpen, setIsTipsDialogOpen] = useState(false);
   const { toast } = useToast();
   const [waterGlasses, setWaterGlasses] = useState<boolean[]>([]);
+  const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
 
   const loadWaterData = () => {
       const savedWaterLog = localStorage.getItem(WATER_STORAGE_KEY);
@@ -135,6 +138,14 @@ export default function FatigueTrackerPage() {
   const hydrationProgress = (filledGlasses / waterGlasses.length) * 100;
 
   const handleGetRecoveryTips = () => {
+    if (!isPremium) {
+      toast({
+        variant: "destructive",
+        title: "Premium Feature",
+        description: "AI Recovery Tips are only available for premium users.",
+      });
+      return;
+    }
     const mostFatigued = Object.entries(fatigueData)
         .filter(([, value]) => value > 50)
         .sort(([, a], [, b]) => b - a)
@@ -165,6 +176,37 @@ export default function FatigueTrackerPage() {
     if (value >= 10) return "bg-blue-500";
     return "bg-primary";
   };
+  
+  if (isPremiumLoading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+    );
+  }
+
+  if (!isPremium) {
+    return (
+        <div className="space-y-8 p-4 md:p-8 pb-24">
+            <Card className="relative min-h-[60vh] flex items-center justify-center">
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-8 text-center rounded-lg">
+                    <Lock className="h-12 w-12 text-primary mb-4" />
+                    <h2 className="text-2xl font-bold font-headline mb-2">Unlock Fatigue Tracking</h2>
+                    <p className="text-muted-foreground mb-6">Upgrade to premium to track muscle fatigue, get AI recovery tips, and prevent overtraining.</p>
+                    <Button asChild>
+                        <Link href="/dashboard/subscription">Upgrade to Premium</Link>
+                    </Button>
+                </div>
+                 <div className="blur-sm pointer-events-none w-full">
+                     <div>
+                        <h1 className="text-3xl font-bold font-headline md:text-4xl">Fatigue Tracker</h1>
+                        <p className="text-muted-foreground">Visualize your muscle recovery and train smarter.</p>
+                    </div>
+                </div>
+            </Card>
+        </div>
+    );
+  }
 
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
