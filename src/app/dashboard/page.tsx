@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Bell, User, ChevronDown, ChevronLeft, ChevronRight, Calendar, Dumbbell, PlayCircle, Plus } from "lucide-react";
+import { Bell, User, ChevronLeft, ChevronRight, Calendar, Dumbbell, PlayCircle, Plus } from "lucide-react";
 import Link from 'next/link';
 import Image from "next/image";
 import { format, addDays, subDays, isToday, isYesterday, isSameDay } from 'date-fns';
@@ -388,5 +388,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
