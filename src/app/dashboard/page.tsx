@@ -357,7 +357,7 @@ export default function DashboardPage() {
                     {isClient && <CardDescription>{`${filledGlasses} / ${WATER_GOAL} glasses`}</CardDescription>}
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                    <div className="grid grid-cols-8 gap-2">
+                    <div className="grid grid-cols-4 gap-4">
                     {isClient && waterGlassesForDate.map((filled, index) => (
                         <WaterGlass key={index} filled={filled} onClick={() => handleWaterClick(index)} />
                     ))}
@@ -389,5 +389,6 @@ export default function DashboardPage() {
   );
 }
 
+    
     
     
