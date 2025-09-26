@@ -91,7 +91,7 @@ export default function WaterPage() {
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground"/>
                 </div>
             ) : (
-                <div className="grid grid-cols-4 gap-4 sm:grid-cols-8">
+                <div className="grid grid-cols-8 gap-4">
                 {todaysGlasses.map((filled, index) => (
                     <WaterGlass key={index} filled={filled} onClick={() => handleWaterClick(index)} />
                 ))}
@@ -115,4 +115,5 @@ export default function WaterPage() {
   );
 }
 
+    
     
