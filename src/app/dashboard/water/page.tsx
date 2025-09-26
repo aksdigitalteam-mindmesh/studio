@@ -114,9 +114,3 @@ export default function WaterPage() {
     </div>
   );
 }
-
-    
-    
-    
-
-    
