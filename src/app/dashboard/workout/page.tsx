@@ -1,12 +1,11 @@
 
-
 "use client";
 
-import { useState, useEffect, useTransition, Suspense, useCallback } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Dumbbell, CheckCircle, Flame, BarChart3, BrainCircuit, ArrowLeft, PlusCircle, Timer, SkipForward, ArrowRight, Play, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Dumbbell, CheckCircle, Flame, BarChart3, BrainCircuit, ArrowLeft, PlusCircle, Timer, SkipForward, ChevronRight, Play, X, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { saveCompletedWorkoutAction, getCompletedWorkouts } from "@/lib/workout-log-actions";
 import { useToast } from "@/hooks/use-toast";
@@ -36,6 +35,7 @@ type WorkoutPlan = {
   weeklySchedule: {
     day: number;
     title: string;
+    description: string;
     exercises: Exercise[];
   }[];
 };
@@ -67,24 +67,24 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 function ProgressTracker() {
-  const [weightData, setWeightData] = useState(() => {
-    if (typeof window === 'undefined') return initialWeightData;
-    const savedData = localStorage.getItem(WEIGHT_STORAGE_KEY);
-    return savedData ? JSON.parse(savedData) : initialWeightData;
-  });
+  const [weightData, setWeightData] = useState(initialWeightData);
   const [targetWeight, setTargetWeight] = useState(70);
   const [currentWeight, setCurrentWeight] = useState("");
   const [completedWorkouts, setCompletedWorkouts] = useState<CompletedWorkout[]>([]);
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+    const savedData = localStorage.getItem(WEIGHT_STORAGE_KEY);
+    setWeightData(savedData ? JSON.parse(savedData) : initialWeightData);
+    setCompletedWorkouts(getCompletedWorkouts());
+  }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isClient) {
       localStorage.setItem(WEIGHT_STORAGE_KEY, JSON.stringify(weightData));
     }
-  }, [weightData]);
-
-  useEffect(() => {
-      setCompletedWorkouts(getCompletedWorkouts());
-  }, []);
+  }, [weightData, isClient]);
 
   const handleAddWeight = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,7 +103,7 @@ function ProgressTracker() {
        <Card>
         <CardHeader>
           <CardTitle>Progress Chart</CardTitle>
-          <CardDescription>Current: {weightData.length > 0 ? weightData[weightData.length-1].weight : 'N/A'}kg | Target: {targetWeight}kg</CardDescription>
+          <CardDescription>Current: {isClient && weightData.length > 0 ? weightData[weightData.length-1].weight : 'N/A'}kg | Target: {targetWeight}kg</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="h-64 w-full">
@@ -124,7 +124,7 @@ function ProgressTracker() {
           <CardDescription>A history of your completed workouts.</CardDescription>
         </CardHeader>
         <CardContent>
-          {completedWorkouts.length > 0 ? (
+          {isClient && completedWorkouts.length > 0 ? (
             <ul className="space-y-4 max-h-64 overflow-y-auto">
               {completedWorkouts.slice().reverse().map((workout, index) => (
                 <li key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
@@ -207,14 +207,15 @@ function WorkoutLog() {
 
   // Rest timer logic
   useEffect(() => {
+    let timer: NodeJS.Timeout;
     if (sessionState === 'rest' && !isPaused && restTimeLeft > 0) {
-      const timer = setInterval(() => {
+      timer = setInterval(() => {
         setRestTimeLeft(prev => prev - 1);
       }, 1000);
-      return () => clearInterval(timer);
     } else if (sessionState === 'rest' && restTimeLeft <= 0) {
       handleNext();
     }
+    return () => clearInterval(timer);
   }, [sessionState, restTimeLeft, isPaused]);
 
 
@@ -228,27 +229,31 @@ function WorkoutLog() {
   };
 
   const handleNext = () => {
-    setIsPaused(false);
-    setRestTimeLeft(REST_DURATION_SECONDS);
+    if (!activeWorkoutDay?.exercises) return;
 
-    if (!activeWorkoutDay || !activeWorkoutDay.exercises) return;
+    setIsPaused(false); // Make sure timer isn't paused
+    setRestTimeLeft(REST_DURATION_SECONDS);
 
     if (currentExerciseIndex < activeWorkoutDay.exercises.length - 1) {
       setSessionState('rest');
-      // Delay moving to next exercise until after rest
-      setTimeout(() => {
-        setCurrentExerciseIndex(prev => prev + 1);
-        setSessionState('exercise');
-      }, REST_DURATION_SECONDS * 1000);
     } else {
       setSessionState('completed');
     }
   };
   
+  const handleRestEnd = () => {
+      setSessionState('exercise');
+      setCurrentExerciseIndex(prev => prev + 1);
+  }
+
+  useEffect(() => {
+    if (sessionState === 'rest' && restTimeLeft <= 0) {
+      handleRestEnd();
+    }
+  }, [restTimeLeft, sessionState]);
+
   const skipRest = () => {
       setRestTimeLeft(0);
-      setCurrentExerciseIndex(prev => prev + 1);
-      setSessionState('exercise');
   }
 
   const handlePrevious = () => {
@@ -258,25 +263,26 @@ function WorkoutLog() {
   };
 
   const handleCompleteWorkout = () => {
-    if (activeWorkoutDay && activeWorkoutDay.exercises) {
+    if (activeWorkoutDay?.exercises) {
       const completedExerciseNames = activeWorkoutDay.exercises.map(ex => ex.name);
       saveCompletedWorkoutAction(activeWorkoutDay.title, completedExerciseNames);
       toast({ title: "Workout Completed!", description: `Great job! "${activeWorkoutDay.title}" has been added to your log.` });
       setSessionState('preview');
+      setCurrentExerciseIndex(0);
     }
   };
 
   if (sessionState === "preview") {
     if (!workoutPlan) {
       return (
-        <Card className="flex flex-col items-center justify-center min-h-[400px]">
-          <CardHeader className="text-center">
+        <Card className="flex flex-col items-center justify-center text-center min-h-[400px]">
+          <CardHeader>
             <Dumbbell className="h-12 w-12 mx-auto text-muted-foreground" />
-            <CardTitle>No Active Workout</CardTitle>
+            <CardTitle>No Active Workout Plan</CardTitle>
             <CardDescription>Go to "AI Programs" to generate a new workout plan.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild><Link href="/dashboard/programs">Generate Workout</Link></Button>
+            <Button asChild><Link href="/dashboard/programs?tab=workout">Generate Workout</Link></Button>
           </CardContent>
         </Card>
       );
@@ -307,17 +313,17 @@ function WorkoutLog() {
             <Card>
               <CardHeader>
                 <CardTitle>Day {activeDay}: {activeWorkoutDay.title}</CardTitle>
-                <CardDescription>{activeWorkoutDay.exercises?.length || 0} exercises today.</CardDescription>
+                <CardDescription>{activeWorkoutDay.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={() => startSession()} size="lg" className="w-full">
+                <Button onClick={() => startSession()} size="lg" className="w-full" disabled={!activeWorkoutDay.exercises || activeWorkoutDay.exercises.length === 0}>
                   <Play className="mr-2 h-5 w-5" /> Start Full Workout
                 </Button>
               </CardContent>
             </Card>
 
             <div className="space-y-4">
-              {activeWorkoutDay.exercises && activeWorkoutDay.exercises.map((exercise, index) => (
+              {activeWorkoutDay.exercises && activeWorkoutDay.exercises.length > 0 ? (activeWorkoutDay.exercises.map((exercise, index) => (
                 <Card key={exercise.name} onClick={() => startSession(index)} className="cursor-pointer hover:bg-muted/50 transition-colors">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -334,11 +340,10 @@ function WorkoutLog() {
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-             {(!activeWorkoutDay.exercises || activeWorkoutDay.exercises.length === 0) && (
+              ))) : (
                 <div className="text-center py-8 text-muted-foreground">This is a rest day. Enjoy your recovery!</div>
-            )}
+              )}
+            </div>
           </>
         )}
       </div>
@@ -350,7 +355,7 @@ function WorkoutLog() {
   if (sessionState === 'exercise' && currentExercise) {
      const progress = ((currentExerciseIndex + 1) / (activeWorkoutDay?.exercises?.length || 1)) * 100;
      return (
-        <div className="flex flex-col h-[80vh] bg-background">
+        <div className="flex flex-col h-[calc(100vh-10rem)] bg-background">
              <div className="flex items-center justify-between p-4">
                 <Button variant="ghost" size="icon" onClick={() => setSessionState('preview')}>
                     <X className="h-6 w-6" />
@@ -392,8 +397,9 @@ function WorkoutLog() {
 
   if (sessionState === 'rest') {
     const restProgress = ((REST_DURATION_SECONDS - restTimeLeft) / REST_DURATION_SECONDS) * 100;
+    const nextExercise = activeWorkoutDay?.exercises?.[currentExerciseIndex + 1];
     return (
-        <div className="flex flex-col items-center justify-center h-[80vh] text-center p-4">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)] text-center p-4">
             <Timer className="h-16 w-16 text-primary mb-4" />
             <h2 className="text-3xl font-bold font-headline mb-2">Take a Rest</h2>
             <p className="text-7xl font-bold font-mono my-8">{restTimeLeft}s</p>
@@ -401,14 +407,14 @@ function WorkoutLog() {
              <Button onClick={skipRest} size="lg" className="w-full max-w-sm">
                 <SkipForward className="mr-2 h-5 w-5"/> Skip Rest
             </Button>
-             <p className="text-muted-foreground mt-4">Next up: {activeWorkoutDay?.exercises?.[currentExerciseIndex]?.name}</p>
+            {nextExercise && <p className="text-muted-foreground mt-4">Next up: {nextExercise.name}</p>}
         </div>
     )
   }
 
   if (sessionState === 'completed') {
     return (
-        <div className="flex flex-col items-center justify-center h-[80vh] text-center p-4">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)] text-center p-4">
             <CheckCircle className="h-20 w-20 text-green-500 mb-6" />
             <h2 className="text-4xl font-bold font-headline mb-2">Workout Complete!</h2>
             <p className="text-muted-foreground mb-8">You crushed {activeWorkoutDay?.exercises?.length} exercises today.</p>
@@ -430,7 +436,7 @@ function WorkoutLog() {
                 <Button onClick={handleCompleteWorkout} size="lg" className="w-full">
                     <CheckCircle className="mr-2 h-5 w-5"/> Log Workout
                 </Button>
-                <Button variant="outline" onClick={() => setSessionState('preview')} className="w-full">
+                <Button variant="outline" onClick={() => { setSessionState('preview'); setCurrentExerciseIndex(0); }} className="w-full">
                     Back to Workout List
                 </Button>
             </div>
@@ -447,57 +453,56 @@ function HubView({ setView }: { setView: (view: View) => void }) {
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
-        // Trigger fade-in animation
         setIsMounted(true);
     }, []);
 
-    const bubbleCommonClass = "w-32 h-32 rounded-full flex flex-col items-center justify-center text-primary-foreground shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl";
+    const bubbleCommonClass = "w-32 h-32 rounded-full flex flex-col items-center justify-center text-center p-2 text-primary-foreground shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl";
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[70vh] text-center overflow-hidden">
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center overflow-hidden">
             <h1 className={cn("text-3xl font-bold font-headline md:text-4xl transition-opacity duration-500", isMounted ? "opacity-100" : "opacity-0")}>Activity Hub</h1>
             <p className={cn("text-muted-foreground mb-12 transition-opacity duration-500 delay-200", isMounted ? "opacity-100" : "opacity-0")}>
                 Track your workouts and monitor your progress.
             </p>
             <div className="relative w-full max-w-xs h-72 flex items-center justify-center">
-                 <Link
-                    href="/dashboard/programs"
+                 <button
+                    onClick={() => setView('workout')}
                     className={cn(
                         bubbleCommonClass,
-                        "absolute bg-gradient-to-br from-purple-500 to-indigo-600 hover:shadow-purple-400/40 hover:scale-105",
-                        isMounted ? "opacity-100 -translate-y-4" : "opacity-0"
+                        "absolute bg-gradient-to-br from-blue-500 to-cyan-500 hover:shadow-blue-400/40 hover:scale-105",
+                        isMounted ? "opacity-100 -translate-y-4" : "opacity-0 -translate-y-0"
                     )}
                     style={{ top: '0', left: '50%', transform: 'translateX(-50%)', transitionDelay: '200ms' }}
                 >
-                    <BrainCircuit className="h-10 w-10" />
-                    <span className="font-bold mt-2 text-sm">AI Coach</span>
-                </Link>
+                    <Dumbbell className="h-10 w-10" />
+                    <span className="font-bold mt-2 text-sm">Start Workout</span>
+                </button>
 
                 <button
                     onClick={() => setView('progress')}
                     className={cn(
                         bubbleCommonClass,
                         "absolute bg-gradient-to-br from-green-400 to-emerald-500 hover:shadow-green-400/40 hover:scale-105",
-                         isMounted ? "opacity-100 translate-y-4" : "opacity-0"
+                         isMounted ? "opacity-100 translate-y-4 -translate-x-4" : "opacity-0"
                     )}
                     style={{ bottom: '0', left: '0', transitionDelay: '400ms' }}
                 >
                     <BarChart3 className="h-10 w-10" />
                     <span className="font-bold mt-2 text-sm">Progress</span>
                 </button>
-
-                <button
-                    onClick={() => setView('workout')}
+                
+                 <Link
+                    href="/dashboard/programs?tab=workout"
                     className={cn(
                         bubbleCommonClass,
-                        "absolute bg-gradient-to-br from-blue-500 to-cyan-500 hover:shadow-blue-400/40 hover:scale-105",
-                        isMounted ? "opacity-100 translate-y-4" : "opacity-0"
+                        "absolute bg-gradient-to-br from-purple-500 to-indigo-600 hover:shadow-purple-400/40 hover:scale-105",
+                        isMounted ? "opacity-100 translate-y-4 translate-x-4" : "opacity-0"
                     )}
                     style={{ bottom: '0', right: '0', transitionDelay: '600ms' }}
                 >
-                    <Dumbbell className="h-10 w-10" />
-                    <span className="font-bold mt-2 text-sm">Workout</span>
-                </button>
+                    <BrainCircuit className="h-10 w-10" />
+                    <span className="font-bold mt-2 text-sm">AI Coach</span>
+                </Link>
             </div>
         </div>
     );
@@ -509,10 +514,11 @@ function ActivityPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialView = searchParams.get("view") as View | null;
-  const [view, setView] = useState<View>(initialView || "hub");
+  const [view, setView] = useState<View>("hub");
 
   useEffect(() => {
-    if (initialView) {
+    // Only set view from params on initial load if it's valid
+    if (initialView && ["hub", "workout", "progress"].includes(initialView)) {
       setView(initialView);
     }
   }, [initialView]);
@@ -558,7 +564,5 @@ export default function WorkoutPage() {
         </Suspense>
     )
 }
-    
-    
 
     

@@ -23,50 +23,42 @@ function ProfilePageContent() {
   const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
   const { theme, setTheme } = useTheme();
 
-  const [gender, setGender] = useState(() => {
-    if (typeof window === 'undefined') return 'male';
-    return localStorage.getItem('userGender') || 'male';
-  });
-
-  // Notification states
-  const [workoutReminder, setWorkoutReminder] = useState(() => {
-    if (typeof window === 'undefined') return { enabled: false, time: '17:00' };
-    const saved = localStorage.getItem('workoutReminder');
-    return saved ? JSON.parse(saved) : { enabled: false, time: '17:00' };
-  });
-  const [mealReminder, setMealReminder] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('mealReminder') === 'true';
-  });
-  const [shoppingReminder, setShoppingReminder] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('shoppingReminder') === 'true';
-  });
-  const [motivationalReminder, setMotivationalReminder] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('motivationalReminder') === 'true';
-  });
-
+  const [gender, setGender] = useState('male');
+  const [workoutReminder, setWorkoutReminder] = useState({ enabled: false, time: '17:00' });
+  const [mealReminder, setMealReminder] = useState(false);
+  const [shoppingReminder, setShoppingReminder] = useState(false);
+  const [motivationalReminder, setMotivationalReminder] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('workoutReminder', JSON.stringify(workoutReminder));
-  }, [workoutReminder]);
+    setIsClient(true);
+    setGender(localStorage.getItem('userGender') || 'male');
+    const savedWR = localStorage.getItem('workoutReminder');
+    setWorkoutReminder(savedWR ? JSON.parse(savedWR) : { enabled: false, time: '17:00' });
+    setMealReminder(localStorage.getItem('mealReminder') === 'true');
+    setShoppingReminder(localStorage.getItem('shoppingReminder') === 'true');
+    setMotivationalReminder(localStorage.getItem('motivationalReminder') === 'true');
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('mealReminder', String(mealReminder));
-  }, [mealReminder]);
+    if(isClient) localStorage.setItem('userGender', gender);
+  }, [gender, isClient]);
 
   useEffect(() => {
-    localStorage.setItem('shoppingReminder', String(shoppingReminder));
-  }, [shoppingReminder]);
-  
-  useEffect(() => {
-    localStorage.setItem('motivationalReminder', String(motivationalReminder));
-  }, [motivationalReminder]);
+    if(isClient) localStorage.setItem('workoutReminder', JSON.stringify(workoutReminder));
+  }, [workoutReminder, isClient]);
 
   useEffect(() => {
-    localStorage.setItem('userGender', gender);
-  }, [gender]);
+    if(isClient) localStorage.setItem('mealReminder', String(mealReminder));
+  }, [mealReminder, isClient]);
+
+  useEffect(() => {
+    if(isClient) localStorage.setItem('shoppingReminder', String(shoppingReminder));
+  }, [shoppingReminder, isClient]);
+
+  useEffect(() => {
+    if(isClient) localStorage.setItem('motivationalReminder', String(motivationalReminder));
+  }, [motivationalReminder, isClient]);
 
 
   const handleReminderToggle = (enabled: boolean) => {
@@ -84,11 +76,11 @@ function ProfilePageContent() {
     }
   };
 
-  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setWorkoutReminder(prev => ({...prev, time: e.target.value}));
-  };
-  
   const scheduleNotification = useCallback(() => {
+    if (!workoutReminder.enabled || typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
+      return;
+    }
+    
     const motivationalMessages = [
       "Time to crush your workout 💥",
       "Your body is waiting, let’s move 🏋️",
@@ -96,49 +88,44 @@ function ProfilePageContent() {
       "Rise and grind! It's workout time!",
     ];
 
-    if (workoutReminder.enabled && 'Notification' in window && Notification.permission === 'granted') {
-      const [hours, minutes] = workoutReminder.time.split(':').map(Number);
-      const now = new Date();
-      const reminderDate = new Date();
-      reminderDate.setHours(hours, minutes, 0, 0);
+    const [hours, minutes] = workoutReminder.time.split(':').map(Number);
+    const now = new Date();
+    let reminderDate = new Date();
+    reminderDate.setHours(hours, minutes, 0, 0);
 
-      // If the time is already past, schedule it for tomorrow
-      if (reminderDate < now) {
-        reminderDate.setDate(reminderDate.getDate() + 1);
-      }
-
-      const timeout = reminderDate.getTime() - now.getTime();
-      
-      const timer = setTimeout(() => {
-         const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
-         new Notification('FitBoost Workout Reminder', {
-            body: randomMessage,
-            icon: '/logo.svg' // Make sure you have a logo here
-         });
-         // Schedule for next day
-         scheduleNotification();
-      }, timeout);
-
-      return () => clearTimeout(timer);
+    if (reminderDate <= now) {
+      reminderDate.setDate(reminderDate.getDate() + 1);
     }
+
+    const timeout = reminderDate.getTime() - now.getTime();
+    
+    const timerId = setTimeout(() => {
+       const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+       new Notification('FitBoost Workout Reminder', {
+          body: randomMessage,
+          icon: '/logo.svg'
+       });
+    }, timeout);
+
+    return () => clearTimeout(timerId);
   }, [workoutReminder.enabled, workoutReminder.time]);
 
   useEffect(() => {
-    const clearNotification = scheduleNotification();
-    return clearNotification;
+    const clearNotificationTimer = scheduleNotification();
+    return clearNotificationTimer;
   }, [scheduleNotification]);
 
 
   const userData = {
     name: 'Fitness Enthusiast',
     email: 'user@example.com',
-    avatar: 'https://placehold.co/128x128.png',
+    avatar: 'https://picsum.photos/seed/avatar/128/128',
     age: 28,
     height: '175 cm',
     weight: '72 kg',
   };
   
-  if (isPremiumLoading) {
+  if (isPremiumLoading || !isClient) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -271,14 +258,13 @@ function ProfilePageContent() {
                           id="reminder-time"
                           type="time" 
                           value={workoutReminder.time}
-                          onChange={handleTimeChange}
+                          onChange={(e) => setWorkoutReminder(prev => ({...prev, time: e.target.value}))}
                           className="w-32"
                         />
                   </div>
               )}
-              {/* Premium Features */}
                <div className="space-y-2 rounded-lg border p-4 relative">
-                  {!isPremium && <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-10 rounded-lg"></div>}
+                  {!isPremium && <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 rounded-lg"></div>}
                   <div className="flex items-center justify-between">
                     <Label htmlFor="meal-reminder-toggle" className="font-semibold flex items-center gap-2">
                         Meal Reminders <PremiumBadge className="h-5 px-1.5 text-[10px]" />
@@ -288,7 +274,7 @@ function ProfilePageContent() {
                   <p className="text-sm text-muted-foreground">Get notified at meal times with meal name & calories.</p>
                </div>
                 <div className="space-y-2 rounded-lg border p-4 relative">
-                    {!isPremium && <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-10 rounded-lg"></div>}
+                    {!isPremium && <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 rounded-lg"></div>}
                     <div className="flex items-center justify-between">
                         <Label htmlFor="shopping-reminder-toggle" className="font-semibold flex items-center gap-2">
                            <ShoppingCart className="h-4 w-4"/> Shopping Reminders <PremiumBadge className="h-5 px-1.5 text-[10px]" />
@@ -298,7 +284,7 @@ function ProfilePageContent() {
                     <p className="text-sm text-muted-foreground">Reminds you to buy ingredients you haven't purchased.</p>
                </div>
                 <div className="space-y-2 rounded-lg border p-4 relative">
-                   {!isPremium && <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-10 rounded-lg"></div>}
+                   {!isPremium && <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 rounded-lg"></div>}
                    <div className="flex items-center justify-between">
                         <Label htmlFor="motivational-reminder-toggle" className="font-semibold flex items-center gap-2">
                            <Sparkles className="h-4 w-4"/> Motivational Nudges <PremiumBadge className="h-5 px-1.5 text-[10px]" />
@@ -332,9 +318,11 @@ function ProfilePageContent() {
               <CardTitle>Account Settings</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4">
-            <Button variant="outline" className="w-full justify-between">
-                <span>Manage Subscription</span>
-                <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+            <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/dashboard/subscription">
+                    <span>Manage Subscription</span>
+                    <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+                </Link>
             </Button>
           </CardContent>
       </Card>
@@ -354,3 +342,5 @@ export default function ProfilePage() {
         </Suspense>
     )
 }
+
+    
