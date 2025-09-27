@@ -219,8 +219,8 @@ export default function DashboardPage() {
           </header>
 
           <main className="flex-1">
-            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-b from-green-400/0 to-primary/0">
-              <div className="relative w-56 h-56">
+            <div className="flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-b from-green-400/0 to-primary/0">
+              <div className="relative w-48 h-48 md:w-56 md:h-56">
                 <svg className="w-full h-full" viewBox="0 0 36 36">
                   <defs>
                       <linearGradient id="eatenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -260,17 +260,17 @@ export default function DashboardPage() {
                    </>}
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-5xl font-bold">{isClient ? Math.round(caloriesLeft) : '...'}</span>
+                  <span className="text-4xl md:text-5xl font-bold">{isClient ? Math.round(caloriesLeft) : '...'}</span>
                   <span className="text-sm tracking-wider">KCAL LEFT</span>
                 </div>
               </div>
               <div className="flex justify-between w-full max-w-sm mt-4">
                 <div className="text-center">
-                  <p className="text-2xl font-bold">{isClient ? eatenCalories : '...'}</p>
+                  <p className="text-xl md:text-2xl font-bold">{isClient ? eatenCalories : '...'}</p>
                   <p className="text-xs">EATEN</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold">{isClient ? burnedCalories : '...'}</p>
+                  <p className="text-xl md:text-2xl font-bold">{isClient ? burnedCalories : '...'}</p>
                   <p className="text-xs">BURNED</p>
                 </div>
               </div>
@@ -278,7 +278,7 @@ export default function DashboardPage() {
             </main>
         </div>
       </div>
-      <div className="bg-background rounded-t-3xl -mt-6 p-4 space-y-4">
+      <div className="bg-background rounded-t-3xl -mt-6 p-4 md:p-6 space-y-4">
             {isClient && (todaysWorkout ? (
               <Card>
                 <CardHeader>
@@ -367,26 +367,26 @@ export default function DashboardPage() {
 
             <div className="space-y-2">
               <h3 className="px-2 font-semibold">Log Your Meals</h3>
-              {mealCategories.map((cat) => (
-                  <Link href="/dashboard/calories" key={cat.name}>
-                      <Card className="hover:bg-muted/50 transition-colors">
-                          <CardContent className="p-4 flex items-center gap-4">
-                              <Image src={cat.image} alt={cat.name} width={64} height={64} data-ai-hint={cat.hint} className="rounded-full bg-muted" />
-                              <div className="flex-grow">
-                                  <h3 className="font-bold">{cat.name}</h3>
-                                  <p className="text-sm text-muted-foreground">Recommended {cat.recommended} kcal</p>
-                              </div>
-                              <Button variant="ghost" size="icon" className="rounded-full bg-muted text-muted-foreground">
-                                  <Plus />
-                              </Button>
-                          </CardContent>
-                      </Card>
-                  </Link>
-              ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {mealCategories.map((cat) => (
+                    <Link href="/dashboard/calories" key={cat.name}>
+                        <Card className="hover:bg-muted/50 transition-colors">
+                            <CardContent className="p-4 flex items-center gap-4">
+                                <Image src={cat.image} alt={cat.name} width={64} height={64} data-ai-hint={cat.hint} className="rounded-full bg-muted" />
+                                <div className="flex-grow">
+                                    <h3 className="font-bold">{cat.name}</h3>
+                                    <p className="text-sm text-muted-foreground">Recommended {cat.recommended} kcal</p>
+                                </div>
+                                <Button variant="ghost" size="icon" className="rounded-full bg-muted text-muted-foreground">
+                                    <Plus />
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                ))}
+              </div>
             </div>
         </div>
     </div>
   );
 }
-
-    

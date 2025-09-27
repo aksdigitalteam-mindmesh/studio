@@ -115,7 +115,7 @@ export default function WorkoutGeneratorPage() {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
             <CardTitle>Your Preferences</CardTitle>
@@ -167,7 +167,7 @@ export default function WorkoutGeneratorPage() {
                         <RadioGroup
                           onValueChange={field.onChange}
                           defaultValue={field.value}
-                          className="flex space-x-4"
+                          className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
                         >
                           <FormItem className="flex items-center space-x-3 space-y-0">
                             <FormControl>
@@ -197,7 +197,7 @@ export default function WorkoutGeneratorPage() {
                         <RadioGroup
                           onValueChange={field.onChange}
                           defaultValue={field.value}
-                          className="flex space-x-4"
+                          className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
                         >
                           <FormItem className="flex items-center space-x-3 space-y-0">
                             <FormControl>

@@ -136,14 +136,14 @@ function ProfilePageContent() {
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
       <div className="flex flex-col items-center space-y-4">
-        <Avatar className="h-32 w-32 border-4 border-primary/50">
+        <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-primary/50">
           <AvatarImage src={userData.avatar} alt={userData.name} data-ai-hint="person portrait" />
           <AvatarFallback>
-            <User className="h-16 w-16" />
+            <User className="h-12 w-12 md:h-16 md:w-16" />
           </AvatarFallback>
         </Avatar>
         <div className="text-center">
-          <h1 className="text-3xl font-bold font-headline">{userData.name}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold font-headline">{userData.name}</h1>
           <p className="text-muted-foreground">{userData.email}</p>
         </div>
         <Badge variant={isPremium ? 'default' : 'secondary'} className={isPremium ? 'bg-gradient-to-r from-accent to-orange-400 text-accent-foreground' : ''}>
@@ -158,7 +158,7 @@ function ProfilePageContent() {
               <CardDescription>Customize the look and feel of the app.</CardDescription>
           </CardHeader>
           <CardContent>
-            <RadioGroup value={theme} onValueChange={(value) => setTheme(value as "light" | "dark" | "system")} className="grid grid-cols-3 gap-4">
+            <RadioGroup value={theme} onValueChange={(value) => setTheme(value as "light" | "dark" | "system")} className="grid grid-cols-3 gap-2 sm:gap-4">
                 <div>
                     <RadioGroupItem value="light" id="light" className="peer sr-only" />
                     <Label
@@ -342,5 +342,3 @@ export default function ProfilePage() {
         </Suspense>
     )
 }
-
-    

@@ -122,7 +122,7 @@ export default function DietGeneratorPage() {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
             <CardTitle>Your Details</CardTitle>
@@ -247,7 +247,7 @@ export default function DietGeneratorPage() {
                         <p className="text-muted-foreground mt-2">{result.summary}</p>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Button onClick={handleSavePlan} variant="outline">
                         <Bookmark className="mr-2 h-4 w-4" />
                         Save All Recipes
@@ -268,14 +268,14 @@ export default function DietGeneratorPage() {
                               </div>
                               <div className="flex-grow text-left">
                                 <p className="font-semibold">Day {dayPlan.day}</p>
-                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                                     <span>{dayPlan.dailyTotals.calories} kcal</span>
                                     <Dot/>
                                     <span>P: {dayPlan.dailyTotals.macros.protein}</span>
-                                    <Dot/>
-                                    <span>C: {dayPlan.dailyTotals.macros.carbs}</span>
-                                     <Dot/>
-                                    <span>F: {dayPlan.dailyTotals.macros.fat}</span>
+                                    <Dot className="hidden sm:block"/>
+                                    <span className="hidden sm:block">C: {dayPlan.dailyTotals.macros.carbs}</span>
+                                     <Dot className="hidden sm:block"/>
+                                    <span className="hidden sm:block">F: {dayPlan.dailyTotals.macros.fat}</span>
                                 </div>
                               </div>
                             </div>
@@ -301,15 +301,15 @@ export default function DietGeneratorPage() {
                                                 <h4 className="font-semibold flex items-center gap-2"><Apple className="h-4 w-4" /> Ingredients</h4>
                                                 <ul className="space-y-1">
                                                     {meal.recipe.ingredients.map((ingredient, i) => (
-                                                        <li key={i} className="flex items-center">
-                                                        <Dot className="h-4 w-4" />{ingredient}
+                                                        <li key={i} className="flex items-start">
+                                                        <Dot className="h-4 w-4 mt-1 flex-shrink-0" /><span>{ingredient}</span>
                                                         </li>
                                                     ))}
                                                 </ul>
                                             </div>
                                             <div className="space-y-2">
                                                 <h4 className="font-semibold flex items-center gap-2"><ChefHat className="h-4 w-4" /> Instructions</h4>
-                                                <ol className="list-decimal list-inside space-y-1">
+                                                <ol className="list-decimal list-inside space-y-2">
                                                 {meal.recipe.instructions.map((step, i) => (
                                                     <li key={i}>{step}</li>
                                                 ))}
@@ -325,8 +325,8 @@ export default function DietGeneratorPage() {
                                                     <p>{meal.macros.protein}</p>
                                                 </div>
                                                 <div className="p-2 bg-muted rounded-md">
-                                                    <p className="font-semibold">Carbs</p>
-                                                    <p>{meal.macros.carbs}</p>
+                                                    <p className="font-semibold">Fat</p>
+                                                    <p>{meal.macros.fat}</p>
                                                 </div>
                                             </div>
                                         </div>
