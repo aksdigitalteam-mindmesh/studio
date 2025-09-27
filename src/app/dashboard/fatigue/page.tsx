@@ -72,6 +72,7 @@ export default function FatigueTrackerPage() {
   const [gender, setGender] = useState<'male' | 'female'>('male');
 
   const loadWaterData = () => {
+      if (typeof window === 'undefined') return;
       const savedWaterLog = localStorage.getItem(WATER_STORAGE_KEY);
       if (savedWaterLog) {
           try {
@@ -86,10 +87,8 @@ export default function FatigueTrackerPage() {
       }
   };
 
-  useEffect(() => {
-    setIsClient(true);
-    setGender((localStorage.getItem('userGender') as 'male' | 'female') || 'male');
-    const loadFatigueData = () => {
+  const loadFatigueData = () => {
+      if (typeof window === 'undefined') return;
       const savedFatigueData = localStorage.getItem(FATIGUE_STORAGE_KEY);
       if (savedFatigueData) {
         try {
@@ -98,12 +97,18 @@ export default function FatigueTrackerPage() {
             checkFatigueAndNotify(parsedData);
         } catch {
             setFatigueData(initialFatigueData);
+             localStorage.setItem(FATIGUE_STORAGE_KEY, JSON.stringify(initialFatigueData));
         }
       } else {
         setFatigueData(initialFatigueData);
+        localStorage.setItem(FATIGUE_STORAGE_KEY, JSON.stringify(initialFatigueData));
       }
     };
 
+
+  useEffect(() => {
+    setIsClient(true);
+    setGender((localStorage.getItem('userGender') as 'male' | 'female') || 'male');
     loadFatigueData();
     loadWaterData();
 
@@ -341,3 +346,5 @@ export default function FatigueTrackerPage() {
     </div>
   );
 }
+
+    
