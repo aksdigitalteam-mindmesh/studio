@@ -8,12 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Muscle } from "@/components/muscle-fatigue-diagram";
-import { MuscleFatigueDiagram } from "@/components/muscle-fatigue-diagram";
-import { Hand, Loader2, BrainCircuit, Lightbulb, Droplets, MoreVertical, Lock } from "lucide-react";
+import { Hand, Loader2, BrainCircuit, Lightbulb, Droplets, Lock } from "lucide-react";
 import { generateRecoveryTips } from "@/ai/flows/generate-recovery-tips";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { format, isSameDay } from "date-fns";
+import { format } from "date-fns";
 import { usePremiumStatus } from "@/hooks/use-premium-status";
 
 type FatigueData = Partial<Record<Muscle, number>>;
@@ -61,7 +60,6 @@ const fatigueLegend = [
 
 export default function FatigueTrackerPage() {
   const [fatigueData, setFatigueData] = useState<FatigueData>({});
-  const [selectedMuscle, setSelectedMuscle] = useState<Muscle | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [recoveryTips, setRecoveryTips] = useState<RecoveryTip[] | null>(null);
@@ -69,7 +67,6 @@ export default function FatigueTrackerPage() {
   const { toast } = useToast();
   const [waterGlasses, setWaterGlasses] = useState<boolean[]>([]);
   const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
-  const [gender, setGender] = useState<'male' | 'female'>('male');
 
   const loadWaterData = () => {
       if (typeof window === 'undefined') return;
@@ -108,7 +105,6 @@ export default function FatigueTrackerPage() {
 
   useEffect(() => {
     setIsClient(true);
-    setGender((localStorage.getItem('userGender') as 'male' | 'female') || 'male');
     loadFatigueData();
     loadWaterData();
 
@@ -238,57 +234,40 @@ export default function FatigueTrackerPage() {
         <div className="space-y-4 lg:col-span-2 xl:col-span-3">
              <Card>
                 <CardHeader>
-                    <CardTitle>Muscle Diagram</CardTitle>
-                    <CardDescription>Click on a muscle to see its fatigue level.</CardDescription>
+                    <CardTitle>Detailed Muscle Groups</CardTitle>
+                    <CardDescription>Fatigue levels based on your recent workouts.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                    {isClient ? (
-                        <>
-                        <MuscleFatigueDiagram 
-                            fatiguedMuscles={fatigueData} 
-                            gender={gender}
-                            onMuscleClick={setSelectedMuscle}
-                            selectedMuscle={selectedMuscle}
-                        />
-                        <div className="space-y-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Detailed Muscle Groups</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                {Object.entries(fatigueData)
-                                    .sort(([, a], [, b]) => b - a)
-                                    .map(([muscle, value]) => (
-                                    <div key={muscle} className="space-y-1 cursor-pointer" onClick={() => setSelectedMuscle(muscle as Muscle)}>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="font-medium">{muscleGroupDetails[muscle as Muscle].name}</span>
-                                            <span className="text-muted-foreground">{value}%</span>
-                                        </div>
-                                        <Progress value={value} indicatorClassName={getProgressColor(value || 0)} />
-                                    </div>
-                                ))}
-                                </CardContent>
-                            </Card>
-                             <Button onClick={handleGetRecoveryTips} disabled={isPending} className="w-full">
-                                {isPending ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Generating...
-                                    </>
-                                ) : (
-                                    <>
-                                        <BrainCircuit className="mr-2 h-4 w-4" />
-                                        Get Fast Recovery Tips
-                                    </>
-                                )}
-                            </Button>
+                <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                    {isClient ? (Object.entries(fatigueData)
+                        .sort(([, a], [, b]) => b - a)
+                        .map(([muscle, value]) => (
+                        <div key={muscle} className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                                <span className="font-medium">{muscleGroupDetails[muscle as Muscle].name}</span>
+                                <span className="text-muted-foreground">{value}%</span>
+                            </div>
+                            <Progress value={value} indicatorClassName={getProgressColor(value || 0)} />
                         </div>
-                        </>
-                    ) : (
-                        <div className="flex justify-center items-center p-8 col-span-2 min-h-[400px]">
+                    ))) : (
+                        <div className="flex justify-center items-center p-8 min-h-[200px]">
                             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground"/>
                         </div>
                     )}
+                    </div>
+                     <Button onClick={handleGetRecoveryTips} disabled={isPending} className="w-full">
+                        {isPending ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Generating...
+                            </>
+                        ) : (
+                            <>
+                                <BrainCircuit className="mr-2 h-4 w-4" />
+                                Get Fast Recovery Tips
+                            </>
+                        )}
+                    </Button>
                 </CardContent>
             </Card>
         </div>
