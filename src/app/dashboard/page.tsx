@@ -136,11 +136,15 @@ export default function DashboardPage() {
             setWorkoutPlan(JSON.parse(storedPlan));
         }
 
-        const handleStorageChange = () => {
-            loadDataForDate(currentDate);
-            const updatedPlan = localStorage.getItem('latestWorkoutPlan');
-             if (updatedPlan) {
-                setWorkoutPlan(JSON.parse(updatedPlan));
+        const handleStorageChange = (event: StorageEvent) => {
+            if (event.key === 'dailyMeals' || event.key === 'completedWorkouts' || event.key === WATER_STORAGE_KEY) {
+                loadDataForDate(currentDate);
+            }
+            if (event.key === 'latestWorkoutPlan') {
+                const updatedPlan = localStorage.getItem('latestWorkoutPlan');
+                 if (updatedPlan) {
+                    setWorkoutPlan(JSON.parse(updatedPlan));
+                }
             }
         };
 
@@ -390,3 +394,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
