@@ -10,7 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {generateExerciseMedia} from '@/ai/flows/generate-exercise-media';
+import { generateExerciseMedia } from '@/ai/flows/generate-exercise-media';
 
 const GenerateWorkoutPlanInputSchema = z.object({
   fitnessGoals: z

@@ -25,7 +25,7 @@ export type GenerateExerciseMediaOutput = z.infer<typeof GenerateExerciseMediaOu
 export async function generateExerciseMedia(
   input: GenerateExerciseMediaInput
 ): Promise<GenerateExerciseMediaOutput> {
-    return generateExerciseMediaFlow(input);
+  return generateExerciseMediaFlow(input);
 }
 
 
