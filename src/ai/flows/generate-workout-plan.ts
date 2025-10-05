@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -10,7 +11,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { generateExerciseMedia } from '@/ai/flows/generate-exercise-media';
 
 const GenerateWorkoutPlanInputSchema = z.object({
   fitnessGoals: z
@@ -58,24 +58,7 @@ export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutput
 const workoutPrompt = ai.definePrompt({
   name: 'generateWorkoutPlanPrompt',
   input: {schema: GenerateWorkoutPlanInputSchema},
-  output: {
-    schema: z.object({
-      title: z.string(),
-      description: z.string(),
-      weeklySchedule: z.array(z.object({
-          day: z.number(),
-          title: z.string(),
-          description: z.string(),
-          exercises: z.array(z.object({
-              name: z.string(),
-              sets: z.string(),
-              reps: z.string(),
-              rest: z.string(),
-              muscleGroups: z.array(z.string()),
-          })).optional(),
-      })),
-    }),
-  },
+  output: {schema: GenerateWorkoutPlanOutputSchema},
   prompt: `You are a certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences. The plan must include exactly one rest day.
 
 Fitness Goals: {{{fitnessGoals}}}
@@ -87,6 +70,7 @@ Body Focus: {{#if bodyFocus}}{{{bodyFocus}}}{{else}}Full body{{/if}}
 Provide a catchy title for the whole week, a short description, and a weekly schedule.
 For each of the 7 days, provide a day number, a title for the day's workout, a short description, and a list of specific exercises with sets, reps, rest times, and the primary muscle groups targeted.
 The muscle groups should be from this list: 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'.
+For the videoUrl field for each exercise, you MUST return the string 'error'.
 If a day is a rest day, the 'exercises' array should be empty.
 The exercises should be appropriate for the selected equipment availability. Do not include video URLs.`,
 });
@@ -102,32 +86,7 @@ const generateWorkoutPlanFlow = ai.defineFlow(
     if (!output) {
       throw new Error('Failed to generate workout plan text');
     }
-
-    const scheduleWithVideos = await Promise.all(
-      output.weeklySchedule.map(async (day) => {
-        if (!day.exercises || day.exercises.length === 0) {
-          return { ...day, exercises: [] }; // Rest day
-        }
-
-        const exercisesWithVideos = await Promise.all(
-          day.exercises.map(async (exercise) => {
-            const videoResult = await generateExerciseMedia({ exerciseName: exercise.name });
-            return {
-              ...exercise,
-              videoUrl: videoResult.videoUrl,
-            };
-          })
-        );
-        
-        return { ...day, exercises: exercisesWithVideos };
-      })
-    );
-
-    return {
-      title: output.title,
-      description: output.description,
-      weeklySchedule: scheduleWithVideos,
-    };
+    return output;
   }
 );
 
