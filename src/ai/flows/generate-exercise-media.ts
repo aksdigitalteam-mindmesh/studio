@@ -18,25 +18,15 @@ const GenerateExerciseMediaInputSchema = z.object({
 export type GenerateExerciseMediaInput = z.infer<typeof GenerateExerciseMediaInputSchema>;
 
 const GenerateExerciseMediaOutputSchema = z.object({
-  videoUrl: z.string().describe('The data URI of the generated video.'),
+  videoUrl: z.string().describe('The data URI of the generated video, or an error string.'),
 });
 export type GenerateExerciseMediaOutput = z.infer<typeof GenerateExerciseMediaOutputSchema>;
 
+
 export async function generateExerciseMedia(
-  input: GenerateExerciseMediaInput
+  { exerciseName }: GenerateExerciseMediaInput
 ): Promise<GenerateExerciseMediaOutput> {
-  return generateExerciseMediaFlow(input);
-}
-
-
-const generateExerciseMediaFlow = ai.defineFlow(
-  {
-    name: 'generateExerciseMediaFlow',
-    inputSchema: GenerateExerciseMediaInputSchema,
-    outputSchema: GenerateExerciseMediaOutputSchema,
-  },
-  async ({ exerciseName }) => {
-    try {
+  try {
       let { operation } = await ai.generate({
         model: googleAI.model('veo-2.0-generate-001'),
         prompt: `Generate a clean, simple, vector-style animation of a person performing the '${exerciseName}' exercise. The background should be a solid, light grey color. The person should be gender-neutral and wearing simple workout attire. The style should be minimalist and clear, focusing on proper form.`,
@@ -52,7 +42,7 @@ const generateExerciseMediaFlow = ai.defineFlow(
 
       // Wait for the operation to complete
       while (!operation.done) {
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds
           operation = await ai.checkOperation(operation);
       }
 
@@ -76,5 +66,4 @@ const generateExerciseMediaFlow = ai.defineFlow(
         videoUrl: 'error' 
       };
     }
-  }
-);
+}

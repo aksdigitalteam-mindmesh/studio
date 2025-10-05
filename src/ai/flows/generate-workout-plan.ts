@@ -55,12 +55,6 @@ const GenerateWorkoutPlanOutputSchema = z.object({
 });
 export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutputSchema>;
 
-export async function generateWorkoutPlan(
-  input: GenerateWorkoutPlanInput
-): Promise<GenerateWorkoutPlanOutput> {
-  return generateWorkoutPlanFlow(input);
-}
-
 const workoutPrompt = ai.definePrompt({
   name: 'generateWorkoutPlanPrompt',
   input: {schema: GenerateWorkoutPlanInputSchema},
@@ -109,23 +103,25 @@ const generateWorkoutPlanFlow = ai.defineFlow(
       throw new Error('Failed to generate workout plan text');
     }
 
-    const scheduleWithVideos = [];
-
-    for (const day of output.weeklySchedule) {
-        if (day.exercises && day.exercises.length > 0) {
-            const exercisesWithVideos = [];
-            for (const exercise of day.exercises) {
-                const videoResult = await generateExerciseMedia({ exerciseName: exercise.name });
-                exercisesWithVideos.push({
-                    ...exercise,
-                    videoUrl: videoResult.videoUrl,
-                });
-            }
-            scheduleWithVideos.push({ ...day, exercises: exercisesWithVideos });
-        } else {
-            scheduleWithVideos.push(day); // Rest day
+    const scheduleWithVideos = await Promise.all(
+      output.weeklySchedule.map(async (day) => {
+        if (!day.exercises || day.exercises.length === 0) {
+          return { ...day, exercises: [] }; // Rest day
         }
-    }
+
+        const exercisesWithVideos = await Promise.all(
+          day.exercises.map(async (exercise) => {
+            const videoResult = await generateExerciseMedia({ exerciseName: exercise.name });
+            return {
+              ...exercise,
+              videoUrl: videoResult.videoUrl,
+            };
+          })
+        );
+        
+        return { ...day, exercises: exercisesWithVideos };
+      })
+    );
 
     return {
       title: output.title,
@@ -134,3 +130,10 @@ const generateWorkoutPlanFlow = ai.defineFlow(
     };
   }
 );
+
+
+export async function generateWorkoutPlan(
+  input: GenerateWorkoutPlanInput
+): Promise<GenerateWorkoutPlanOutput> {
+  return generateWorkoutPlanFlow(input);
+}
