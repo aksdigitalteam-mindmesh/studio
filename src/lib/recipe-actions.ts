@@ -55,6 +55,7 @@ export function saveRecipesFromPlan(meals: Meal[]): Recipe[] {
 
 
 export function getRecipeBySlug(slug: string): Recipe | undefined {
+    if (typeof window === "undefined") return undefined;
     const recipes = getSavedRecipes();
     const discoverableRecipes = getDiscoverableRecipes();
     return [...recipes, ...discoverableRecipes].find(recipe => recipe.slug === slug);

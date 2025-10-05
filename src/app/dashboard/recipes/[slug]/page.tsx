@@ -1,128 +1,157 @@
 
 "use client";
 
-import { useEffect, useState, use } from "react";
-import { getRecipeBySlug, deleteRecipe } from "@/lib/recipe-actions";
-import type { Recipe } from "@/lib/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Apple, ChefHat, Dot, ArrowLeft, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { getRecipeBySlug } from "@/lib/recipe-actions";
+import type { Recipe } from "@/lib/types";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ChefHat, Apple, Dot, Bookmark, ShoppingCart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { saveRecipesFromPlan } from "@/lib/recipe-actions";
+import { addIngredientsToShoppingList } from "@/lib/shopping-list-actions";
 
-function RecipeDetails({ slug }: { slug: string }) {
-    const [recipe, setRecipe] = useState<Recipe | null>(null);
-    const router = useRouter();
-    const { toast } = useToast();
+export default function RecipeDetailsPage({ params }: { params: { slug: string } }) {
+  const [recipe, setRecipe] = useState<Recipe | undefined>(undefined);
+  const [isClient, setIsClient] = useState(false);
+  const { toast } = useToast();
+  const slug = params.slug;
 
-    useEffect(() => {
-        const foundRecipe = getRecipeBySlug(slug);
-        if (foundRecipe) {
-            setRecipe(foundRecipe);
-        }
-    }, [slug]);
+  useEffect(() => {
+    setIsClient(true);
+    setRecipe(getRecipeBySlug(slug));
+  }, [slug]);
 
-    const handleDelete = () => {
-        if (recipe) {
-            deleteRecipe(recipe.slug);
-            toast({
-                title: "Recipe Removed",
-                description: `"${recipe.title}" has been removed from your saved list.`,
-            });
-            router.push("/dashboard/recipes");
-        }
-    };
-    
-    const isSavedRecipe = recipe?.slug.includes("-discover") === false;
-
-    if (!recipe) {
-        return (
-            <div className="p-4 md:p-8">
-                <Button asChild variant="outline">
-                    <Link href="/dashboard/recipes">
-                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Recipes
-                    </Link>
-                </Button>
-                <div className="flex justify-center items-center h-64">
-                    <p className="text-muted-foreground">Recipe not found.</p>
-                </div>
-            </div>
-        );
+  const handleSaveRecipe = () => {
+    if (!recipe) return;
+    const saved = saveRecipesFromPlan([{...recipe, name: recipe.title}]);
+    if(saved.length > 0) {
+      toast({
+          title: "Recipe Saved!",
+          description: `${recipe.title} has been added to your collection.`,
+      });
+    } else {
+       toast({
+          title: "Already Saved",
+          description: "This recipe is already in your collection.",
+      });
     }
+  };
 
+  const handleAddToShoppingList = () => {
+    if (recipe) {
+      const addedCount = addIngredientsToShoppingList(recipe.ingredients);
+      toast({
+        title: "Shopping List Updated",
+        description: `${addedCount} new ingredients have been added to your shopping list.`,
+      });
+    }
+  };
+
+  if (!isClient) {
     return (
-        <div className="space-y-8 p-4 md:p-8 pb-24">
-             <div className="flex justify-between items-center mb-4">
-                <Button asChild variant="outline">
-                    <Link href="/dashboard/recipes">
-                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Recipes
-                    </Link>
-                </Button>
-
-                {isSavedRecipe && (
-                    <Button variant="destructive" onClick={handleDelete}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Remove Recipe
-                    </Button>
-                )}
-            </div>
-            
-            <Card className="overflow-hidden">
-                <CardHeader className="p-0 relative h-64">
-                    <Image src={recipe.image || "https://placehold.co/1200x400.png"} alt={recipe.title} layout="fill" objectFit="cover" data-ai-hint={recipe.hint} />
-                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                     <div className="absolute bottom-0 left-0 p-6">
-                        <Badge>{recipe.category}</Badge>
-                        <CardTitle className="text-3xl font-bold font-headline text-primary-foreground mt-2">{recipe.title}</CardTitle>
-                        <CardDescription className="text-primary-foreground/80">{recipe.description}</CardDescription>
-                     </div>
-                </CardHeader>
-                <CardContent className="p-6">
-                     <div className="grid md:grid-cols-3 gap-2 text-center text-sm mb-6">
-                        <div className="p-3 bg-muted rounded-md">
-                            <p className="font-semibold">Calories</p>
-                            <p>{recipe.calories} kcal</p>
-                        </div>
-                        <div className="p-3 bg-muted rounded-md">
-                            <p className="font-semibold">Protein</p>
-                            <p>{recipe.macros.protein}</p>
-                        </div>
-                            <div className="p-3 bg-muted rounded-md">
-                            <p className="font-semibold">Carbs</p>
-                            <p>{recipe.macros.carbs}</p>
-                        </div>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <div className="space-y-4">
-                            <h3 className="font-semibold text-xl flex items-center gap-2"><Apple className="h-5 w-5 text-primary" /> Ingredients</h3>
-                            <ul className="space-y-2 pl-2">
-                                {recipe.ingredients.map((ingredient, i) => (
-                                    <li key={i} className="flex items-center">
-                                        <Dot className="h-4 w-4 text-primary" />
-                                        <span>{ingredient}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                        <div className="space-y-4">
-                            <h3 className="font-semibold text-xl flex items-center gap-2"><ChefHat className="h-5 w-5 text-primary" /> Instructions</h3>
-                            <ol className="list-decimal list-inside space-y-2">
-                                {recipe.instructions.map((step, i) => (
-                                <li key={i}>{step}</li>
-                                ))}
-                            </ol>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
         </div>
     );
-}
+  }
+
+  if (!recipe) {
+    return (
+      <div className="p-4 md:p-8 text-center">
+        <p>Recipe not found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 p-4 md:p-8 pb-24">
+        <Card className="overflow-hidden">
+            <CardHeader className="p-0">
+                 <Image 
+                    src={recipe.image || `https://placehold.co/1200x600.png`} 
+                    alt={recipe.title} 
+                    width={1200} 
+                    height={600} 
+                    className="w-full h-48 md:h-64 object-cover" 
+                    data-ai-hint={recipe.hint}
+                />
+            </CardHeader>
+            <CardContent className="p-4 md:p-6">
+                <Badge variant="secondary">{recipe.category}</Badge>
+                <h1 className="text-3xl md:text-4xl font-bold font-headline mt-2">{recipe.title}</h1>
+                <p className="text-muted-foreground mt-2">{recipe.description}</p>
+            </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+             <Button onClick={handleSaveRecipe} variant="outline">
+                <Bookmark className="mr-2 h-4 w-4" />
+                Save Recipe
+            </Button>
+            <Button onClick={handleAddToShoppingList}>
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Add to Shopping List
+            </Button>
+        </div>
 
 
-export default function RecipeDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
-    const resolvedParams = use(params);
-    return <RecipeDetails slug={resolvedParams.slug} />;
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Apple className="h-5 w-5 text-primary"/> Ingredients</CardTitle>
+            </CardHeader>
+            <CardContent>
+                 <ul className="space-y-2">
+                    {recipe.ingredients.map((ingredient, i) => (
+                        <li key={i} className="flex items-start">
+                           <Dot className="h-4 w-4 mt-1 flex-shrink-0" />
+                           <span>{ingredient}</span>
+                        </li>
+                    ))}
+                </ul>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><ChefHat className="h-5 w-5 text-primary"/> Instructions</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <ol className="list-decimal list-inside space-y-4">
+                    {recipe.instructions.map((step, i) => (
+                        <li key={i}>{step}</li>
+                    ))}
+                </ol>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Nutritional Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div className="p-4 bg-muted rounded-lg">
+                        <p className="font-bold text-lg">{recipe.calories}</p>
+                        <p className="text-sm text-muted-foreground">Calories</p>
+                    </div>
+                     <div className="p-4 bg-muted rounded-lg">
+                        <p className="font-bold text-lg">{recipe.macros.protein}</p>
+                        <p className="text-sm text-muted-foreground">Protein</p>
+                    </div>
+                     <div className="p-4 bg-muted rounded-lg">
+                        <p className="font-bold text-lg">{recipe.macros.carbs}</p>
+                        <p className="text-sm text-muted-foreground">Carbs</p>
+                    </div>
+                     <div className="p-4 bg-muted rounded-lg">
+                        <p className="font-bold text-lg">{recipe.macros.fat}</p>
+                        <p className="text-sm text-muted-foreground">Fat</p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    </div>
+  );
 }
