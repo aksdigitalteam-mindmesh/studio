@@ -36,6 +36,7 @@ export default function LoginPage() {
   const signupForm = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
+      displayName: "",
       email: "",
       password: "",
       medicalConditions: "",
@@ -153,6 +154,19 @@ export default function LoginPage() {
               <TabsContent value="signup">
                 <Form {...signupForm}>
                   <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+                    <FormField
+                      control={signupForm.control}
+                      name="displayName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Display Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Jane Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={signupForm.control}
                       name="email"

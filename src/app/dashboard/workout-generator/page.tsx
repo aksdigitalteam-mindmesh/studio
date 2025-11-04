@@ -17,13 +17,16 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { generateWorkoutPlanAction } from "@/lib/actions";
 import { workoutPlanSchema } from "@/lib/schemas";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Loader2, VideoOff, CheckCircle, ShieldAlert, Calendar, Dumbbell, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useUsageTracker } from "@/hooks/use-usage-tracker";
+import { useAuthContext } from "@/hooks/use-auth";
+import { doc, getDoc } from "firebase/firestore";
+import { useFirebase } from "@/firebase";
 
 type Exercise = {
   name: string;
@@ -52,6 +55,8 @@ export default function WorkoutGeneratorPage() {
   const [result, setResult] = useState<WorkoutPlan | null>(null);
   const { toast } = useToast();
   const { canUse, recordUsage, usagesLeft } = useUsageTracker();
+  const { user } = useAuthContext();
+  const { firestore } = useFirebase();
 
   const form = useForm<z.infer<typeof workoutPlanSchema>>({
     resolver: zodResolver(workoutPlanSchema),
@@ -64,6 +69,28 @@ export default function WorkoutGeneratorPage() {
       bodyFocus: "",
     },
   });
+
+  useEffect(() => {
+    async function fetchUserData() {
+        if (user && firestore) {
+            const userDocRef = doc(firestore, "users", user.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                form.reset({
+                    duration: userData.workoutDuration || 60,
+                    daysPerWeek: userData.workoutDaysPerWeek || 5,
+                    fitnessGoals: form.getValues('fitnessGoals'),
+                    intensity: form.getValues('intensity'),
+                    equipment: form.getValues('equipment'),
+                    bodyFocus: form.getValues('bodyFocus'),
+                });
+            }
+        }
+    }
+    fetchUserData();
+  }, [user, firestore, form]);
+
 
   function onSubmit(values: z.infer<typeof workoutPlanSchema>) {
     if (!canUse()) {

@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { generateDietPlanAction } from "@/lib/actions";
 import { dietPlanSchema } from "@/lib/schemas";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Loader2, Apple, ChefHat, Dot, ShoppingCart, Bookmark, ShieldAlert, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +28,9 @@ import type { Meal } from "@/lib/types";
 import { saveRecipesFromPlan } from "@/lib/recipe-actions";
 import { useUsageTracker } from "@/hooks/use-usage-tracker";
 import { addIngredientsToShoppingList } from "@/lib/shopping-list-actions";
+import { useAuthContext } from "@/hooks/use-auth";
+import { doc, getDoc } from "firebase/firestore";
+import { useFirebase } from "@/firebase";
 
 type DailyPlan = {
   day: number;
@@ -49,6 +52,8 @@ export default function DietGeneratorPage() {
   const [result, setResult] = useState<DietPlan | null>(null);
   const { toast } = useToast();
   const { canUse, recordUsage } = useUsageTracker();
+  const { user } = useAuthContext();
+  const { firestore } = useFirebase();
 
 
   const form = useForm<z.infer<typeof dietPlanSchema>>({
@@ -63,6 +68,24 @@ export default function DietGeneratorPage() {
       medicalConditions: "None",
     },
   });
+
+  useEffect(() => {
+    async function fetchUserData() {
+        if (user && firestore) {
+            const userDocRef = doc(firestore, "users", user.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                form.reset({
+                    ...form.getValues(), // keep existing form values
+                    medicalConditions: userData.medicalConditions || "None",
+                });
+            }
+        }
+    }
+    fetchUserData();
+  }, [user, firestore, form]);
+
 
   function onSubmit(values: z.infer<typeof dietPlanSchema>) {
      if (!canUse()) {

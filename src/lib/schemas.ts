@@ -26,6 +26,7 @@ export const loginSchema = z.object({
 });
 
 export const signupSchema = loginSchema.extend({
+  displayName: z.string().min(2, { message: "Name must be at least 2 characters long." }),
   medicalConditions: z.string().optional(),
   workoutDuration: z.coerce.number().min(10, "Duration must be at least 10 minutes.").max(180, "Duration must be 180 minutes or less."),
   workoutDaysPerWeek: z.coerce.number().min(1, "You must work out at least 1 day a week.").max(7, "You can work out a maximum of 7 days a week."),

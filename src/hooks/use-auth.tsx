@@ -44,17 +44,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const newUser = userCredential.user;
             
-            // Set display name (from email) and save other data to Firestore
-            const displayName = email.split('@')[0];
+            const displayName = profileData.displayName || email.split('@')[0];
             await updateProfile(newUser, { displayName });
 
             const userDocRef = doc(firestore, "users", newUser.uid);
             await setDoc(userDocRef, {
                 uid: newUser.uid,
                 email: newUser.email,
-                displayName: displayName,
                 photoURL: newUser.photoURL || `https://i.pravatar.cc/150?u=${newUser.uid}`,
-                ...profileData
+                ...profileData,
+                displayName: displayName, // Ensure display name is saved
             }, { merge: true });
 
             return null;
