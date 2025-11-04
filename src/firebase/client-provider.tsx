@@ -1,3 +1,4 @@
+
 'use client';
 import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from '@/firebase';
