@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "user": {
@@ -28,7 +29,7 @@
     }
   },
   "auth": {
-    "providers": ["google.com"]
+    "providers": ["email"]
   },
   "firestore": {
     "/users/{userId}": {

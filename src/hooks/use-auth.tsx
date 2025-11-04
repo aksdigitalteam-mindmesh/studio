@@ -3,21 +3,23 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { useRouter } from 'next/navigation';
-import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getAuth, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { useFirebase } from "@/firebase";
 import { Loader2 } from "lucide-react";
 
 interface AuthContextType {
     user: User | null;
     loading: boolean;
-    signInWithGoogle: () => Promise<void>;
+    signUpWithEmail: (email: string, password: string) => Promise<string | null>;
+    signInWithEmail: (email: string, password: string) => Promise<string | null>;
     signOutUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
     loading: true,
-    signInWithGoogle: async () => {},
+    signUpWithEmail: async () => null,
+    signInWithEmail: async () => null,
     signOutUser: async () => {},
 });
 
@@ -35,14 +37,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return () => unsubscribe();
     }, [auth]);
-
-    const signInWithGoogle = async () => {
-        const provider = new GoogleAuthProvider();
+    
+    const signUpWithEmail = async (email: string, password: string) => {
         try {
-            await signInWithPopup(auth, provider);
-            router.push('/dashboard');
-        } catch (error) {
-            console.error("Error signing in with Google:", error);
+            await createUserWithEmailAndPassword(auth, email, password);
+            return null;
+        } catch (error: any) {
+            console.error("Error signing up:", error);
+            return error.message;
+        }
+    };
+    
+    const signInWithEmail = async (email: string, password: string) => {
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            return null;
+        } catch (error: any) {
+            console.error("Error signing in:", error);
+            return error.message;
         }
     };
     
@@ -63,9 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
     }
 
-
     return (
-        <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOutUser }}>
+        <AuthContext.Provider value={{ user, loading, signUpWithEmail, signInWithEmail, signOutUser }}>
             {children}
         </AuthContext.Provider>
     );

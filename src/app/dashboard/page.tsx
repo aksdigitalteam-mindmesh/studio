@@ -11,6 +11,7 @@ import Image from "next/image";
 import { format, addDays, subDays, isToday, isYesterday, isSameDay } from 'date-fns';
 import { WaterGlass } from "@/components/water-glass";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuthContext } from "@/hooks/use-auth";
 
 
 type Exercise = {
@@ -74,6 +75,7 @@ const WATER_STORAGE_KEY = "waterLog";
 
 
 export default function DashboardPage() {
+    const { user } = useAuthContext();
     const [waterLog, setWaterLog] = useState<WaterLog>({});
     const [isClient, setIsClient] = useState(false);
     const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
@@ -82,7 +84,6 @@ export default function DashboardPage() {
     const [eatenCalories, setEatenCalories] = useState(0);
     const [burnedCalories, setBurnedCalories] = useState(0);
     const [macros, setMacros] = useState({ carbs: 0, protein: 0, fat: 0 });
-    const user = { displayName: 'Fitness Pro', photoURL: 'https://picsum.photos/seed/user/128/128' };
 
 
     const loadDataForDate = useCallback((date: Date) => {
@@ -206,7 +207,7 @@ export default function DashboardPage() {
           <header className="flex items-center justify-between p-4">
             <div className="flex items-center gap-2">
                 <Avatar className="h-10 w-10 border-2 border-white/50">
-                  <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || ''} data-ai-hint="person portrait" />
+                  <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} data-ai-hint="person portrait" />
                   <AvatarFallback><User /></AvatarFallback>
                 </Avatar>
                 <div>

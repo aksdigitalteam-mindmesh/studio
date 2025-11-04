@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, ShoppingCart, Sparkles, Loader2, Sun, Moon, Monitor } from 'lucide-react';
+import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, ShoppingCart, Sparkles, Loader2, Sun, Moon, Monitor, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -17,8 +17,10 @@ import { PremiumBadge } from '@/components/premium-badge';
 import { usePremiumStatus } from '@/hooks/use-premium-status';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useTheme } from '@/components/theme-provider';
+import { useAuthContext } from '@/hooks/use-auth';
 
 function ProfilePageContent() {
+  const { user, signOutUser } = useAuthContext();
   const { toast } = useToast();
   const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
   const { theme, setTheme } = useTheme();
@@ -115,16 +117,6 @@ function ProfilePageContent() {
     return clearNotificationTimer;
   }, [scheduleNotification]);
 
-
-  const userData = {
-    name: 'Fitness Enthusiast',
-    email: 'user@example.com',
-    avatar: 'https://picsum.photos/seed/avatar/128/128',
-    age: 28,
-    height: '175 cm',
-    weight: '72 kg',
-  };
-  
   if (isPremiumLoading || !isClient) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
@@ -137,14 +129,14 @@ function ProfilePageContent() {
     <div className="space-y-8 p-4 md:p-8 pb-24">
       <div className="flex flex-col items-center space-y-4">
         <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-primary/50">
-          <AvatarImage src={userData.avatar} alt={userData.name} data-ai-hint="person portrait" />
+          <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} data-ai-hint="person portrait" />
           <AvatarFallback>
             <User className="h-12 w-12 md:h-16 md:w-16" />
           </AvatarFallback>
         </Avatar>
         <div className="text-center">
-          <h1 className="text-2xl md:text-3xl font-bold font-headline">{userData.name}</h1>
-          <p className="text-muted-foreground">{userData.email}</p>
+          <h1 className="text-2xl md:text-3xl font-bold font-headline">{user?.displayName || 'Fitness Enthusiast'}</h1>
+          <p className="text-muted-foreground">{user?.email}</p>
         </div>
         <Badge variant={isPremium ? 'default' : 'secondary'} className={isPremium ? 'bg-gradient-to-r from-accent to-orange-400 text-accent-foreground' : ''}>
           {isPremium ? <Crown className="mr-2 h-4 w-4" /> : <Shield className="mr-2 h-4 w-4" />}
@@ -219,21 +211,21 @@ function ProfilePageContent() {
               <Cake className="h-5 w-5" />
               <span className="font-medium">Age</span>
             </div>
-            <span className="font-semibold">{userData.age}</span>
+            <span className="font-semibold">28</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-muted-foreground">
               <Ruler className="h-5 w-5" />
               <span className="font-medium">Height</span>
             </div>
-            <span className="font-semibold">{userData.height}</span>
+            <span className="font-semibold">175 cm</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-muted-foreground">
               <Weight className="h-5 w-5" />
               <span className="font-medium">Weight</span>
             </div>
-            <span className="font-semibold">{userData.weight}</span>
+            <span className="font-semibold">72 kg</span>
           </div>
         </CardContent>
       </Card>
@@ -323,6 +315,10 @@ function ProfilePageContent() {
                     <span>Manage Subscription</span>
                     <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
                 </Link>
+            </Button>
+            <Button variant="destructive" className="w-full justify-between" onClick={signOutUser}>
+                <span>Sign Out</span>
+                <LogOut className="h-4 w-4" />
             </Button>
           </CardContent>
       </Card>
