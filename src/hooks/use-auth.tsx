@@ -3,7 +3,7 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { useRouter } from 'next/navigation';
-import { getAuth, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { getAuth, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, AuthErrorCodes } from "firebase/auth";
 import { useFirebase } from "@/firebase";
 import { Loader2 } from "lucide-react";
 
@@ -44,6 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return null;
         } catch (error: any) {
             console.error("Error signing up:", error);
+            if (error.code === AuthErrorCodes.EMAIL_EXISTS) {
+                return "This email is already in use. Please try logging in.";
+            }
+            if (error.code === 'auth/configuration-not-found') {
+                return "Authentication method not enabled. Please enable Email/Password sign-in in your Firebase console.";
+            }
             return error.message;
         }
     };
@@ -54,6 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return null;
         } catch (error: any) {
             console.error("Error signing in:", error);
+             if (error.code === 'auth/configuration-not-found') {
+                return "Authentication method not enabled. Please enable Email/Password sign-in in your Firebase console.";
+            }
+             if (error.code === AuthErrorCodes.INVALID_LOGIN_CREDENTIALS) {
+                return "Invalid email or password. Please try again.";
+            }
             return error.message;
         }
     };
