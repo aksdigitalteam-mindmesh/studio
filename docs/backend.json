@@ -23,6 +23,18 @@
           "type": "string",
           "format": "uri",
           "description": "The URL of the user's profile picture."
+        },
+        "medicalConditions": {
+          "type": "string",
+          "description": "Any medical conditions the user has, e.g., diabetes, high blood pressure."
+        },
+        "workoutDuration": {
+            "type": "number",
+            "description": "Preferred workout duration in minutes."
+        },
+        "workoutDaysPerWeek": {
+            "type": "number",
+            "description": "How many days per week the user can work out."
         }
       },
       "required": ["uid", "email"]

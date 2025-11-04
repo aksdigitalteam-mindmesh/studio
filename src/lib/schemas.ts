@@ -24,3 +24,9 @@ export const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters long." }),
 });
+
+export const signupSchema = loginSchema.extend({
+  medicalConditions: z.string().optional(),
+  workoutDuration: z.coerce.number().min(10, "Duration must be at least 10 minutes.").max(180, "Duration must be 180 minutes or less."),
+  workoutDaysPerWeek: z.coerce.number().min(1, "You must work out at least 1 day a week.").max(7, "You can work out a maximum of 7 days a week."),
+});

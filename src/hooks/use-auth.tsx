@@ -3,14 +3,15 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { useRouter } from 'next/navigation';
-import { getAuth, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, AuthErrorCodes } from "firebase/auth";
+import { getAuth, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, AuthErrorCodes, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { useFirebase } from "@/firebase";
 import { Loader2 } from "lucide-react";
 
 interface AuthContextType {
     user: User | null;
     loading: boolean;
-    signUpWithEmail: (email: string, password: string) => Promise<string | null>;
+    signUpWithEmail: (email: string, password: string, profileData?: Record<string, any>) => Promise<string | null>;
     signInWithEmail: (email: string, password: string) => Promise<string | null>;
     signOutUser: () => Promise<void>;
 }
@@ -24,7 +25,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const { auth } = useFirebase();
+    const { auth, firestore } = useFirebase();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
@@ -38,9 +39,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => unsubscribe();
     }, [auth]);
     
-    const signUpWithEmail = async (email: string, password: string) => {
+    const signUpWithEmail = async (email: string, password: string, profileData: Record<string, any> = {}) => {
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const newUser = userCredential.user;
+            
+            // Set display name (from email) and save other data to Firestore
+            const displayName = email.split('@')[0];
+            await updateProfile(newUser, { displayName });
+
+            const userDocRef = doc(firestore, "users", newUser.uid);
+            await setDoc(userDocRef, {
+                uid: newUser.uid,
+                email: newUser.email,
+                displayName: displayName,
+                photoURL: newUser.photoURL || `https://i.pravatar.cc/150?u=${newUser.uid}`,
+                ...profileData
+            }, { merge: true });
+
             return null;
         } catch (error: any) {
             console.error("Error signing up:", error);
