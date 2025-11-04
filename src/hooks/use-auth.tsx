@@ -4,7 +4,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { useRouter } from 'next/navigation';
 import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
-import { app } from "@/lib/firebase";
+import { useFirebase } from "@/firebase";
 import { Loader2 } from "lucide-react";
 
 interface AuthContextType {
@@ -21,9 +21,8 @@ const AuthContext = createContext<AuthContextType>({
     signOutUser: async () => {},
 });
 
-const auth = getAuth(app);
-
 export function AuthProvider({ children }: { children: ReactNode }) {
+    const { auth } = useFirebase();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
@@ -35,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [auth]);
 
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
@@ -72,4 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuthContext() {
+    return useContext(AuthContext);
+};
