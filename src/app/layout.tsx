@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
   title: 'FitBoost',
@@ -29,8 +30,10 @@ export default function RootLayout({
       </head>
       <body className="font-body">
         <ThemeProvider>
+          <AuthProvider>
             {children}
-          <Toaster />
+            <Toaster />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

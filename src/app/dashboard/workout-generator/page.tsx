@@ -58,7 +58,8 @@ export default function WorkoutGeneratorPage() {
     defaultValues: {
       fitnessGoals: "Build muscle and increase strength",
       intensity: "medium",
-      duration: 45,
+      duration: 60,
+      daysPerWeek: 5,
       equipment: "with",
       bodyFocus: "",
     },
@@ -149,9 +150,22 @@ export default function WorkoutGeneratorPage() {
                   name="duration"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Workout Duration (minutes)</FormLabel>
+                      <FormLabel>Workout Time Per Day (minutes)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 45" {...field} />
+                        <Input type="number" placeholder="e.g., 60" {...field} />
+                      </FormControl>
+                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="daysPerWeek"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Days Per Week</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="e.g., 5" {...field} />
                       </FormControl>
                        <FormMessage />
                     </FormItem>

@@ -36,6 +36,10 @@ const GenerateDietPlanInputSchema = z.object({
     .string()
     .optional()
     .describe('The food preferences of the user, e.g., likes chicken, dislikes fish.'),
+    medicalConditions: z
+    .string()
+    .optional()
+    .describe('Any medical conditions to consider, e.g., diabetes, high blood pressure.'),
 });
 export type GenerateDietPlanInput = z.infer<typeof GenerateDietPlanInputSchema>;
 
@@ -91,15 +95,16 @@ const prompt = ai.definePrompt({
   Calorie Target: ~{{{calorieTarget}}} calories per day
   Macro Ratio: {{{macroRatio}}}
   Cuisine Preference: {{#if cuisine}}{{{cuisine}}}{{else}}None{{/if}}
-  Dietary Restrictions: {{{dietaryRestrictions}}}
-  Food Preferences: {{{foodPreferences}}}
+  Dietary Restrictions: {{#if dietaryRestrictions}}{{{dietaryRestrictions}}}{{else}}None{{/if}}
+  Food Preferences: {{#if foodPreferences}}{{{foodPreferences}}}{{else}}None{{/if}}
+  Medical Conditions: {{#if medicalConditions}}{{{medicalConditions}}}{{else}}None{{/if}}
 
   Generate a detailed 7-day diet plan. For each day, provide:
   1. A full day of meals (Breakfast, Lunch, Dinner, and a Snack).
   2. For each meal, provide a short description, a detailed recipe (ingredients and instructions), and an estimation of calories and macros (protein, carbs, fat).
   3. A daily summary of total calories and macros.
 
-  The entire diet plan MUST align with the total daily calorie target and macro ratio. It also must respect all dietary restrictions, food preferences, and cuisine styles.
+  The entire diet plan MUST align with the total daily calorie target and macro ratio. It also must respect all dietary restrictions, food preferences, medical conditions, and cuisine styles.
   Create a catchy title and a brief, encouraging summary for the overall 7-day plan. Ensure the meals are varied and interesting across the 7 days.
 `,
 });

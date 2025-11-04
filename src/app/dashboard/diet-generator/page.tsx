@@ -60,6 +60,7 @@ export default function DietGeneratorPage() {
       cuisine: "Mediterranean",
       dietaryRestrictions: "None",
       foodPreferences: "I enjoy spicy food, chicken, and vegetables.",
+      medicalConditions: "None",
     },
   });
 
@@ -185,6 +186,19 @@ export default function DietGeneratorPage() {
                       <FormLabel>Preferred Cuisine (optional)</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., Italian, Mexican, Indian" {...field} />
+                      </FormControl>
+                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="medicalConditions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Medical Conditions (optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Diabetes, high BP" {...field} />
                       </FormControl>
                        <FormMessage />
                     </FormItem>

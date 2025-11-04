@@ -22,6 +22,9 @@ const GenerateWorkoutPlanInputSchema = z.object({
   duration: z
     .number()
     .describe('Preferred workout duration in minutes per session.'),
+  daysPerWeek: z
+    .number()
+    .describe('How many days per week the user can work out.'),
   equipment: z
     .enum(['with', 'without'])
     .describe('Whether the user has access to gym equipment.'),
@@ -59,16 +62,20 @@ const workoutPrompt = ai.definePrompt({
   name: 'generateWorkoutPlanPrompt',
   input: {schema: GenerateWorkoutPlanInputSchema},
   output: {schema: GenerateWorkoutPlanOutputSchema},
-  prompt: `You are a certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences. The plan must include exactly one rest day.
+  prompt: `You are a certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences.
 
 Fitness Goals: {{{fitnessGoals}}}
 Intensity: {{{intensity}}}
 Duration per session: {{{duration}}} minutes
+Days per week: {{{daysPerWeek}}}
 Equipment: {{{equipment}}} equipment
 Body Focus: {{#if bodyFocus}}{{{bodyFocus}}}{{else}}Full body{{/if}}
 
+Important Rule: You MUST structure the plan so that each major muscle group ('chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings') is trained at least twice during the 7-day week.
+
 Provide a catchy title for the whole week, a short description, and a weekly schedule.
 For each of the 7 days, provide a day number, a title for the day's workout, a short description, and a list of specific exercises with sets, reps, rest times, and the primary muscle groups targeted.
+The number of workout days in the schedule should match the user's 'Days per week' preference. The remaining days should be rest days.
 The muscle groups should be from this list: 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'.
 For the videoUrl field for each exercise, you MUST return the string 'error'.
 If a day is a rest day, the 'exercises' array should be empty.
