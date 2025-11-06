@@ -66,7 +66,7 @@ export default function SubscriptionPage({ searchParams }: { searchParams: { suc
     <div className="space-y-8 p-4 md:p-8 pb-24">
       <div>
         <h1 className="text-3xl font-bold font-headline md:text-4xl">Go Premium</h1>
-        <p className="text-muted-foreground">Unlock your full potential with FitBoost Premium.</p>
+        <p className="text-muted-foreground">Unlock your full potential with Fit-Pulse Premium.</p>
       </div>
       
        <Alert className="border-accent/50 bg-accent/10 text-accent-foreground">
@@ -87,7 +87,7 @@ export default function SubscriptionPage({ searchParams }: { searchParams: { suc
          <Card className="flex flex-col">
           <CardHeader>
             <CardTitle className="font-headline">Premium Membership</CardTitle>
-            <CardDescription>Get full access to all FitBoost features for one month.</CardDescription>
+            <CardDescription>Get full access to all Fit-Pulse features for one month.</CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex flex-col justify-between space-y-4">
             <ul className="space-y-4 text-sm">

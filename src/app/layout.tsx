@@ -7,7 +7,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
-  title: 'FitBoost',
+  title: 'Fit-Pulse',
   description: 'Your personal AI fitness and nutrition coach.',
 };
 

@@ -103,7 +103,7 @@ function ProfilePageContent() {
     
     const timerId = setTimeout(() => {
        const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
-       new Notification('FitBoost Workout Reminder', {
+       new Notification('Fit-Pulse Workout Reminder', {
           body: randomMessage,
           icon: '/logo.svg'
        });

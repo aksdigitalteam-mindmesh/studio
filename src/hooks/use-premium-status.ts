@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { differenceInDays } from 'date-fns';
 
 const PREMIUM_DURATION_DAYS = 30;
-const SUBSCRIPTION_STORAGE_KEY = 'fitboost_subscription';
+const SUBSCRIPTION_STORAGE_KEY = 'fit-pulse_subscription';
 
 type Subscription = {
   isPremium: boolean;

@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { differenceInDays } from 'date-fns';
 
 const USAGE_LIMIT = 6;
-const USAGE_STORAGE_KEY = 'fitboost_ai_usage';
+const USAGE_STORAGE_KEY = 'fit-pulse_ai_usage';
 
 type UsageData = {
   count: number;

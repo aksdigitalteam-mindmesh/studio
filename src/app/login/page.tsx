@@ -107,7 +107,7 @@ export default function LoginPage() {
                 <div className="mx-auto mb-4">
                     <Icons.Logo className="h-16 w-16 text-primary"/>
                 </div>
-              <CardTitle className="text-2xl font-headline">Welcome to FitBoost</CardTitle>
+              <CardTitle className="text-2xl font-headline">Welcome to Fit-Pulse</CardTitle>
               <CardDescription>Your personal AI fitness and nutrition coach.</CardDescription>
             </CardHeader>
             <CardContent>
