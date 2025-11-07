@@ -47,7 +47,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace('/dashboard');
+      router.replace('/onboarding');
     }
   }, [user, loading, router]);
 
@@ -63,9 +63,9 @@ export default function LoginPage() {
       } else {
         toast({
             title: "Login Successful",
-            description: "Redirecting to your dashboard...",
+            description: "Redirecting...",
         })
-        router.push('/dashboard');
+        router.push('/onboarding');
       }
     });
   }
@@ -83,9 +83,9 @@ export default function LoginPage() {
         } else {
             toast({
                 title: "Signup Successful",
-                description: "Redirecting to your dashboard...",
+                description: "Redirecting...",
             })
-            router.push('/dashboard');
+            router.push('/onboarding');
         }
     });
   }

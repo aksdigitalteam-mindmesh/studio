@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { generateWorkoutPlan as genWorkoutPlan } from "@/ai/flows/generate-workout-plan";
 import { generateDietPlan as genDietPlan } from "@/ai/flows/generate-diet-plan";
-import { dietPlanSchema, workoutPlanSchema } from "./schemas";
+import { dietPlanSchema, onboardingSchema, workoutPlanSchema } from "./schemas";
 import { generateRecoveryTips as genRecoveryTips } from "@/ai/flows/generate-recovery-tips";
 
 
