@@ -187,7 +187,7 @@ export default function DashboardPage() {
       return format(currentDate, 'EEEE, dd MMM').toUpperCase();
     })();
 
-    const caloriesLeft = CALORIE_GOAL - eatenCalories;
+    const caloriesLeft = CALORIE_GOAL - eatenCalories + burnedCalories;
     const eatenProgress = (eatenCalories / CALORIE_GOAL) * 100;
     const burnedProgress = (burnedCalories / CALORIE_GOAL) * 100;
 
@@ -395,5 +395,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
