@@ -8,7 +8,7 @@ import { Loader2, Sparkles, Wand } from "lucide-react";
 import { generateRecoveryTipsAction } from "@/lib/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
+import { Progress } from "@/components/ui/progress";
 
 
 type FatigueData = Record<string, number>;
@@ -83,29 +83,22 @@ export default function FatiguePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Muscle Fatigue Chart</CardTitle>
+          <CardTitle>Muscle Fatigue Levels</CardTitle>
           <CardDescription>{fatigueDescription}</CardDescription>
         </CardHeader>
         <CardContent>
             {isClient ? (
-                <ResponsiveContainer width="100%" height={400}>
-                    <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false}/>
-                        <XAxis type="number" domain={[0, 100]} unit="%" />
-                        <YAxis type="category" dataKey="name" width={80} tickLine={false} axisLine={false}/>
-                        <Tooltip 
-                            cursor={{ fill: 'hsl(var(--muted))' }}
-                            contentStyle={{ 
-                                background: 'hsl(var(--background))', 
-                                border: '1px solid hsl(var(--border))', 
-                                borderRadius: 'var(--radius)' 
-                            }}
-                        />
-                        <Bar dataKey="fatigue" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]}>
-                           <LabelList dataKey="fatigue" position="right" formatter={(value: number) => `${value}%`} />
-                        </Bar>
-                    </BarChart>
-                </ResponsiveContainer>
+                <div className="space-y-4">
+                  {chartData.map((muscle) => (
+                    <div key={muscle.name}>
+                       <div className="flex justify-between items-center mb-1">
+                          <span className="text-sm font-medium">{muscle.name}</span>
+                          <span className="text-xs text-muted-foreground">{muscle.fatigue}%</span>
+                        </div>
+                      <Progress value={muscle.fatigue} />
+                    </div>
+                  ))}
+                </div>
             ) : (
                 <div className="flex justify-center items-center h-96">
                     <Loader2 className="h-8 w-8 animate-spin text-primary"/>
