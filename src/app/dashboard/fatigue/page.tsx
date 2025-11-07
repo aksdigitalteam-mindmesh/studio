@@ -1,25 +1,23 @@
 
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { MuscleFatigueDiagram, type Muscle } from "@/components/muscle-fatigue-diagram";
 import { Loader2, Sparkles, Wand } from "lucide-react";
 import { generateRecoveryTipsAction } from "@/lib/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
+
 
 type FatigueData = Record<string, number>;
 const FATIGUE_STORAGE_KEY = 'muscleFatigueData';
-const GENDER_STORAGE_KEY = 'userGender';
+
+const allMuscles = ["chest", "biceps", "abs", "quads", "shoulders", "back", "triceps", "glutes", "hamstrings", "calves"];
 
 export default function FatiguePage() {
   const [fatigueData, setFatigueData] = useState<FatigueData>({});
-  const [gender, setGender] = useState<"male" | "female">("male");
-  const [selectedMuscle, setSelectedMuscle] = useState<Muscle | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [recoveryTips, setRecoveryTips] = useState<{ title: string, description: string }[]>([]);
@@ -28,7 +26,6 @@ export default function FatiguePage() {
   const handleDataUpdate = () => {
     const fatigueString = localStorage.getItem(FATIGUE_STORAGE_KEY);
     setFatigueData(fatigueString ? JSON.parse(fatigueString) : {});
-    setGender((localStorage.getItem(GENDER_STORAGE_KEY) as "male" | "female") || 'male');
   };
 
   useEffect(() => {
@@ -41,16 +38,28 @@ export default function FatiguePage() {
     };
   }, []);
 
-  const handleMuscleClick = (muscle: Muscle) => {
-    setSelectedMuscle(prev => prev === muscle ? null : muscle);
-    setRecoveryTips([]);
-  };
+  const chartData = useMemo(() => {
+    return allMuscles.map(muscle => ({
+      name: muscle.charAt(0).toUpperCase() + muscle.slice(1),
+      fatigue: fatigueData[muscle] || 0,
+    })).sort((a, b) => b.fatigue - a.fatigue);
+  }, [fatigueData]);
 
   const handleGenerateTips = () => {
-    if (!selectedMuscle) return;
+    const fatiguedMuscles = chartData
+        .filter(m => m.fatigue > 30) // Get tips for muscles with moderate or higher fatigue
+        .map(m => m.name.toLowerCase());
+
+    if (fatiguedMuscles.length === 0) {
+        toast({
+            title: "No Significant Fatigue",
+            description: "You're well-rested! No special recovery tips needed right now.",
+        });
+        return;
+    }
 
     startTransition(async () => {
-        const response = await generateRecoveryTipsAction([selectedMuscle]);
+        const response = await generateRecoveryTipsAction(fatiguedMuscles);
         if (response.error) {
             toast({
                 variant: "destructive",
@@ -63,17 +72,7 @@ export default function FatiguePage() {
     });
   };
 
-  const getFatigueLevel = (muscle: Muscle | null): string => {
-    if (!muscle) return "None";
-    const level = fatigueData[muscle] || 0;
-    if (level >= 80) return "Very High";
-    if (level >= 50) return "High";
-    if (level >= 30) return "Moderate";
-    if (level >= 10) return "Low";
-    return "None";
-  };
-  
-  const fatigueDescription = "This diagram visualizes muscle fatigue based on your completed workouts. Muscles recover over time. Click a muscle group to get AI-powered recovery tips.";
+  const fatigueDescription = "This chart visualizes muscle fatigue based on your completed workouts. Muscles with higher fatigue levels may need more recovery time. Click the button below to get AI-powered recovery tips for your most fatigued areas.";
 
   return (
     <div className="space-y-8 p-4 md:p-8 pb-24">
@@ -84,40 +83,43 @@ export default function FatiguePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Muscle Fatigue Diagram</CardTitle>
+          <CardTitle>Muscle Fatigue Chart</CardTitle>
           <CardDescription>{fatigueDescription}</CardDescription>
         </CardHeader>
         <CardContent>
             {isClient ? (
-                <MuscleFatigueDiagram fatiguedMuscles={fatigueData} gender={gender} onMuscleClick={handleMuscleClick} selectedMuscle={selectedMuscle}/>
+                <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false}/>
+                        <XAxis type="number" domain={[0, 100]} unit="%" />
+                        <YAxis type="category" dataKey="name" width={80} tickLine={false} axisLine={false}/>
+                        <Tooltip 
+                            cursor={{ fill: 'hsl(var(--muted))' }}
+                            contentStyle={{ 
+                                background: 'hsl(var(--background))', 
+                                border: '1px solid hsl(var(--border))', 
+                                borderRadius: 'var(--radius)' 
+                            }}
+                        />
+                        <Bar dataKey="fatigue" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]}>
+                           <LabelList dataKey="fatigue" position="right" formatter={(value: number) => `${value}%`} />
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
             ) : (
-                <div className="flex justify-center items-center h-64">
+                <div className="flex justify-center items-center h-96">
                     <Loader2 className="h-8 w-8 animate-spin text-primary"/>
                 </div>
             )}
-             <div className="flex justify-center pt-4">
-                <RadioGroup value={gender} onValueChange={(val) => setGender(val as "male" | "female")} className="flex gap-4">
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="male" id="male" />
-                        <Label htmlFor="male">Male</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="female" id="female" />
-                        <Label htmlFor="female">Female</Label>
-                    </div>
-                </RadioGroup>
-            </div>
         </CardContent>
       </Card>
       
-      {selectedMuscle && (
-        <Card>
+      <Card>
             <CardHeader>
                 <CardTitle className="capitalize flex items-center justify-between">
-                    <span>{selectedMuscle} Recovery</span>
-                    <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary">{getFatigueLevel(selectedMuscle)}</span>
+                    <span>AI Recovery Coach</span>
                 </CardTitle>
-                <CardDescription>Fatigue Level: {fatigueData[selectedMuscle] || 0}%</CardDescription>
+                <CardDescription>Generate personalized tips for your most fatigued muscles.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <Button onClick={handleGenerateTips} disabled={isPending} className="w-full">
@@ -146,7 +148,6 @@ export default function FatiguePage() {
                 )}
             </CardContent>
         </Card>
-      )}
     </div>
   );
 }
