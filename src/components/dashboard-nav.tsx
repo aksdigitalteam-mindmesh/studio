@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Flame, Activity, Bookmark, User, BrainCircuit } from "lucide-react";
+import { Flame, Activity, Bookmark, HeartPulse, BrainCircuit } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -11,7 +11,7 @@ const navLinks = [
   { href: "/dashboard/workout", label: "Activity", icon: Activity },
   { href: "/dashboard/programs", label: "AI Coach", icon: BrainCircuit, central: true },
   { href: "/dashboard/recipes", label: "Recipes", icon: Bookmark },
-  { href: "/dashboard/fatigue", label: "Fatigue", icon: User },
+  { href: "/dashboard/fatigue", label: "Fatigue", icon: HeartPulse },
 ];
 
 export default function DashboardNav() {
