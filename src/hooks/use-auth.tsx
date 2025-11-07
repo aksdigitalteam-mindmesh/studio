@@ -66,6 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
     } catch (error: any) {
         console.error("Error signing up:", error);
+        if (error.code === 'auth/email-already-in-use') {
+            return "This email is already in use. Please try logging in.";
+        }
         if (error.code === 'auth/configuration-not-found') {
             return "Authentication method not enabled. Please enable Email/Password sign-in in your Firebase console.";
         }
