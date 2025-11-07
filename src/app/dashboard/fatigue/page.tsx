@@ -9,12 +9,21 @@ import { generateRecoveryTipsAction } from "@/lib/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
+import { PolarGrid, PolarAngleAxis, Radar, RadarChart } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 
 
 type FatigueData = Record<string, number>;
 const FATIGUE_STORAGE_KEY = 'muscleFatigueData';
 
 const allMuscles = ["chest", "biceps", "abs", "quads", "shoulders", "back", "triceps", "glutes", "hamstrings", "calves"];
+
+const chartConfig = {
+  fatigue: {
+    label: "Fatigue",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig;
 
 export default function FatiguePage() {
   const [fatigueData, setFatigueData] = useState<FatigueData>({});
@@ -43,6 +52,13 @@ export default function FatiguePage() {
       name: muscle.charAt(0).toUpperCase() + muscle.slice(1),
       fatigue: fatigueData[muscle] || 0,
     })).sort((a, b) => b.fatigue - a.fatigue);
+  }, [fatigueData]);
+  
+  const radarChartData = useMemo(() => {
+     return allMuscles.map(muscle => ({
+      muscle: muscle.charAt(0).toUpperCase() + muscle.slice(1),
+      fatigue: fatigueData[muscle] || 0,
+    }));
   }, [fatigueData]);
 
   const handleGenerateTips = () => {
@@ -107,6 +123,40 @@ export default function FatiguePage() {
         </CardContent>
       </Card>
       
+      <Card>
+        <CardHeader>
+          <CardTitle>Fatigue Radar</CardTitle>
+          <CardDescription>A holistic view of your muscle recovery balance.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isClient ? (
+            <ChartContainer config={chartConfig} className="mx-auto w-full max-w-lg h-96">
+              <RadarChart data={radarChartData}>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="line" />}
+                />
+                <PolarAngleAxis dataKey="muscle" />
+                <PolarGrid />
+                <Radar
+                  dataKey="fatigue"
+                  fill="var(--color-fatigue)"
+                  fillOpacity={0.6}
+                  dot={{
+                    r: 4,
+                    fillOpacity: 1,
+                  }}
+                />
+              </RadarChart>
+            </ChartContainer>
+          ) : (
+            <div className="flex justify-center items-center h-96">
+                <Loader2 className="h-8 w-8 animate-spin text-primary"/>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
             <CardHeader>
                 <CardTitle className="capitalize flex items-center justify-between">
