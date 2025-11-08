@@ -15,6 +15,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile as updateFirebaseProfile,
+  sendPasswordResetEmail,
   type User,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
@@ -45,6 +46,7 @@ interface AuthContextType {
   signUpWithEmail: (email: string, password: string, profileData?: Record<string, any>) => Promise<string | null>;
   signInWithEmail: (email: string, password: string) => Promise<string | null>;
   signOutUser: () => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<string | null>;
   updateUserProfile: (uid: string, data: Partial<UserProfile>) => Promise<string | null>;
   refreshProfile: () => void;
 }
@@ -85,14 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        await fetchProfile(user);
+        // removed onboarding logic
       } else {
         setProfile(null);
       }
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [auth, fetchProfile]);
+  }, [auth]);
 
   const refreshProfile = useCallback(() => {
     if (user) {
@@ -156,6 +158,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return error.message || "An unknown error occurred.";
       }
   };
+  
+  const sendPasswordReset = async (email: string) => {
+    try {
+        await sendPasswordResetEmail(auth, email);
+        return null;
+    } catch (error: any) {
+        console.error("Error sending password reset email:", error);
+        if (error.code === 'auth/user-not-found') {
+            return "No user found with this email address.";
+        }
+        return error.message || "An unknown error occurred.";
+    }
+  };
 
   const signOutUser = async () => {
     await signOut(auth);
@@ -209,9 +224,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUpWithEmail,
     signInWithEmail,
     signOutUser,
+    sendPasswordReset,
     updateUserProfile,
     refreshProfile
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

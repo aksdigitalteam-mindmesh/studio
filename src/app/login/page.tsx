@@ -17,13 +17,19 @@ import { loginSchema, signupSchema } from '@/lib/schemas';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address." }),
+});
 
 export default function LoginPage() {
-  const { user, loading, signUpWithEmail, signInWithEmail } = useAuthContext();
+  const { user, loading, signUpWithEmail, signInWithEmail, sendPasswordReset } = useAuthContext();
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [tab, setTab] = useState("login");
+  const [isForgotPassDialogOpen, setIsForgotPassDialogOpen] = useState(false);
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -42,6 +48,13 @@ export default function LoginPage() {
       medicalConditions: "",
       workoutDuration: 60,
       workoutDaysPerWeek: 4,
+    },
+  });
+  
+  const forgotPasswordForm = useForm<z.infer<typeof forgotPasswordSchema>>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
     },
   });
 
@@ -89,6 +102,25 @@ export default function LoginPage() {
         }
     });
   }
+  
+  const handleForgotPassword = async (values: z.infer<typeof forgotPasswordSchema>) => {
+    startTransition(async () => {
+        const error = await sendPasswordReset(values.email);
+        if (error) {
+             toast({
+                variant: "destructive",
+                title: "Failed to send email",
+                description: error,
+            });
+        } else {
+            toast({
+                title: "Password Reset Email Sent",
+                description: "Please check your inbox for instructions to reset your password.",
+            });
+            setIsForgotPassDialogOpen(false);
+        }
+    });
+  }
 
 
   if (loading || user) {
@@ -101,6 +133,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Dialog open={isForgotPassDialogOpen} onOpenChange={setIsForgotPassDialogOpen}>
       <Tabs value={tab} onValueChange={setTab} className="w-full max-w-md">
         <Card>
             <CardHeader className="text-center">
@@ -117,7 +150,7 @@ export default function LoginPage() {
               </TabsList>
               <TabsContent value="login">
                 <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
+                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                     <FormField
                       control={loginForm.control}
                       name="email"
@@ -144,6 +177,13 @@ export default function LoginPage() {
                         </FormItem>
                       )}
                     />
+                     <div className="text-right">
+                        <DialogTrigger asChild>
+                            <Button type="button" variant="link" className="p-0 h-auto font-normal">
+                                Forgot password?
+                            </Button>
+                        </DialogTrigger>
+                    </div>
                     <Button type="submit" disabled={isPending} className="w-full">
                       {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Login
@@ -244,6 +284,39 @@ export default function LoginPage() {
             </CardContent>
         </Card>
       </Tabs>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Forgot Password</DialogTitle>
+            <DialogDescription>
+              Enter your email address below and we'll send you a link to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...forgotPasswordForm}>
+            <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
+              <FormField
+                control={forgotPasswordForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="name@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsForgotPassDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Send Reset Link
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
