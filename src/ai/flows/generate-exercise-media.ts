@@ -44,6 +44,9 @@ export async function generateExerciseMedia(
       while (!operation.done) {
           await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds
           operation = await ai.checkOperation(operation);
+          if (!operation) { // Add a check here in case checkOperation fails
+            throw new Error('Operation status check failed.');
+          }
       }
 
       if (operation.error) {
