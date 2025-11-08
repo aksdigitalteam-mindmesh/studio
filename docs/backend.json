@@ -35,6 +35,32 @@
         "workoutDaysPerWeek": {
             "type": "number",
             "description": "How many days per week the user can work out."
+        },
+        "age": {
+            "type": "number",
+            "description": "The user's age."
+        },
+        "height": {
+            "type": "number",
+            "description": "The user's height in centimeters."
+        },
+        "weight": {
+            "type": "number",
+            "description": "The user's weight in kilograms."
+        },
+        "fitnessGoal": {
+            "type": "string",
+            "enum": ["weight-loss", "build-muscle", "endurance"],
+            "description": "The user's primary fitness goal."
+        },
+        "goalLastUpdated": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp of when the fitness goal was last updated."
+        },
+        "goalUpdateCount": {
+            "type": "number",
+            "description": "How many times the goal has been updated this month."
         }
       },
       "required": ["uid", "email"]

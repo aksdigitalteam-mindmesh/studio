@@ -17,7 +17,7 @@ import {
   updateProfile as updateFirebaseProfile,
   type User,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirebase } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 
@@ -32,6 +32,9 @@ interface UserProfile {
     age?: number;
     height?: number;
     weight?: number;
+    fitnessGoal?: 'weight-loss' | 'build-muscle' | 'endurance';
+    goalLastUpdated?: any; 
+    goalUpdateCount?: number;
 }
 
 interface AuthContextType {
@@ -57,17 +60,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userDocRef = doc(firestore, 'users', user.uid);
     const userDoc = await getDoc(userDocRef);
     if (userDoc.exists()) {
-        setProfile(userDoc.data() as UserProfile);
+        const data = userDoc.data() as UserProfile;
+        // Convert Firestore Timestamp to Date if it exists
+        if (data.goalLastUpdated && typeof data.goalLastUpdated.toDate === 'function') {
+            data.goalLastUpdated = data.goalLastUpdated.toDate();
+        }
+        setProfile(data);
     } else {
         // If profile doesn't exist, create a shell
-        const newProfile = {
+        const newProfile: UserProfile = {
             uid: user.uid,
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL
         };
         await setDoc(userDocRef, newProfile);
-        setProfile(newProfile as UserProfile);
+        setProfile(newProfile);
     }
   }, [firestore]);
 
@@ -101,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         const userDocRef = doc(firestore, 'users', newUser.uid);
-        const newProfileData = {
+        const newProfileData: UserProfile = {
             uid: newUser.uid,
             email: newUser.email,
             displayName: profileData.displayName,
@@ -111,11 +119,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             age: profileData.age,
             height: profileData.height,
             weight: profileData.weight,
+            fitnessGoal: profileData.fitnessGoal,
+            goalUpdateCount: 0,
         };
         await setDoc(userDocRef, newProfileData);
 
         setUser(newUser);
-        setProfile(newProfileData as UserProfile);
+        setProfile(newProfileData);
         return null;
     } catch (error: any) {
         console.error("Error signing up:", error);
@@ -154,8 +164,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateUserProfile = async (uid: string, data: Partial<UserProfile>) => {
     try {
         const userDocRef = doc(firestore, 'users', uid);
-        await updateDoc(userDocRef, data);
-        await fetchProfile(auth.currentUser!);
+        let dataToUpdate = { ...data };
+
+        // Special handling for fitnessGoal updates
+        if (data.fitnessGoal) {
+            const userDoc = await getDoc(userDocRef);
+            const currentProfile = userDoc.data() as UserProfile;
+            const now = new Date();
+            let count = currentProfile.goalUpdateCount || 0;
+            const lastUpdated = currentProfile.goalLastUpdated ? new Date(currentProfile.goalLastUpdated) : null;
+            
+            if(lastUpdated && now.getMonth() === lastUpdated.getMonth() && now.getFullYear() === lastUpdated.getFullYear()){
+                if(count >= 2) {
+                    return "You can only change your fitness goal twice a month.";
+                }
+                count++;
+            } else {
+                // It's a new month, so reset the count
+                count = 1;
+            }
+
+            dataToUpdate = {
+                ...dataToUpdate,
+                goalUpdateCount: count,
+                goalLastUpdated: serverTimestamp() // Use server timestamp
+            };
+        }
+
+        await updateDoc(userDocRef, dataToUpdate);
+        await fetchProfile(auth.currentUser!); // Refetch to get server-generated timestamp
         return null;
     } catch (error: any) {
         console.error("Error updating profile:", error);

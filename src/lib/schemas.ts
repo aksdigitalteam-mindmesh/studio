@@ -36,4 +36,7 @@ export const onboardingSchema = z.object({
     age: z.coerce.number().min(12, "You must be at least 12 years old.").max(120, "Age seems too high."),
     height: z.coerce.number().min(100, "Height must be at least 100 cm.").max(300, "Height must be 300cm or less."),
     weight: z.coerce.number().min(30, "Weight must be at least 30 kg.").max(500, "Weight must be 500kg or less."),
+    fitnessGoal: z.enum(["weight-loss", "build-muscle", "endurance"], {
+      required_error: "You need to select a fitness goal.",
+    }),
 });

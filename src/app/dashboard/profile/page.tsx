@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, ShoppingCart, Sparkles, Loader2, Sun, Moon, Monitor, LogOut } from 'lucide-react';
+import { User, Shield, Crown, Cake, ArrowRightLeft, Ruler, Weight, Bell, ShoppingCart, Sparkles, Loader2, Sun, Moon, Monitor, LogOut, Target } from 'lucide-react';
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -18,9 +18,32 @@ import { usePremiumStatus } from '@/hooks/use-premium-status';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useTheme } from '@/components/theme-provider';
 import { useAuthContext } from '@/hooks/use-auth';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+
+const goalLabels = {
+    'weight-loss': 'Weight Loss',
+    'build-muscle': 'Build Muscle',
+    'endurance': 'Improve Endurance'
+}
 
 function ProfilePageContent() {
-  const { user, profile, signOutUser } = useAuthContext();
+  const { user, profile, signOutUser, updateUserProfile, refreshProfile } = useAuthContext();
   const { toast } = useToast();
   const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
   const { theme, setTheme } = useTheme();
@@ -31,6 +54,8 @@ function ProfilePageContent() {
   const [shoppingReminder, setShoppingReminder] = useState(false);
   const [motivationalReminder, setMotivationalReminder] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState(profile?.fitnessGoal);
 
   useEffect(() => {
     setIsClient(true);
@@ -40,7 +65,10 @@ function ProfilePageContent() {
     setMealReminder(localStorage.getItem('mealReminder') === 'true');
     setShoppingReminder(localStorage.getItem('shoppingReminder') === 'true');
     setMotivationalReminder(localStorage.getItem('motivationalReminder') === 'true');
-  }, []);
+    if(profile?.fitnessGoal) {
+        setSelectedGoal(profile.fitnessGoal);
+    }
+  }, [profile]);
 
   useEffect(() => {
     if(isClient) localStorage.setItem('userGender', gender);
@@ -116,6 +144,18 @@ function ProfilePageContent() {
     const clearNotificationTimer = scheduleNotification();
     return clearNotificationTimer;
   }, [scheduleNotification]);
+  
+  const handleGoalChange = async () => {
+    if (!user || !selectedGoal) return;
+    const error = await updateUserProfile(user.uid, { fitnessGoal: selectedGoal });
+    if(error) {
+        toast({ variant: 'destructive', title: 'Update failed', description: error });
+    } else {
+        toast({ title: 'Fitness goal updated!' });
+        refreshProfile();
+    }
+    setIsGoalDialogOpen(false);
+  }
 
   if (isPremiumLoading || !isClient) {
     return (
@@ -190,6 +230,39 @@ function ProfilePageContent() {
           <CardTitle>Your Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <Target className="h-5 w-5" />
+              <span className="font-medium">Fitness Goal</span>
+            </div>
+            <Dialog open={isGoalDialogOpen} onOpenChange={setIsGoalDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">{profile?.fitnessGoal ? goalLabels[profile.fitnessGoal] : 'Set Goal'}</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Change Your Fitness Goal</DialogTitle>
+                  <DialogDescription>
+                    You can change your goal twice per month. This will affect your AI-generated plans.
+                  </DialogDescription>
+                </DialogHeader>
+                <Select value={selectedGoal} onValueChange={(val) => setSelectedGoal(val as any)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a goal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weight-loss">Weight Loss</SelectItem>
+                    <SelectItem value="build-muscle">Build Muscle</SelectItem>
+                    <SelectItem value="endurance">Improve Endurance</SelectItem>
+                  </SelectContent>
+                </Select>
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => setIsGoalDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleGoalChange}>Save Goal</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-muted-foreground">
               <User className="h-5 w-5" />

@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { onboardingSchema } from "@/lib/schemas";
 import { useAuthContext } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -35,18 +36,15 @@ export default function OnboardingPage() {
       age: 25,
       height: 175,
       weight: 70,
+      fitnessGoal: "weight-loss",
     },
   });
   
-  // If user is not logged in, redirect them.
-  // After login, this page is the next step.
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
+    if (!loading && !user) {
         router.replace('/login');
-      }
     }
-  }, [user, profile, loading, router]);
+  }, [user, loading, router]);
 
 
   function onSubmit(values: z.infer<typeof onboardingSchema>) {
@@ -94,6 +92,48 @@ export default function OnboardingPage() {
             <CardContent>
                 <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="fitnessGoal"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>What is your primary fitness goal?</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="flex flex-col space-y-1"
+                            >
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="weight-loss" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Weight Loss
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="build-muscle" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Build Muscle
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="endurance" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Improve Endurance
+                                </FormLabel>
+                              </FormItem>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                     control={form.control}
                     name="age"
