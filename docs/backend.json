@@ -53,6 +53,11 @@
             "enum": ["weight-loss", "build-muscle", "endurance"],
             "description": "The user's primary fitness goal."
         },
+        "intensity": {
+          "type": "string",
+          "enum": ["beginner", "intermediate", "advanced"],
+          "description": "The user's fitness intensity level."
+        },
         "goalLastUpdated": {
             "type": "string",
             "format": "date-time",

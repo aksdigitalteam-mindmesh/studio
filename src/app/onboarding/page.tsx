@@ -37,6 +37,7 @@ export default function OnboardingPage() {
       height: 175,
       weight: 70,
       fitnessGoal: "weight-loss",
+      intensity: "beginner",
     },
   });
   
@@ -44,7 +45,10 @@ export default function OnboardingPage() {
     if (!loading && !user) {
         router.replace('/login');
     }
-  }, [user, loading, router]);
+    if (!loading && user && profile?.age) {
+        router.replace('/dashboard');
+    }
+  }, [user, profile, loading, router]);
 
 
   function onSubmit(values: z.infer<typeof onboardingSchema>) {
@@ -71,7 +75,7 @@ export default function OnboardingPage() {
     });
   }
 
-  if (loading || !user) {
+  if (loading || !user || profile?.age) {
      return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -127,6 +131,42 @@ export default function OnboardingPage() {
                                 <FormLabel className="font-normal">
                                   Improve Endurance
                                 </FormLabel>
+                              </FormItem>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name="intensity"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>What is your current fitness level?</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="flex flex-col space-y-1"
+                            >
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="beginner" />
+                                </FormControl>
+                                <FormLabel className="font-normal">Beginner</FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="intermediate" />
+                                </FormControl>
+                                <FormLabel className="font-normal">Intermediate</FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="advanced" />
+                                </FormControl>
+                                <FormLabel className="font-normal">Advanced</FormLabel>
                               </FormItem>
                             </RadioGroup>
                           </FormControl>

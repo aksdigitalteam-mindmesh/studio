@@ -60,15 +60,14 @@ export default function CaloriesPage() {
       // TDEE using a light activity multiplier of 1.375
       const tdee = bmr * 1.375;
 
-      switch(profile.fitnessGoal) {
-        case 'weight-loss':
-          return Math.round(tdee - 500);
-        case 'build-muscle':
-          return Math.round(tdee + 300);
-        case 'endurance':
-        default:
-          return Math.round(tdee);
+      let adjustment = 0;
+      if (profile.fitnessGoal === 'weight-loss') {
+        adjustment = profile.intensity === 'beginner' ? -300 : profile.intensity === 'intermediate' ? -500 : -700;
+      } else if (profile.fitnessGoal === 'build-muscle') {
+        adjustment = profile.intensity === 'beginner' ? 300 : profile.intensity === 'intermediate' ? 500 : 700;
       }
+      
+      return Math.round(tdee + adjustment);
     }
     return 2000; // Default goal
   }, [profile]);

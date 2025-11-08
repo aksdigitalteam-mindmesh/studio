@@ -39,4 +39,7 @@ export const onboardingSchema = z.object({
     fitnessGoal: z.enum(["weight-loss", "build-muscle", "endurance"], {
       required_error: "You need to select a fitness goal.",
     }),
+    intensity: z.enum(["beginner", "intermediate", "advanced"], {
+        required_error: "You need to select an intensity level.",
+    }),
 });

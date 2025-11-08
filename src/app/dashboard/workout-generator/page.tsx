@@ -55,7 +55,7 @@ export default function WorkoutGeneratorPage() {
   const [result, setResult] = useState<WorkoutPlan | null>(null);
   const { toast } = useToast();
   const { canUse, recordUsage, usagesLeft } = useUsageTracker();
-  const { user } = useAuthContext();
+  const { user, profile } = useAuthContext();
   const { firestore } = useFirebase();
 
   const form = useForm<z.infer<typeof workoutPlanSchema>>({
@@ -81,7 +81,7 @@ export default function WorkoutGeneratorPage() {
                     duration: userData.workoutDuration || 60,
                     daysPerWeek: userData.workoutDaysPerWeek || 5,
                     fitnessGoals: form.getValues('fitnessGoals'),
-                    intensity: form.getValues('intensity'),
+                    intensity: userData.intensity || 'medium',
                     equipment: form.getValues('equipment'),
                     bodyFocus: form.getValues('bodyFocus'),
                 });
@@ -104,7 +104,10 @@ export default function WorkoutGeneratorPage() {
 
     setResult(null);
     startTransition(async () => {
-      const response = await generateWorkoutPlanAction(values);
+      const response = await generateWorkoutPlanAction({
+          ...values,
+          medicalConditions: profile?.medicalConditions
+      });
       if (response.error) {
         toast({
           variant: "destructive",

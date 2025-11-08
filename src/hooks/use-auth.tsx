@@ -33,6 +33,7 @@ interface UserProfile {
     height?: number;
     weight?: number;
     fitnessGoal?: 'weight-loss' | 'build-muscle' | 'endurance';
+    intensity?: 'beginner' | 'intermediate' | 'advanced';
     goalLastUpdated?: any; 
     goalUpdateCount?: number;
 }
@@ -120,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             height: profileData.height,
             weight: profileData.weight,
             fitnessGoal: profileData.fitnessGoal,
+            intensity: profileData.intensity,
             goalUpdateCount: 0,
         };
         await setDoc(userDocRef, newProfileData);

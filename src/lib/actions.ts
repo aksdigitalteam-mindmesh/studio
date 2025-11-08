@@ -4,13 +4,13 @@
 import { z } from "zod";
 import { generateWorkoutPlan as genWorkoutPlan } from "@/ai/flows/generate-workout-plan";
 import { generateDietPlan as genDietPlan } from "@/ai/flows/generate-diet-plan";
-import { dietPlanSchema, onboardingSchema, workoutPlanSchema } from "./schemas";
+import { dietPlanSchema, workoutPlanSchema } from "./schemas";
 import { generateRecoveryTips as genRecoveryTips } from "@/ai/flows/generate-recovery-tips";
 
 
-export async function generateWorkoutPlanAction(values: z.infer<typeof workoutPlanSchema>) {
+export async function generateWorkoutPlanAction(values: z.infer<typeof workoutPlanSchema> & { medicalConditions?: string }) {
   try {
-    const validatedFields = workoutPlanSchema.safeParse(values);
+    const validatedFields = workoutPlanSchema.extend({ medicalConditions: z.string().optional() }).safeParse(values);
     if (!validatedFields.success) {
       return { error: "Invalid input provided." };
     }

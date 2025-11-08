@@ -32,6 +32,10 @@ const GenerateWorkoutPlanInputSchema = z.object({
     .string()
     .optional()
     .describe('Optional: Specific body parts to focus on, e.g., legs, core, arms.'),
+    medicalConditions: z
+    .string()
+    .optional()
+    .describe('Any medical conditions to consider, e.g., diabetes, high blood pressure. Be extra cautious with recommendations.'),
 });
 export type GenerateWorkoutPlanInput = z.infer<typeof GenerateWorkoutPlanInputSchema>;
 
@@ -70,6 +74,9 @@ Duration per session: {{{duration}}} minutes
 Days per week: {{{daysPerWeek}}}
 Equipment: {{{equipment}}} equipment
 Body Focus: {{#if bodyFocus}}{{{bodyFocus}}}{{else}}Full body{{/if}}
+Medical Conditions: {{#if medicalConditions}}{{{medicalConditions}}}{{else}}None{{/if}}
+
+If the user has specified any medical conditions, you MUST create a safe, low-impact workout plan and include a disclaimer to consult a doctor. Avoid high-impact exercises.
 
 Important Rule: You MUST structure the plan so that each major muscle group ('chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings') is trained at least twice during the 7-day week.
 
