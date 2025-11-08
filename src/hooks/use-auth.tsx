@@ -87,14 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        // removed onboarding logic
+        await fetchProfile(user);
       } else {
         setProfile(null);
       }
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [auth]);
+  }, [auth, fetchProfile]);
 
   const refreshProfile = useCallback(() => {
     if (user) {
