@@ -1,15 +1,26 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback }from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, ShieldAlert } from "lucide-react";
 import { isToday, startOfToday } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuthContext } from "@/hooks/use-auth";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Meal {
   id: number;
@@ -23,19 +34,58 @@ interface Meal {
 
 const STORAGE_KEY = "dailyMeals";
 
+// Mifflin-St Jeor Equation for BMR
+const calculateBmr = (weight: number, height: number, age: number, gender: string): number => {
+    if (gender === 'male') {
+        return 10 * weight + 6.25 * height - 5 * age + 5;
+    } else {
+        return 10 * weight + 6.25 * height - 5 * age - 161;
+    }
+};
+
 export default function CaloriesPage() {
+  const { profile } = useAuthContext();
   const [allMeals, setAllMeals] = useState<Meal[]>([]);
   const [mealName, setMealName] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [unit, setUnit] = useState("pieces");
   const [caloriesPerUnit, setCaloriesPerUnit] = useState("");
+  const [isClient, setIsClient] = useState(false);
+  const [pendingMeal, setPendingMeal] = useState<Meal | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
+  const calorieGoal = useMemo(() => {
+    if (profile?.weight && profile?.height && profile?.age) {
+      const gender = localStorage.getItem('userGender') || 'male';
+      const bmr = calculateBmr(profile.weight, profile.height, profile.age, gender);
+      // TDEE using a light activity multiplier of 1.375
+      return Math.round(bmr * 1.375);
+    }
+    return 2000; // Default goal
+  }, [profile]);
+  
+  const loadMeals = useCallback(() => {
+     if (typeof window !== 'undefined') {
         const savedMeals = localStorage.getItem(STORAGE_KEY);
         setAllMeals(savedMeals ? JSON.parse(savedMeals) : []);
     }
   }, []);
+
+  useEffect(() => {
+    setIsClient(true);
+    loadMeals();
+
+     const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) {
+        loadMeals();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+
+  }, [loadMeals]);
 
   useEffect(() => {
     if (allMeals.length > 0 || localStorage.getItem(STORAGE_KEY)) {
@@ -46,7 +96,6 @@ export default function CaloriesPage() {
   const todaysMeals = allMeals.filter(meal => isToday(new Date(meal.date)));
 
   const totalCalories = todaysMeals.reduce((acc, meal) => acc + meal.totalCalories, 0);
-  const calorieGoal = 2000;
   const progress = (totalCalories / calorieGoal) * 100;
 
   const handleAddMeal = (e: React.FormEvent) => {
@@ -54,7 +103,7 @@ export default function CaloriesPage() {
     if (mealName.trim() && quantity && caloriesPerUnit) {
       const numQuantity = parseFloat(quantity);
       const numCalories = parseInt(caloriesPerUnit);
-      const newMeal: Meal = {
+      const mealToAdd: Meal = {
         id: Date.now(),
         name: mealName.trim(),
         quantity: numQuantity,
@@ -63,16 +112,30 @@ export default function CaloriesPage() {
         totalCalories: numQuantity * numCalories,
         date: startOfToday().toISOString(),
       };
-      setAllMeals([...allMeals, newMeal]);
-      setMealName("");
-      setQuantity("1");
-      setCaloriesPerUnit("");
+
+      if (totalCalories + mealToAdd.totalCalories > calorieGoal) {
+          setPendingMeal(mealToAdd);
+      } else {
+          confirmAddMeal(mealToAdd);
+      }
+    }
+  };
+
+  const confirmAddMeal = (meal: Meal) => {
+    setAllMeals([...allMeals, meal]);
+    setMealName("");
+    setQuantity("1");
+    setCaloriesPerUnit("");
+    if (pendingMeal) {
+      setPendingMeal(null); // Close dialog
     }
   };
 
   const handleDeleteMeal = (id: number) => {
     setAllMeals(allMeals.filter(meal => meal.id !== id));
   }
+
+  if (!isClient) return null;
 
   return (
     <div className="space-y-8 p-4 md:p-8">
@@ -177,6 +240,28 @@ export default function CaloriesPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      <Dialog open={!!pendingMeal} onOpenChange={(isOpen) => !isOpen && setPendingMeal(null)}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Calorie Limit Warning</DialogTitle>
+                <DialogDescription>
+                    Adding this meal will exceed your daily calorie goal.
+                </DialogDescription>
+            </DialogHeader>
+            <Alert variant="destructive">
+                <ShieldAlert className="h-4 w-4" />
+                <AlertTitle>You are over your limit!</AlertTitle>
+                <AlertDescription>
+                   Your goal is {calorieGoal} kcal, but this meal would bring your total to {totalCalories + (pendingMeal?.totalCalories || 0)} kcal.
+                </AlertDescription>
+            </Alert>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setPendingMeal(null)}>Cancel</Button>
+                <Button onClick={() => pendingMeal && confirmAddMeal(pendingMeal)}>Add Anyway</Button>
+            </DialogFooter>
+        </DialogContent>
+     </Dialog>
     </div>
   );
 }

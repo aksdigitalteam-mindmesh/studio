@@ -8,39 +8,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getCompletedWorkouts } from "@/lib/workout-log-actions";
 import { format } from "date-fns";
-import { Dumbbell, Flame, PlusCircle, Ruler } from "lucide-react";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { Bar, BarChart, Line, LineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { Dumbbell, Flame, PlusCircle, Ruler, Save } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
+import { useAuthContext } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 type CompletedWorkout = {
   title:string;
   date: string;
 };
 
-const initialWeightData = [
-  { date: "2024-05-01", weight: 80.0 },
-  { date: "2024-05-08", weight: 79.5 },
-  { date: "2024-05-15", weight: 78.7 },
-  { date: "2024-05-22", weight: 77.8 },
-  { date: "2024-05-29", weight: 77.1 },
-];
+type WeightEntry = {
+    date: string;
+    weight: number;
+};
+
 const WEIGHT_STORAGE_KEY = 'weightData';
-const HEIGHT_STORAGE_KEY = 'userHeight';
 
 const weightChartConfig = {
   weight: {
     label: "Weight (kg)",
     color: "hsl(var(--primary))",
   },
-} satisfies ChartConfig;
-
-const bmiChartConfig = {
-  bmi: {
-    label: "BMI",
-    color: "hsl(var(--primary))",
-  },
-} satisfies ChartConfig;
+};
 
 const getBmiCategory = (bmi: number) => {
     if (bmi < 18.5) return { category: "Underweight", color: "bg-blue-500" };
@@ -50,57 +43,98 @@ const getBmiCategory = (bmi: number) => {
 }
 
 export function ProgressTracker() {
-  const [weightData, setWeightData] = useState(initialWeightData);
-  const [height, setHeight] = useState(175); // default height in cm
-  const [targetWeight, setTargetWeight] = useState(70);
+  const { user, profile, updateUserProfile, refreshProfile } = useAuthContext();
+  const { toast } = useToast();
+
+  const [weightData, setWeightData] = useState<WeightEntry[]>([]);
+  const [height, setHeight] = useState(profile?.height || 0);
   const [currentWeight, setCurrentWeight] = useState("");
   const [completedWorkouts, setCompletedWorkouts] = useState<CompletedWorkout[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   useEffect(() => {
     setIsClient(true);
     const savedWeight = localStorage.getItem(WEIGHT_STORAGE_KEY);
-    const savedHeight = localStorage.getItem(HEIGHT_STORAGE_KEY);
-    setWeightData(savedWeight ? JSON.parse(savedWeight) : initialWeightData);
-    setHeight(savedHeight ? JSON.parse(savedHeight) : 175);
+    setWeightData(savedWeight ? JSON.parse(savedWeight) : []);
     setCompletedWorkouts(getCompletedWorkouts());
   }, []);
-
+  
   useEffect(() => {
-    if (isClient) {
-      localStorage.setItem(WEIGHT_STORAGE_KEY, JSON.stringify(weightData));
-      localStorage.setItem(HEIGHT_STORAGE_KEY, JSON.stringify(height));
+    if (profile) {
+      setHeight(profile.height || 0);
+      if (profile.weight) {
+        // Check if there's already an entry for today
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todaysEntry = weightData.find(d => d.date === todayStr);
+        if (!todaysEntry) {
+            setWeightData(prevData => {
+              const newData = [...prevData, { date: todayStr, weight: profile.weight! }];
+              localStorage.setItem(WEIGHT_STORAGE_KEY, JSON.stringify(newData));
+              return newData;
+            });
+        }
+      }
     }
-  }, [weightData, height, isClient]);
+  }, [profile, weightData]);
 
   const handleAddWeight = (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentWeight) {
-      const newEntry = {
-        date: new Date().toISOString().split('T')[0],
-        weight: parseFloat(currentWeight),
-      };
-      setWeightData([...weightData, newEntry]);
-      setCurrentWeight("");
+    if (currentWeight && user) {
+      const newWeight = parseFloat(currentWeight);
+      const todayStr = new Date().toISOString().split('T')[0];
+      
+      setIsUpdating(true);
+      updateUserProfile(user.uid, { weight: newWeight }).then(error => {
+          setIsUpdating(false);
+          if (error) {
+              toast({ variant: 'destructive', title: 'Update failed', description: error });
+          } else {
+              toast({ title: 'Weight updated!' });
+              
+              const existingEntryIndex = weightData.findIndex(d => d.date === todayStr);
+              let newData = [...weightData];
+              if (existingEntryIndex > -1) {
+                  newData[existingEntryIndex] = { date: todayStr, weight: newWeight };
+              } else {
+                  newData.push({ date: todayStr, weight: newWeight });
+              }
+              setWeightData(newData);
+              localStorage.setItem(WEIGHT_STORAGE_KEY, JSON.stringify(newData));
+              setCurrentWeight("");
+              refreshProfile(); // Refresh context
+          }
+      });
     }
   };
 
-  const latestWeight = weightData.length > 0 ? weightData[weightData.length-1].weight : 0;
+  const handleSetHeight = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (height && user) {
+        setIsUpdating(true);
+        updateUserProfile(user.uid, { height }).then(error => {
+            setIsUpdating(false);
+            if(error) {
+                 toast({ variant: 'destructive', title: 'Update failed', description: error });
+            } else {
+                toast({ title: 'Height updated!' });
+                refreshProfile();
+            }
+        });
+    }
+  };
+
+  const latestWeight = weightData.length > 0 ? weightData[weightData.length-1].weight : profile?.weight || 0;
   const bmi = latestWeight > 0 && height > 0 ? (latestWeight / ((height / 100) ** 2)) : 0;
   const { category: bmiCategory, color: bmiColor } = getBmiCategory(bmi);
-  const bmiChartData = [
-      { name: 'Underweight', range: 18.5, fill: 'var(--color-underweight)' },
-      { name: 'Normal', range: 24.9, fill: 'var(--color-normal)' },
-      { name: 'Overweight', range: 29.9, fill: 'var(--color-overweight)' },
-      { name: 'Obese', range: 40, fill: 'var(--color-obese)' },
-  ];
+  const targetWeight = 70; // Placeholder
 
   return (
     <div className="space-y-8">
        <Card>
         <CardHeader>
           <CardTitle>Weight Progress</CardTitle>
-          <CardDescription>Current: {isClient && latestWeight > 0 ? latestWeight : 'N/A'}kg | Target: {targetWeight}kg</CardDescription>
+          <CardDescription>Current: {isClient && latestWeight > 0 ? `${latestWeight}kg` : 'N/A'} | Target: {targetWeight}kg</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={weightChartConfig} className="h-64 w-full">
@@ -169,8 +203,8 @@ export function ProgressTracker() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-         <Card className="lg:col-span-1">
+      <div className="grid gap-4 md:grid-cols-2">
+         <Card>
           <CardHeader><CardTitle>Log Your Weight</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={handleAddWeight} className="space-y-4">
@@ -178,31 +212,25 @@ export function ProgressTracker() {
                 <Label htmlFor="currentWeight">Today's Weight (kg)</Label>
                 <Input id="currentWeight" type="number" step="0.1" placeholder="e.g., 75.2" value={currentWeight} onChange={(e) => setCurrentWeight(e.target.value)} required />
               </div>
-              <Button type="submit" className="w-full"><PlusCircle className="mr-2 h-4 w-4" /> Add Entry</Button>
+              <Button type="submit" className="w-full" disabled={isUpdating}>
+                {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <PlusCircle className="mr-2 h-4 w-4" />} 
+                Add Entry
+              </Button>
             </form>
           </CardContent>
         </Card>
-        <Card className="lg:col-span-1">
-          <CardHeader><CardTitle>Your Height</CardTitle></CardHeader>
+        <Card>
+          <CardHeader><CardTitle>Update Your Height</CardTitle></CardHeader>
           <CardContent>
-             <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+             <form className="space-y-4" onSubmit={handleSetHeight}>
               <div className="space-y-2">
                 <Label htmlFor="height">Your Height (cm)</Label>
                 <Input id="height" type="number" value={height} onChange={(e) => setHeight(Number(e.target.value))} />
               </div>
-              <Button type="submit" className="w-full"><Ruler className="mr-2 h-4 w-4" /> Set Height</Button>
-            </form>
-          </CardContent>
-        </Card>
-         <Card className="lg:col-span-1">
-          <CardHeader><CardTitle>Target Weight</CardTitle></CardHeader>
-          <CardContent>
-             <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-              <div className="space-y-2">
-                <Label htmlFor="targetWeight">Set Target (kg)</Label>
-                <Input id="targetWeight" type="number" step="0.1" value={targetWeight} onChange={(e) => setTargetWeight(Number(e.target.value))} />
-              </div>
-              <Button type="submit" className="w-full">Set Target</Button>
+              <Button type="submit" className="w-full" disabled={isUpdating}>
+                {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4" />} 
+                Set Height
+              </Button>
             </form>
           </CardContent>
         </Card>

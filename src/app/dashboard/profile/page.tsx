@@ -20,7 +20,7 @@ import { useTheme } from '@/components/theme-provider';
 import { useAuthContext } from '@/hooks/use-auth';
 
 function ProfilePageContent() {
-  const { user, signOutUser } = useAuthContext();
+  const { user, profile, signOutUser } = useAuthContext();
   const { toast } = useToast();
   const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
   const { theme, setTheme } = useTheme();
@@ -211,21 +211,21 @@ function ProfilePageContent() {
               <Cake className="h-5 w-5" />
               <span className="font-medium">Age</span>
             </div>
-            <span className="font-semibold">28</span>
+            <span className="font-semibold">{profile?.age || 'N/A'}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-muted-foreground">
               <Ruler className="h-5 w-5" />
               <span className="font-medium">Height</span>
             </div>
-            <span className="font-semibold">175 cm</span>
+            <span className="font-semibold">{profile?.height ? `${profile.height} cm` : 'N/A'}</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-muted-foreground">
               <Weight className="h-5 w-5" />
               <span className="font-medium">Weight</span>
             </div>
-            <span className="font-semibold">72 kg</span>
+            <span className="font-semibold">{profile?.weight ? `${profile.weight} kg`: 'N/A'}</span>
           </div>
         </CardContent>
       </Card>

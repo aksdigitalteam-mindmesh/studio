@@ -38,13 +38,12 @@ export default function OnboardingPage() {
     },
   });
   
-  // If user is not logged in or has already completed onboarding, redirect them
+  // If user is not logged in, redirect them.
+  // After login, this page is the next step.
   useEffect(() => {
     if (!loading) {
       if (!user) {
         router.replace('/login');
-      } else if (profile && profile.age && profile.height && profile.weight) {
-        router.replace('/dashboard');
       }
     }
   }, [user, profile, loading, router]);
@@ -74,7 +73,7 @@ export default function OnboardingPage() {
     });
   }
 
-  if (loading || !user || (profile && profile.age)) {
+  if (loading || !user) {
      return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />

@@ -8,17 +8,22 @@ import { useAuthContext } from '@/hooks/use-auth';
 
 export default function Home() {
   const router = useRouter();
-  const { user, loading } = useAuthContext();
+  const { user, profile, loading } = useAuthContext();
 
   useEffect(() => {
     if (!loading) {
       if (user) {
-        router.replace('/dashboard');
+        // If user is logged in, check if they have completed onboarding
+        if (profile && profile.age && profile.height && profile.weight) {
+            router.replace('/dashboard');
+        } else {
+            router.replace('/onboarding');
+        }
       } else {
         router.replace('/login');
       }
     }
-  }, [user, loading, router]);
+  }, [user, profile, loading, router]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center bg-background">
