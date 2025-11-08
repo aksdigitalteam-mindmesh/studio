@@ -9,11 +9,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { isToday, startOfToday } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Meal {
   id: number;
   name: string;
-  calories: number;
+  quantity: number;
+  unit: string;
+  caloriesPerUnit: number;
+  totalCalories: number;
   date: string;
 }
 
@@ -22,7 +26,9 @@ const STORAGE_KEY = "dailyMeals";
 export default function CaloriesPage() {
   const [allMeals, setAllMeals] = useState<Meal[]>([]);
   const [mealName, setMealName] = useState("");
-  const [calories, setCalories] = useState("");
+  const [quantity, setQuantity] = useState("1");
+  const [unit, setUnit] = useState("pieces");
+  const [caloriesPerUnit, setCaloriesPerUnit] = useState("");
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -39,22 +45,28 @@ export default function CaloriesPage() {
 
   const todaysMeals = allMeals.filter(meal => isToday(new Date(meal.date)));
 
-  const totalCalories = todaysMeals.reduce((acc, meal) => acc + meal.calories, 0);
+  const totalCalories = todaysMeals.reduce((acc, meal) => acc + meal.totalCalories, 0);
   const calorieGoal = 2000;
   const progress = (totalCalories / calorieGoal) * 100;
 
   const handleAddMeal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (mealName.trim() && calories) {
+    if (mealName.trim() && quantity && caloriesPerUnit) {
+      const numQuantity = parseFloat(quantity);
+      const numCalories = parseInt(caloriesPerUnit);
       const newMeal: Meal = {
         id: Date.now(),
         name: mealName.trim(),
-        calories: parseInt(calories),
+        quantity: numQuantity,
+        unit: unit,
+        caloriesPerUnit: numCalories,
+        totalCalories: numQuantity * numCalories,
         date: startOfToday().toISOString(),
       };
       setAllMeals([...allMeals, newMeal]);
       setMealName("");
-      setCalories("");
+      setQuantity("1");
+      setCaloriesPerUnit("");
     }
   };
 
@@ -84,23 +96,41 @@ export default function CaloriesPage() {
           <CardTitle>Log a Meal</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAddMeal} className="flex flex-col gap-4 sm:flex-row">
+          <form onSubmit={handleAddMeal} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
             <Input
               placeholder="Meal or food item"
               value={mealName}
               onChange={(e) => setMealName(e.target.value)}
               required
-              className="flex-grow"
+              className="sm:col-span-2 lg:col-span-2"
             />
             <Input
               type="number"
-              placeholder="Calories (kcal)"
-              value={calories}
-              onChange={(e) => setCalories(e.target.value)}
+              placeholder="Quantity"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
               required
-              className="sm:w-48"
             />
-            <Button type="submit" className="w-full sm:w-auto">
+             <Select value={unit} onValueChange={setUnit}>
+                <SelectTrigger>
+                    <SelectValue placeholder="Unit" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="pieces">pieces</SelectItem>
+                    <SelectItem value="g">g</SelectItem>
+                    <SelectItem value="kg">kg</SelectItem>
+                    <SelectItem value="ml">ml</SelectItem>
+                    <SelectItem value="liters">liters</SelectItem>
+                </SelectContent>
+            </Select>
+            <Input
+              type="number"
+              placeholder="Calories per unit"
+              value={caloriesPerUnit}
+              onChange={(e) => setCaloriesPerUnit(e.target.value)}
+              required
+            />
+            <Button type="submit" className="w-full sm:col-span-2 lg:col-span-5">
               <PlusCircle className="mr-2 h-4 w-4" />
               Add Meal
             </Button>
@@ -117,7 +147,8 @@ export default function CaloriesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Meal</TableHead>
-                <TableHead className="text-right">Calories</TableHead>
+                <TableHead>Details</TableHead>
+                <TableHead className="text-right">Total Calories</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -126,7 +157,8 @@ export default function CaloriesPage() {
                 todaysMeals.map((meal) => (
                   <TableRow key={meal.id}>
                     <TableCell className="font-medium">{meal.name}</TableCell>
-                    <TableCell className="text-right">{meal.calories} kcal</TableCell>
+                    <TableCell className="text-muted-foreground">{meal.quantity} {meal.unit} &times; {meal.caloriesPerUnit} kcal</TableCell>
+                    <TableCell className="text-right font-semibold">{meal.totalCalories} kcal</TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon" onClick={() => handleDeleteMeal(meal.id)}>
                         <Trash2 className="h-4 w-4 text-muted-foreground" />
@@ -136,7 +168,7 @@ export default function CaloriesPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
                     No meals logged yet.
                   </TableCell>
                 </TableRow>
