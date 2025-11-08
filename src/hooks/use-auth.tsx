@@ -108,6 +108,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             medicalConditions: profileData.medicalConditions || '',
             workoutDuration: profileData.workoutDuration || 60,
             workoutDaysPerWeek: profileData.workoutDaysPerWeek || 4,
+            age: profileData.age,
+            height: profileData.height,
+            weight: profileData.weight,
         };
         await setDoc(userDocRef, newProfileData);
 

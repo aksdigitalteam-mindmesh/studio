@@ -12,20 +12,16 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, profile, loading } = useAuthContext();
+  const { user, loading } = useAuthContext();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-        if (!user) {
-          router.replace('/login');
-        } else if (user && (!profile || !profile.age || !profile.height || !profile.weight)) {
-          router.replace('/onboarding');
-        }
+    if (!loading && !user) {
+        router.replace('/login');
     }
-  }, [user, profile, loading, router]);
+  }, [user, loading, router]);
 
-  if (loading || !user || !profile?.age) {
+  if (loading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
