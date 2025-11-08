@@ -18,9 +18,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 interface Meal {
   id: number;
@@ -58,7 +58,17 @@ export default function CaloriesPage() {
       const gender = localStorage.getItem('userGender') || 'male';
       const bmr = calculateBmr(profile.weight, profile.height, profile.age, gender);
       // TDEE using a light activity multiplier of 1.375
-      return Math.round(bmr * 1.375);
+      const tdee = bmr * 1.375;
+
+      switch(profile.fitnessGoal) {
+        case 'weight-loss':
+          return Math.round(tdee - 500);
+        case 'build-muscle':
+          return Math.round(tdee + 300);
+        case 'endurance':
+        default:
+          return Math.round(tdee);
+      }
     }
     return 2000; // Default goal
   }, [profile]);
@@ -97,6 +107,7 @@ export default function CaloriesPage() {
 
   const totalCalories = todaysMeals.reduce((acc, meal) => acc + meal.totalCalories, 0);
   const progress = (totalCalories / calorieGoal) * 100;
+  const isOverLimit = totalCalories > calorieGoal;
 
   const handleAddMeal = (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,8 +123,10 @@ export default function CaloriesPage() {
         totalCalories: numQuantity * numCalories,
         date: startOfToday().toISOString(),
       };
-
-      if (totalCalories + mealToAdd.totalCalories > calorieGoal) {
+      
+      const newTotal = totalCalories + mealToAdd.totalCalories;
+      // Warn if already over limit OR if adding the meal brings them within 500 calories of the goal or over
+      if (isOverLimit || newTotal >= (calorieGoal - 500)) {
           setPendingMeal(mealToAdd);
       } else {
           confirmAddMeal(mealToAdd);
@@ -150,7 +163,11 @@ export default function CaloriesPage() {
           <CardDescription>You've consumed {totalCalories} out of {calorieGoal} kcal today.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Progress value={progress} className="w-full" />
+          <Progress 
+            value={isOverLimit ? 100 : progress} 
+            className="w-full"
+            indicatorClassName={cn(isOverLimit && "bg-destructive")}
+           />
         </CardContent>
       </Card>
       
@@ -246,12 +263,12 @@ export default function CaloriesPage() {
             <DialogHeader>
                 <DialogTitle>Calorie Limit Warning</DialogTitle>
                 <DialogDescription>
-                    Adding this meal will exceed your daily calorie goal.
+                    Adding this meal will bring you close to or over your daily calorie goal.
                 </DialogDescription>
             </DialogHeader>
-            <Alert variant="destructive">
+            <Alert variant={totalCalories + (pendingMeal?.totalCalories || 0) > calorieGoal ? "destructive" : "default"}>
                 <ShieldAlert className="h-4 w-4" />
-                <AlertTitle>You are over your limit!</AlertTitle>
+                <AlertTitle>{totalCalories + (pendingMeal?.totalCalories || 0) > calorieGoal ? "You are over your limit!" : "Approaching Limit"}</AlertTitle>
                 <AlertDescription>
                    Your goal is {calorieGoal} kcal, but this meal would bring your total to {totalCalories + (pendingMeal?.totalCalories || 0)} kcal.
                 </AlertDescription>
