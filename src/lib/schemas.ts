@@ -30,6 +30,15 @@ export const signupSchema = loginSchema.extend({
   medicalConditions: z.string().optional(),
   workoutDuration: z.coerce.number().min(10, "Duration must be at least 10 minutes.").max(180, "Duration must be 180 minutes or less."),
   workoutDaysPerWeek: z.coerce.number().min(1, "You must work out at least 1 day a week.").max(7, "You can work out a maximum of 7 days a week."),
+  age: z.coerce.number().min(12, "You must be at least 12 years old.").max(120, "Age seems too high."),
+  height: z.coerce.number().min(100, "Height must be at least 100 cm.").max(300, "Height must be 300cm or less."),
+  weight: z.coerce.number().min(30, "Weight must be at least 30 kg.").max(500, "Weight must be 500kg or less."),
+  fitnessGoal: z.enum(["weight-loss", "build-muscle", "endurance"], {
+    required_error: "You need to select a fitness goal.",
+  }),
+  intensity: z.enum(["beginner", "intermediate", "advanced"], {
+      required_error: "You need to select an intensity level.",
+  }),
 });
 
 export const onboardingSchema = z.object({
@@ -43,3 +52,5 @@ export const onboardingSchema = z.object({
         required_error: "You need to select an intensity level.",
     }),
 });
+
+    

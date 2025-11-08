@@ -8,7 +8,7 @@ import { useAuthContext } from '@/hooks/use-auth';
 
 export default function Home() {
   const router = useRouter();
-  const { user, profile, loading } = useAuthContext();
+  const { user, loading } = useAuthContext();
 
   useEffect(() => {
     // We should not do anything until the auth state is resolved.
@@ -22,24 +22,10 @@ export default function Home() {
       return;
     }
 
-    // If we have a user, but the profile is still loading, we wait.
-    // The profile loading is separate from the initial auth loading.
-    if (user && !profile) {
-      return;
-    }
-    
-    // Now we have a user and their profile data. We can make a decision.
-    if (user && profile) {
-      if (profile.age) {
-        // If age exists, onboarding is complete. Go to dashboard.
-        router.replace('/dashboard');
-      } else {
-        // If age is missing, they must complete onboarding.
-        router.replace('/onboarding');
-      }
-    }
+    // If there is a user, always redirect to the dashboard.
+    router.replace('/dashboard');
 
-  }, [user, profile, loading, router]);
+  }, [user, loading, router]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -47,3 +33,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

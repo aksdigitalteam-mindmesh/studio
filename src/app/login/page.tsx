@@ -18,6 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -48,6 +50,11 @@ export default function LoginPage() {
       medicalConditions: "",
       workoutDuration: 60,
       workoutDaysPerWeek: 4,
+      age: 25,
+      height: 175,
+      weight: 70,
+      fitnessGoal: "weight-loss",
+      intensity: "beginner",
     },
   });
   
@@ -78,7 +85,7 @@ export default function LoginPage() {
             title: "Login Successful",
             description: "Redirecting...",
         })
-        router.push('/');
+        router.push('/dashboard');
       }
     });
   }
@@ -98,7 +105,7 @@ export default function LoginPage() {
                 title: "Signup Successful",
                 description: "Redirecting...",
             })
-            router.push('/');
+            router.push('/dashboard');
         }
     });
   }
@@ -134,7 +141,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Dialog open={isForgotPassDialogOpen} onOpenChange={setIsForgotPassDialogOpen}>
-      <Tabs value={tab} onValueChange={setTab} className="w-full max-w-md">
+      <Tabs value={tab} onValueChange={setTab} className="w-full max-w-lg">
         <Card>
             <CardHeader className="text-center">
                 <div className="mx-auto mb-4">
@@ -233,6 +240,100 @@ export default function LoginPage() {
                         </FormItem>
                       )}
                     />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                         <FormField
+                            control={signupForm.control}
+                            name="age"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Age</FormLabel>
+                                <FormControl>
+                                    <Input type="number" placeholder="25" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={signupForm.control}
+                            name="height"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Height (cm)</FormLabel>
+                                <FormControl>
+                                    <Input type="number" placeholder="175" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={signupForm.control}
+                            name="weight"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Weight (kg)</FormLabel>
+                                <FormControl>
+                                    <Input type="number" placeholder="70" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                     <FormField
+                        control={signupForm.control}
+                        name="fitnessGoal"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Primary Fitness Goal</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select your goal" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                <SelectItem value="weight-loss">Weight Loss</SelectItem>
+                                <SelectItem value="build-muscle">Build Muscle</SelectItem>
+                                <SelectItem value="endurance">Improve Endurance</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                      <FormField
+                          control={signupForm.control}
+                          name="intensity"
+                          render={({ field }) => (
+                            <FormItem className="space-y-3">
+                              <FormLabel>Your Fitness Level</FormLabel>
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
+                                >
+                                  <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl><RadioGroupItem value="beginner" /></FormControl>
+                                    <FormLabel className="font-normal">Beginner</FormLabel>
+                                  </FormItem>
+                                  <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl><RadioGroupItem value="intermediate" /></FormControl>
+                                    <FormLabel className="font-normal">Intermediate</FormLabel>
+                                  </FormItem>
+                                  <FormItem className="flex items-center space-x-3 space-y-0">
+                                    <FormControl><RadioGroupItem value="advanced" /></FormControl>
+                                    <FormLabel className="font-normal">Advanced</FormLabel>
+                                  </FormItem>
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
                      <FormField
                         control={signupForm.control}
                         name="medicalConditions"
@@ -320,3 +421,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    

@@ -112,13 +112,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         const userDocRef = doc(firestore, 'users', newUser.uid);
-        const newProfileData: Partial<UserProfile> = {
+        const newProfileData: UserProfile = {
             uid: newUser.uid,
             email: newUser.email,
             displayName: profileData.displayName,
             medicalConditions: profileData.medicalConditions || '',
             workoutDuration: profileData.workoutDuration || 60,
             workoutDaysPerWeek: profileData.workoutDaysPerWeek || 4,
+            age: profileData.age,
+            height: profileData.height,
+            weight: profileData.weight,
+            fitnessGoal: profileData.fitnessGoal,
+            intensity: profileData.intensity,
             goalUpdateCount: 0,
         };
         await setDoc(userDocRef, newProfileData, { merge: true });
@@ -243,3 +248,5 @@ export const useAuthContext = () => {
   }
   return context;
 };
+
+    
