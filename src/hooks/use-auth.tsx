@@ -112,24 +112,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         const userDocRef = doc(firestore, 'users', newUser.uid);
-        const newProfileData: UserProfile = {
+        const newProfileData: Partial<UserProfile> = {
             uid: newUser.uid,
             email: newUser.email,
             displayName: profileData.displayName,
             medicalConditions: profileData.medicalConditions || '',
             workoutDuration: profileData.workoutDuration || 60,
             workoutDaysPerWeek: profileData.workoutDaysPerWeek || 4,
-            age: profileData.age,
-            height: profileData.height,
-            weight: profileData.weight,
-            fitnessGoal: profileData.fitnessGoal,
-            intensity: profileData.intensity,
             goalUpdateCount: 0,
         };
-        await setDoc(userDocRef, newProfileData);
+        await setDoc(userDocRef, newProfileData, { merge: true });
 
         setUser(newUser);
-        setProfile(newProfileData);
+        setProfile(newProfileData as UserProfile);
         return null;
     } catch (error: any) {
         console.error("Error signing up:", error);
@@ -145,15 +140,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithEmail = async (email: string, password: string) => {
       try {
-          await signInWithEmailAndPassword(auth, email, password);
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          await fetchProfile(userCredential.user);
           return null;
       } catch (error: any) {
           console.error("Error signing in:", error);
            if (error.code === 'auth/configuration-not-found') {
               return "Authentication method not enabled. Please enable Email/Password sign-in in your Firebase console.";
           }
-          if (error.code === 'auth/email-already-in-use') {
-            return "This email is already in use. Please try logging in.";
+          if (error.code === 'auth/invalid-credential') {
+            return "Invalid credentials. Please check your email and password.";
           }
           return error.message || "An unknown error occurred.";
       }
