@@ -78,7 +78,7 @@ export default function LoginPage() {
             title: "Login Successful",
             description: "Redirecting...",
         })
-        router.push('/dashboard');
+        router.push('/');
       }
     });
   }
@@ -98,7 +98,7 @@ export default function LoginPage() {
                 title: "Signup Successful",
                 description: "Redirecting...",
             })
-            router.push('/dashboard');
+            router.push('/');
         }
     });
   }
