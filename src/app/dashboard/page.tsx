@@ -190,6 +190,8 @@ export default function DashboardPage() {
     const caloriesLeft = CALORIE_GOAL - eatenCalories + burnedCalories;
     const eatenProgress = (eatenCalories / CALORIE_GOAL) * 100;
     const burnedProgress = (burnedCalories / CALORIE_GOAL) * 100;
+    const caloriesLeftProgress = (caloriesLeft / CALORIE_GOAL) * 100;
+
 
     const carbProgress = (macros.carbs / MACRO_GOALS.carbs) * 100;
     const proteinProgress = (macros.protein / MACRO_GOALS.protein) * 100;
@@ -225,60 +227,62 @@ export default function DashboardPage() {
 
           <main className="flex-1">
             <div className="flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-b from-green-400/0 to-primary/0">
-              <div className="relative w-48 h-48 md:w-56 md:h-56">
-                <svg className="w-full h-full" viewBox="0 0 36 36">
-                  <defs>
-                      <linearGradient id="eatenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" style={{stopColor: "rgb(255, 165, 0)"}} />
-                          <stop offset="100%" style={{stopColor: "rgb(255, 0, 0)"}} />
-                      </linearGradient>
-                      <linearGradient id="burnedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" style={{stopColor: "rgb(0, 255, 255)"}} />
-                          <stop offset="100%" style={{stopColor: "rgb(0, 0, 255)"}} />
-                      </linearGradient>
-                  </defs>
-                  <path
-                    className="text-white/30"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    strokeWidth="2"
-                  />
-                   {isClient && <>
-                     <path
-                        stroke="url(#eatenGradient)"
-                        strokeDasharray={`${eatenProgress}, 100`}
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        transform="rotate(-90 18 18)"
-                      />
-                      <path
-                        stroke="url(#burnedGradient)"
-                        strokeDasharray={`${burnedProgress}, 100`}
-                        d="M18 5.0845 a 12.9155 12.9155 0 0 1 0 25.831 a 12.9155 12.9155 0 0 1 0 -25.831"
-                        fill="none"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        transform="rotate(180 18 18)"
-                      />
-                   </>}
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-4xl md:text-5xl font-bold">{isClient ? Math.round(caloriesLeft) : '...'}</span>
-                  <span className="text-sm tracking-wider">KCAL LEFT</span>
+                <div className="flex items-center justify-center gap-5">
+                    {/* Eaten Calories Ring */}
+                    <div className="flex flex-col items-center gap-2">
+                         <div className="relative w-20 h-20">
+                            <svg className="w-full h-full" viewBox="0 0 36 36">
+                                <path className="text-white/30" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeWidth="3" />
+                                {isClient && <path stroke="url(#eatenGradient)" strokeDasharray={`${eatenProgress}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeWidth="3" strokeLinecap="round" transform="rotate(-90 18 18)" />}
+                            </svg>
+                         </div>
+                         <div className="text-center">
+                            <p className="text-lg font-bold">{isClient ? eatenCalories : '...'}</p>
+                            <p className="text-xs">EATEN</p>
+                        </div>
+                    </div>
+
+                    {/* Main KCAL Left Ring */}
+                    <div className="relative w-40 h-40">
+                        <svg className="w-full h-full" viewBox="0 0 36 36">
+                            <defs>
+                                <linearGradient id="leftGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style={{stopColor: "rgb(139, 92, 246)"}} />
+                                    <stop offset="100%" style={{stopColor: "rgb(251, 146, 60)"}} />
+                                </linearGradient>
+                                <linearGradient id="eatenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style={{stopColor: "rgb(255, 165, 0)"}} />
+                                    <stop offset="100%" style={{stopColor: "rgb(255, 0, 0)"}} />
+                                </linearGradient>
+                                <linearGradient id="burnedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style={{stopColor: "rgb(0, 255, 255)"}} />
+                                    <stop offset="100%" style={{stopColor: "rgb(0, 0, 255)"}} />
+                                </linearGradient>
+                            </defs>
+                            <path className="text-white/30" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeWidth="2" />
+                            {isClient && <path stroke="url(#leftGradient)" strokeDasharray={`${caloriesLeftProgress}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeWidth="2" strokeLinecap="round" transform="rotate(-90 18 18)" />}
+                            <path d="M18 5.0845 a 12.9155 12.9155 0 0 1 0 25.831 a 12.9155 12.9155 0 0 1 0 -25.831" fill="none" />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-4xl font-bold">{isClient ? Math.round(caloriesLeft) : '...'}</span>
+                            <span className="text-sm tracking-wider">KCAL LEFT</span>
+                        </div>
+                    </div>
+                    
+                    {/* Burned Calories Ring */}
+                    <div className="flex flex-col items-center gap-2">
+                         <div className="relative w-20 h-20">
+                            <svg className="w-full h-full" viewBox="0 0 36 36">
+                                <path className="text-white/30" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeWidth="3" />
+                                {isClient && <path stroke="url(#burnedGradient)" strokeDasharray={`${burnedProgress}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeWidth="3" strokeLinecap="round" transform="rotate(-90 18 18)" />}
+                            </svg>
+                         </div>
+                        <div className="text-center">
+                            <p className="text-lg font-bold">{isClient ? burnedCalories : '...'}</p>
+                            <p className="text-xs">BURNED</p>
+                        </div>
+                    </div>
                 </div>
-              </div>
-              <div className="flex justify-between w-full max-w-sm mt-4">
-                <div className="text-center">
-                  <p className="text-xl md:text-2xl font-bold">{isClient ? eatenCalories : '...'}</p>
-                  <p className="text-xs">EATEN</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xl md:text-2xl font-bold">{isClient ? burnedCalories : '...'}</p>
-                  <p className="text-xs">BURNED</p>
-                </div>
-              </div>
             </div>
             </main>
         </div>
@@ -395,6 +399,8 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
 
