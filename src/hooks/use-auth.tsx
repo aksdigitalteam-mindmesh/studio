@@ -27,12 +27,14 @@ interface UserProfile {
     email?: string | null;
     displayName?: string | null;
     photoURL?: string | null;
+    gender?: 'male' | 'female' | 'other';
     medicalConditions?: string;
     workoutDuration?: number;
     workoutDaysPerWeek?: number;
     age?: number;
     height?: number;
     weight?: number;
+    targetWeight?: number;
     fitnessGoal?: 'weight-loss' | 'build-muscle' | 'endurance';
     intensity?: 'beginner' | 'intermediate' | 'advanced';
     goalLastUpdated?: any; 
@@ -116,12 +118,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             uid: newUser.uid,
             email: newUser.email,
             displayName: profileData.displayName,
+            gender: profileData.gender,
             medicalConditions: profileData.medicalConditions || '',
             workoutDuration: profileData.workoutDuration || 60,
             workoutDaysPerWeek: profileData.workoutDaysPerWeek || 4,
             age: profileData.age,
             height: profileData.height,
             weight: profileData.weight,
+            targetWeight: profileData.targetWeight,
             fitnessGoal: profileData.fitnessGoal,
             intensity: profileData.intensity,
             goalUpdateCount: 0,
@@ -248,5 +252,3 @@ export const useAuthContext = () => {
   }
   return context;
 };
-
-    

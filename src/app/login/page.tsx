@@ -47,12 +47,14 @@ export default function LoginPage() {
       displayName: "",
       email: "",
       password: "",
+      gender: "male",
       medicalConditions: "",
       workoutDuration: 60,
       workoutDaysPerWeek: 4,
       age: 25,
       height: 175,
       weight: 70,
+      targetWeight: 65,
       fitnessGoal: "weight-loss",
       intensity: "beginner",
     },
@@ -240,6 +242,36 @@ export default function LoginPage() {
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={signupForm.control}
+                      name="gender"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>Gender</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="flex flex-row space-x-4"
+                            >
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl><RadioGroupItem value="male" /></FormControl>
+                                <FormLabel className="font-normal">Male</FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl><RadioGroupItem value="female" /></FormControl>
+                                <FormLabel className="font-normal">Female</FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl><RadioGroupItem value="other" /></FormControl>
+                                <FormLabel className="font-normal">Other</FormLabel>
+                              </FormItem>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                          <FormField
                             control={signupForm.control}
@@ -281,28 +313,43 @@ export default function LoginPage() {
                             )}
                         />
                     </div>
-                     <FormField
-                        control={signupForm.control}
-                        name="fitnessGoal"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Primary Fitness Goal</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                     <div className="grid grid-cols-2 gap-4">
+                         <FormField
+                            control={signupForm.control}
+                            name="fitnessGoal"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Primary Goal</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select your goal" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    <SelectItem value="weight-loss">Weight Loss</SelectItem>
+                                    <SelectItem value="build-muscle">Build Muscle</SelectItem>
+                                    <SelectItem value="endurance">Improve Endurance</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        <FormField
+                            control={signupForm.control}
+                            name="targetWeight"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Target Weight (kg)</FormLabel>
                                 <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select your goal" />
-                                </SelectTrigger>
+                                    <Input type="number" placeholder="65" {...field} />
                                 </FormControl>
-                                <SelectContent>
-                                <SelectItem value="weight-loss">Weight Loss</SelectItem>
-                                <SelectItem value="build-muscle">Build Muscle</SelectItem>
-                                <SelectItem value="endurance">Improve Endurance</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                            </FormItem>
-                        )}
+                                <FormMessage />
+                                </FormItem>
+                            )}
                         />
+                     </div>
                       <FormField
                           control={signupForm.control}
                           name="intensity"
@@ -421,5 +468,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    

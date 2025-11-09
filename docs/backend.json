@@ -24,6 +24,11 @@
           "format": "uri",
           "description": "The URL of the user's profile picture."
         },
+        "gender": {
+            "type": "string",
+            "enum": ["male", "female", "other"],
+            "description": "The user's gender."
+        },
         "medicalConditions": {
           "type": "string",
           "description": "Any medical conditions the user has, e.g., diabetes, high blood pressure."
@@ -47,6 +52,10 @@
         "weight": {
             "type": "number",
             "description": "The user's weight in kilograms."
+        },
+        "targetWeight": {
+            "type": "number",
+            "description": "The user's target weight in kilograms."
         },
         "fitnessGoal": {
             "type": "string",
