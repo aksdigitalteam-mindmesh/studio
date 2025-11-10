@@ -97,10 +97,12 @@ export default function CaloriesPage() {
   }, [loadMeals]);
 
   useEffect(() => {
-    if (allMeals.length > 0 || localStorage.getItem(STORAGE_KEY)) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(allMeals));
+    if (isClient) {
+        if (allMeals.length > 0 || localStorage.getItem(STORAGE_KEY)) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(allMeals));
+        }
     }
-  }, [allMeals]);
+  }, [allMeals, isClient]);
 
   const todaysMeals = allMeals.filter(meal => isToday(new Date(meal.date)));
 
@@ -281,3 +283,5 @@ export default function CaloriesPage() {
     </div>
   );
 }
+
+    
