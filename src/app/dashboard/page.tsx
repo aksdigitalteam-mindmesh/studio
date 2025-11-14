@@ -100,7 +100,7 @@ export default function DashboardPage() {
         const totalMacros = { carbs: 0, protein: 0, fat: 0 };
 
         relevantMeals.forEach(meal => {
-            totalEaten += meal.calories;
+            totalEaten += Number(meal.calories) || 0; // Fix: Ensure calories are treated as a number
              if (meal.macros) {
                 totalMacros.protein += parseFloat(meal.macros.protein) || 0;
                 totalMacros.carbs += parseFloat(meal.macros.carbs) || 0;
