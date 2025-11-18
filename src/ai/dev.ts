@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-config();
+config({ path: '.env' });
 
 import '@/ai/flows/generate-workout-plan.ts';
 import '@/ai/flows/generate-diet-plan.ts';
