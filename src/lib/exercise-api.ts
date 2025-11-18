@@ -1,67 +1,58 @@
-// src/lib/exercise-api.ts
 
-export async function searchExercises(query: string, limit: number = 10) {
-  const apiKey = process.env.NEXT_PUBLIC_EXERCISEDB_API_KEY;
-  if (!apiKey) {
-    console.warn("ExerciseDB API key not found. Skipping API search.");
-    return [];
+"use server";
+
+const EXERCISEDB_API_URL = 'https://exercisedb.p.rapidapi.com';
+const API_KEY = process.env.NEXT_PUBLIC_EXERCISEDB_API_KEY;
+
+export async function fetchExerciseGifById(exerciseId: string): Promise<string> {
+  if (!API_KEY) {
+    console.warn('ExerciseDB API key not found');
+    return 'error';
   }
 
-  const url = `https://exercisedb.p.rapidapi.com/exercises/name/${encodeURIComponent(query)}?limit=${limit}`;
-  const options = {
-    method: 'GET',
-    headers: {
-      'x-rapidapi-key': apiKey,
-      'x-rapidapi-host': 'exercisedb.p.rapidapi.com'
-    }
-  };
-
   try {
-    const response = await fetch(url, options);
+    const response = await fetch(
+      `${EXERCISEDB_API_URL}/exercises/exercise/${exerciseId}`,
+      {
+        headers: {
+          'X-RapidAPI-Key': API_KEY,
+          'X-RapidAPI-Host': 'exercisedb.p.rapidapi.com'
+        },
+        next: { revalidate: 86400 } // Cache for 24 hours
+      }
+    );
+
     if (!response.ok) {
-      console.error(`ExerciseDB API error: ${response.statusText}`);
-      return [];
+        console.error(`Error fetching GIF for ID ${exerciseId}: ${response.statusText}`);
+        return 'error';
     }
+
     const data = await response.json();
-    return data.map((ex: any) => ({
-        ...ex,
-        videoUrl: ex.gifUrl // Standardize the video/gif property name
-    }));
+    return data.gifUrl || 'error';
   } catch (error) {
-    console.error('Failed to fetch from ExerciseDB API:', error);
-    return [];
+    console.error('Error fetching exercise GIF by ID:', error);
+    return 'error';
   }
 }
 
-export async function getExercisesByBodyPart(bodyPart: string, limit: number = 10) {
-  const apiKey = process.env.NEXT_PUBLIC_EXERCISEDB_API_KEY;
-  if (!apiKey) {
-    console.warn("ExerciseDB API key not found. Skipping API search.");
-    return [];
-  }
-  
-  const url = `https://exercisedb.p.rapidapi.com/exercises/bodyPart/${encodeURIComponent(bodyPart)}?limit=${limit}`;
-  const options = {
-    method: 'GET',
-    headers: {
-      'x-rapidapi-key': apiKey,
-      'x-rapidapi-host': 'exercisedb.p.rapidapi.com'
-    }
-  };
+export async function enrichWorkoutPlanWithGifs(workoutPlan: any) {
+  if (!workoutPlan || !workoutPlan.weeklySchedule) return workoutPlan;
 
-  try {
-    const response = await fetch(url, options);
-     if (!response.ok) {
-      console.error(`ExerciseDB API error: ${response.statusText}`);
-      return [];
+  const enrichedPlan = { ...workoutPlan };
+
+  for (const day of enrichedPlan.weeklySchedule) {
+    if (day.exercises && day.exercises.length > 0) {
+      const gifPromises = day.exercises.map((exercise: any) => 
+        fetchExerciseGifById(exercise.exerciseId || '0001')
+      );
+      
+      const gifs = await Promise.all(gifPromises);
+      
+      day.exercises.forEach((exercise: any, index: number) => {
+        exercise.videoUrl = gifs[index];
+      });
     }
-    const data = await response.json();
-    return data.map((ex: any) => ({
-        ...ex,
-        videoUrl: ex.gifUrl // Standardize the video/gif property name
-    }));
-  } catch (error) {
-    console.error('Failed to fetch from ExerciseDB API:', error);
-    return [];
   }
+
+  return enrichedPlan;
 }

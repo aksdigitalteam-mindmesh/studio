@@ -12,6 +12,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { getExerciseId } from '@/lib/exercise-database';
+import { enrichWorkoutPlanWithGifs } from '@/lib/exercise-api';
 
 const GenerateWorkoutPlanInputSchema = z.object({
   fitnessGoals: z
@@ -128,7 +129,10 @@ const generateWorkoutPlanFlow = ai.defineFlow(
       }
     }
     
-    return output;
+    // Enrich the plan with GIFs from the API
+    const enrichedPlan = await enrichWorkoutPlanWithGifs(output);
+
+    return enrichedPlan;
   }
 );
 
