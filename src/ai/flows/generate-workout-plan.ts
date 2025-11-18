@@ -1,16 +1,10 @@
 
 'use server';
 
-/**
- * @fileOverview Workout plan generation flow for paid members.
- *
- * - generateWorkoutPlan - A function that generates a personalized workout plan.
- * - GenerateWorkoutPlanInput - The input type for the generateWorkoutPlan function.
- * - GenerateWorkoutPlanOutput - The return type for the generateWorkoutPlan function.
- */
-
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { searchGitHubExercise } from '@/lib/github-exercise-db';
+import { searchExercises } from '@/lib/exercise-api';
 
 const GenerateWorkoutPlanInputSchema = z.object({
   fitnessGoals: z
@@ -62,6 +56,61 @@ const GenerateWorkoutPlanOutputSchema = z.object({
 });
 export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutputSchema>;
 
+async function enrichExercisesWithMedia(exercises: any[]) {
+  const enrichedExercises = await Promise.all(
+    exercises.map(async (exercise) => {
+      try {
+        // First, try GitHub DB
+        const githubExercise = await searchGitHubExercise(exercise.name);
+        if (githubExercise && githubExercise.gifUrl) {
+          return {
+            ...exercise,
+            videoUrl: githubExercise.gifUrl,
+            instructions: githubExercise.instructions,
+            equipment: githubExercise.equipment,
+          };
+        }
+
+        // Fallback: Try ExerciseDB API (only if RAPIDAPI_KEY is set)
+        if (process.env.NEXT_PUBLIC_EXERCISEDB_API_KEY) {
+          const searchResults = await searchExercises(exercise.name, 1);
+          if (searchResults && searchResults.length > 0) {
+            const dbExercise = searchResults[0];
+            return {
+              ...exercise,
+              videoUrl: dbExercise.gifUrl,
+              instructions: dbExercise.instructions || [],
+              equipment: dbExercise.equipment,
+            };
+          }
+        }
+
+        // If nothing found, return with generic instructions
+        return {
+          ...exercise,
+          videoUrl: 'not-found',
+          instructions: [
+            `Perform ${exercise.name} with proper form`,
+            'Keep your core engaged throughout',
+            'Breathe steadily - exhale on exertion',
+            'Focus on controlled movements'
+          ],
+        };
+      } catch (error) {
+        console.error(`Error fetching media for ${exercise.name}:`, error);
+        return {
+          ...exercise,
+          videoUrl: 'not-found',
+          instructions: [`Perform ${exercise.name} with proper form`],
+        };
+      }
+    })
+  );
+  
+  return enrichedExercises;
+}
+
+
 const workoutPrompt = ai.definePrompt({
   name: 'generateWorkoutPlanPrompt',
   input: {schema: GenerateWorkoutPlanInputSchema},
@@ -100,7 +149,22 @@ const generateWorkoutPlanFlow = ai.defineFlow(
     if (!output) {
       throw new Error('Failed to generate workout plan text');
     }
-    return output;
+    
+    // Enrich exercises with media
+    const enrichedSchedule = await Promise.all(
+      output.weeklySchedule.map(async (day) => {
+        if (day.exercises && day.exercises.length > 0) {
+          const enriched = await enrichExercisesWithMedia(day.exercises);
+          return { ...day, exercises: enriched };
+        }
+        return day;
+      })
+    );
+
+    return {
+      ...output,
+      weeklySchedule: enrichedSchedule
+    };
   }
 );
 
