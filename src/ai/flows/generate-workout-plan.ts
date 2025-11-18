@@ -1,10 +1,18 @@
-
 'use server';
+
+/**
+ * @fileOverview Workout plan generation flow for paid members.
+ *
+ * - generateWorkoutPlan - A function that generates a personalized workout plan.
+ * - GenerateWorkoutPlanInput - The input type for the generateWorkoutPlan function.
+ * - GenerateWorkoutPlanOutput - The return type for the generateWorkoutPlan function.
+ */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { searchGitHubExercise } from '@/lib/github-exercise-db';
+import { getExerciseId } from '@/lib/exercise-database';
 import { searchExercises } from '@/lib/exercise-api';
+import { generateExerciseMedia } from './generate-exercise-media';
 
 const GenerateWorkoutPlanInputSchema = z.object({
   fitnessGoals: z
@@ -38,7 +46,7 @@ const ExerciseSchema = z.object({
   sets: z.string().describe('The number of sets to perform.'),
   reps: z.string().describe('The number of repetitions per set.'),
   rest: z.string().describe('The rest time between sets.'),
-  videoUrl: z.string().describe('URL of an video showing the exercise.'),
+  videoUrl: z.string().describe("URL of an video showing the exercise. Set this to 'pending'."),
   muscleGroups: z.array(z.string()).describe("A list of the primary muscle groups targeted by the exercise (e.g., ['chest', 'triceps', 'shoulders']). Use one of 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'"),
 });
 
@@ -55,61 +63,6 @@ const GenerateWorkoutPlanOutputSchema = z.object({
   weeklySchedule: z.array(DailyWorkoutSchema).describe('A schedule of workouts for 7 days.'),
 });
 export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutputSchema>;
-
-async function enrichExercisesWithMedia(exercises: any[]) {
-  const enrichedExercises = await Promise.all(
-    exercises.map(async (exercise) => {
-      try {
-        // First, try GitHub DB
-        const githubExercise = await searchGitHubExercise(exercise.name);
-        if (githubExercise && githubExercise.gifUrl) {
-          return {
-            ...exercise,
-            videoUrl: githubExercise.gifUrl,
-            instructions: githubExercise.instructions,
-            equipment: githubExercise.equipment,
-          };
-        }
-
-        // Fallback: Try ExerciseDB API (only if RAPIDAPI_KEY is set)
-        if (process.env.NEXT_PUBLIC_EXERCISEDB_API_KEY) {
-          const searchResults = await searchExercises(exercise.name, 1);
-          if (searchResults && searchResults.length > 0) {
-            const dbExercise = searchResults[0];
-            return {
-              ...exercise,
-              videoUrl: dbExercise.gifUrl,
-              instructions: dbExercise.instructions || [],
-              equipment: dbExercise.equipment,
-            };
-          }
-        }
-
-        // If nothing found, return with generic instructions
-        return {
-          ...exercise,
-          videoUrl: 'not-found',
-          instructions: [
-            `Perform ${exercise.name} with proper form`,
-            'Keep your core engaged throughout',
-            'Breathe steadily - exhale on exertion',
-            'Focus on controlled movements'
-          ],
-        };
-      } catch (error) {
-        console.error(`Error fetching media for ${exercise.name}:`, error);
-        return {
-          ...exercise,
-          videoUrl: 'not-found',
-          instructions: [`Perform ${exercise.name} with proper form`],
-        };
-      }
-    })
-  );
-  
-  return enrichedExercises;
-}
-
 
 const workoutPrompt = ai.definePrompt({
   name: 'generateWorkoutPlanPrompt',
@@ -129,14 +82,57 @@ If the user has specified any medical conditions, you MUST create a safe, low-im
 
 Important Rule: You MUST structure the plan so that each major muscle group ('chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings') is trained at least twice during the 7-day week.
 
+**USE ONLY THESE EXERCISE NAMES (they have verified preview videos):**
+
+CHEST: bench press, incline bench press, dumbbell bench press, chest fly, cable crossover, push-ups, dips
+BACK: deadlift, pull-ups, lat pulldown, seated row, barbell row, dumbbell row, t-bar row, face pull
+SHOULDERS: shoulder press, overhead press, dumbbell shoulder press, lateral raise, front raise, rear delt fly, arnold press, upright row
+LEGS (QUADS): squats, front squat, leg press, leg extension, lunges, bulgarian split squat, hack squat, goblet squat
+LEGS (HAMSTRINGS): leg curl, seated leg curl, romanian deadlift, good morning, nordic curl
+LEGS (GLUTES): hip thrust, glute bridge, cable kickback
+LEGS (CALVES): calf raise, standing calf raise, seated calf raise
+BICEPS: bicep curl, barbell curl, dumbbell curl, hammer curl, preacher curl, cable curl, concentration curl
+TRICEPS: tricep dips, tricep pushdown, overhead extension, skull crusher, close grip bench, diamond pushup, kickback
+ABS: plank, side plank, sit-ups, crunches, bicycle crunch, reverse crunch, leg raise, hanging leg raise, mountain climber, russian twist, cable crunch
+CARDIO: burpees, jumping jacks, high knees, box jumps, battle ropes
+
 Provide a catchy title for the whole week, a short description, and a weekly schedule.
 For each of the 7 days, provide a day number, a title for the day's workout, a short description, and a list of specific exercises with sets, reps, rest times, and the primary muscle groups targeted.
 The number of workout days in the schedule should match the user's 'Days per week' preference. The remaining days should be rest days.
 The muscle groups should be from this list: 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'.
-For the videoUrl field for each exercise, you MUST return the string 'error'.
+For the videoUrl field for each exercise, you MUST return the string 'pending'.
 If a day is a rest day, the 'exercises' array should be empty.
-The exercises should be appropriate for the selected equipment availability. Do not include video URLs.`,
+The exercises should be appropriate for the selected equipment availability.`,
 });
+
+async function enrichExercisesWithMedia(exercises: any[]) {
+  const enrichedExercises = await Promise.all(
+    (exercises || []).map(async (exercise) => {
+      let videoUrl = 'error';
+
+      // First, try to find in ExerciseDB via API if key exists
+      if (process.env.NEXT_PUBLIC_EXERCISEDB_API_KEY) {
+          const apiResults = await searchExercises(exercise.name, 1);
+          if (apiResults && apiResults.length > 0 && apiResults[0].gifUrl) {
+              videoUrl = apiResults[0].gifUrl;
+          }
+      }
+
+      // If API fails or no key, fallback to AI video generation
+      if (videoUrl === 'error') {
+          const mediaResult = await generateExerciseMedia({ exerciseName: exercise.name });
+          videoUrl = mediaResult.videoUrl;
+      }
+      
+      return {
+        ...exercise,
+        videoUrl,
+      };
+    })
+  );
+  return enrichedExercises;
+}
+
 
 const generateWorkoutPlanFlow = ai.defineFlow(
   {
@@ -150,20 +146,27 @@ const generateWorkoutPlanFlow = ai.defineFlow(
       throw new Error('Failed to generate workout plan text');
     }
     
-    // Enrich exercises with media
+    // Add exercise IDs and enrich with media
     const enrichedSchedule = await Promise.all(
-      output.weeklySchedule.map(async (day) => {
+      (output.weeklySchedule || []).map(async (day) => {
         if (day.exercises && day.exercises.length > 0) {
-          const enriched = await enrichExercisesWithMedia(day.exercises);
-          return { ...day, exercises: enriched };
+          const exercisesWithIds = day.exercises.map(ex => ({
+            ...ex,
+            exerciseId: getExerciseId(ex.name)
+          }));
+          const enrichedExercises = await enrichExercisesWithMedia(exercisesWithIds);
+          return {
+            ...day,
+            exercises: enrichedExercises,
+          };
         }
         return day;
       })
     );
-
+    
     return {
       ...output,
-      weeklySchedule: enrichedSchedule
+      weeklySchedule: enrichedSchedule,
     };
   }
 );

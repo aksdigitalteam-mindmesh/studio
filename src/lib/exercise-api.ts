@@ -23,7 +23,10 @@ export async function searchExercises(query: string, limit: number = 10) {
       return [];
     }
     const data = await response.json();
-    return data;
+    return data.map((ex: any) => ({
+        ...ex,
+        videoUrl: ex.gifUrl // Standardize the video/gif property name
+    }));
   } catch (error) {
     console.error('Failed to fetch from ExerciseDB API:', error);
     return [];
@@ -53,7 +56,10 @@ export async function getExercisesByBodyPart(bodyPart: string, limit: number = 1
       return [];
     }
     const data = await response.json();
-    return data;
+    return data.map((ex: any) => ({
+        ...ex,
+        videoUrl: ex.gifUrl // Standardize the video/gif property name
+    }));
   } catch (error) {
     console.error('Failed to fetch from ExerciseDB API:', error);
     return [];
