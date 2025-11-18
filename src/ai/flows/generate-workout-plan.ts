@@ -1,17 +1,7 @@
-
 'use server';
-
-/**
- * @fileOverview Workout plan generation flow for paid members.
- *
- * - generateWorkoutPlan - A function that generates a personalized workout plan.
- * - GenerateWorkoutPlanInput - The input type for the generateWorkoutPlan function.
- * - GenerateWorkoutPlanOutput - The return type for the generateWorkoutPlan function.
- */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { getExerciseId } from '@/lib/exercise-database';
 
 const GenerateWorkoutPlanInputSchema = z.object({
   fitnessGoals: z
@@ -42,6 +32,7 @@ export type GenerateWorkoutPlanInput = z.infer<typeof GenerateWorkoutPlanInputSc
 
 const ExerciseSchema = z.object({
   name: z.string().describe('The name of the exercise.'),
+  exerciseId: z.string().describe('ExerciseDB ID - will be auto-populated.'),
   sets: z.string().describe('The number of sets to perform.'),
   reps: z.string().describe('The number of repetitions per set.'),
   rest: z.string().describe('The rest time between sets.'),
@@ -81,24 +72,11 @@ If the user has specified any medical conditions, you MUST create a safe, low-im
 
 Important Rule: You MUST structure the plan so that each major muscle group ('chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings') is trained at least twice during the 7-day week.
 
-**USE ONLY THESE EXERCISE NAMES (they have verified preview videos):**
-
-CHEST: bench press, incline bench press, dumbbell bench press, chest fly, cable crossover, push-ups, dips
-BACK: deadlift, pull-ups, lat pulldown, seated row, barbell row, dumbbell row, t-bar row, face pull
-SHOULDERS: shoulder press, overhead press, dumbbell shoulder press, lateral raise, front raise, rear delt fly, arnold press, upright row
-LEGS (QUADS): squats, front squat, leg press, leg extension, lunges, bulgarian split squat, hack squat, goblet squat
-LEGS (HAMSTRINGS): leg curl, seated leg curl, romanian deadlift, good morning, nordic curl
-LEGS (GLUTES): hip thrust, glute bridge, cable kickback
-LEGS (CALVES): calf raise, standing calf raise, seated calf raise
-BICEPS: bicep curl, barbell curl, dumbbell curl, hammer curl, preacher curl, cable curl, concentration curl
-TRICEPS: tricep dips, tricep pushdown, overhead extension, skull crusher, close grip bench, diamond pushup, kickback
-ABS: plank, side plank, sit-ups, crunches, bicycle crunch, reverse crunch, leg raise, hanging leg raise, mountain climber, russian twist, cable crunch
-CARDIO: burpees, jumping jacks, high knees, box jumps, battle ropes
-
 Provide a catchy title for the whole week, a short description, and a weekly schedule.
 For each of the 7 days, provide a day number, a title for the day's workout, a short description, and a list of specific exercises with sets, reps, rest times, and the primary muscle groups targeted.
 The number of workout days in the schedule should match the user's 'Days per week' preference. The remaining days should be rest days.
 The muscle groups should be from this list: 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'.
+For the exerciseId field, use "0025" for all exercises (we'll fix this later automatically).
 For the videoUrl field for each exercise, you MUST return the string 'pending'.
 If a day is a rest day, the 'exercises' array should be empty.
 The exercises should be appropriate for the selected equipment availability.`,
@@ -115,19 +93,6 @@ const generateWorkoutPlanFlow = ai.defineFlow(
     if (!output) {
       throw new Error('Failed to generate workout plan text');
     }
-    
-    // Add exercise IDs after AI generation
-    if (output.weeklySchedule) {
-      for (const day of output.weeklySchedule) {
-        if (day.exercises) {
-          for (const exercise of day.exercises) {
-            const exerciseId = getExerciseId(exercise.name);
-            (exercise as any).exerciseId = exerciseId;
-          }
-        }
-      }
-    }
-    
     return output;
   }
 );
