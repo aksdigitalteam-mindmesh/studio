@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -11,8 +12,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { getExerciseId } from '@/lib/exercise-database';
-import { searchExercises } from '@/lib/exercise-api';
-import { generateExerciseMedia } from './generate-exercise-media';
 
 const GenerateWorkoutPlanInputSchema = z.object({
   fitnessGoals: z
@@ -46,7 +45,7 @@ const ExerciseSchema = z.object({
   sets: z.string().describe('The number of sets to perform.'),
   reps: z.string().describe('The number of repetitions per set.'),
   rest: z.string().describe('The rest time between sets.'),
-  videoUrl: z.string().describe("URL of an video showing the exercise. Set this to 'pending'."),
+  videoUrl: z.string().describe('URL of an video showing the exercise.'),
   muscleGroups: z.array(z.string()).describe("A list of the primary muscle groups targeted by the exercise (e.g., ['chest', 'triceps', 'shoulders']). Use one of 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'"),
 });
 
@@ -105,35 +104,6 @@ If a day is a rest day, the 'exercises' array should be empty.
 The exercises should be appropriate for the selected equipment availability.`,
 });
 
-async function enrichExercisesWithMedia(exercises: any[]) {
-  const enrichedExercises = await Promise.all(
-    (exercises || []).map(async (exercise) => {
-      let videoUrl = 'error';
-
-      // First, try to find in ExerciseDB via API if key exists
-      if (process.env.NEXT_PUBLIC_EXERCISEDB_API_KEY) {
-          const apiResults = await searchExercises(exercise.name, 1);
-          if (apiResults && apiResults.length > 0 && apiResults[0].gifUrl) {
-              videoUrl = apiResults[0].gifUrl;
-          }
-      }
-
-      // If API fails or no key, fallback to AI video generation
-      if (videoUrl === 'error') {
-          const mediaResult = await generateExerciseMedia({ exerciseName: exercise.name });
-          videoUrl = mediaResult.videoUrl;
-      }
-      
-      return {
-        ...exercise,
-        videoUrl,
-      };
-    })
-  );
-  return enrichedExercises;
-}
-
-
 const generateWorkoutPlanFlow = ai.defineFlow(
   {
     name: 'generateWorkoutPlanFlow',
@@ -146,28 +116,19 @@ const generateWorkoutPlanFlow = ai.defineFlow(
       throw new Error('Failed to generate workout plan text');
     }
     
-    // Add exercise IDs and enrich with media
-    const enrichedSchedule = await Promise.all(
-      (output.weeklySchedule || []).map(async (day) => {
-        if (day.exercises && day.exercises.length > 0) {
-          const exercisesWithIds = day.exercises.map(ex => ({
-            ...ex,
-            exerciseId: getExerciseId(ex.name)
-          }));
-          const enrichedExercises = await enrichExercisesWithMedia(exercisesWithIds);
-          return {
-            ...day,
-            exercises: enrichedExercises,
-          };
+    // Add exercise IDs after AI generation
+    if (output.weeklySchedule) {
+      for (const day of output.weeklySchedule) {
+        if (day.exercises) {
+          for (const exercise of day.exercises) {
+            const exerciseId = getExerciseId(exercise.name);
+            (exercise as any).exerciseId = exerciseId;
+          }
         }
-        return day;
-      })
-    );
+      }
+    }
     
-    return {
-      ...output,
-      weeklySchedule: enrichedSchedule,
-    };
+    return output;
   }
 );
 
