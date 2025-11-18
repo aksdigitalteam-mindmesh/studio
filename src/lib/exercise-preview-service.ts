@@ -6,7 +6,7 @@ const API_KEY = process.env.NEXT_PUBLIC_EXERCISEDB_API_KEY;
 
 export async function fetchExerciseGifById(exerciseId: string): Promise<string> {
   if (!API_KEY) {
-    console.warn('ExerciseDB API key not found');
+    console.warn('ExerciseDB API key not found. Set NEXT_PUBLIC_EXERCISEDB_API_KEY in your environment variables.');
     return 'error';
   }
 
@@ -23,14 +23,14 @@ export async function fetchExerciseGifById(exerciseId: string): Promise<string> 
     );
 
     if (!response.ok) {
-        console.error(`Error fetching GIF for ID ${exerciseId}: ${response.statusText}`);
+        console.error(`Error fetching GIF for ID ${exerciseId}: ${response.status} ${response.statusText}`);
         return 'error';
     }
 
     const data = await response.json();
     return data.gifUrl || 'error';
   } catch (error) {
-    console.error('Error fetching exercise GIF by ID:', error);
+    console.error(`Error fetching exercise GIF by ID ${exerciseId}:`, error);
     return 'error';
   }
 }
