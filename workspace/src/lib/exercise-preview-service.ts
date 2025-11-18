@@ -1,4 +1,3 @@
-
 "use server";
 
 const EXERCISEDB_API_URL = 'https://exercisedb.p.rapidapi.com';
@@ -6,29 +5,42 @@ const API_KEY = process.env.EXERCISEDB_API_KEY;
 
 export async function fetchExerciseGifById(exerciseId: string): Promise<string> {
   if (!API_KEY) {
-    console.warn('ExerciseDB API key not found. Set EXERCISEDB_API_KEY in your .env file.');
+    console.error('CRITICAL: ExerciseDB API key is not configured in .env file.');
     return 'error';
   }
 
   try {
-    const response = await fetch(
-      `${EXERCISEDB_API_URL}/exercises/exercise/${exerciseId}`,
-      {
-        headers: {
-          'X-RapidAPI-Key': API_KEY,
-          'X-RapidAPI-Host': 'exercisedb.p.rapidapi.com'
-        },
-        next: { revalidate: 86400 } // Cache for 24 hours
-      }
-    );
+    console.log(`Fetching GIF for exercise ID: ${exerciseId}`);
+    
+    const url = `${EXERCISEDB_API_URL}/exercises/exercise/${exerciseId}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-key': API_KEY,
+        'x-rapidapi-host': 'exercisedb.p.rapidapi.com'
+      },
+      // Disable caching for this specific API call to ensure fresh data
+      cache: 'no-store'
+    });
+
+    console.log(`Response status for ${exerciseId}:`, response.status);
 
     if (!response.ok) {
-        console.error(`Error fetching GIF for ID ${exerciseId}: ${response.status} ${response.statusText}`);
-        return 'error';
+      const errorText = await response.text();
+      console.error(`Failed to fetch exercise ${exerciseId}:`, response.status, errorText);
+      return 'error';
     }
 
     const data = await response.json();
-    return data.gifUrl || 'error';
+    
+    if (data && data.gifUrl) {
+      console.log(`✅ Found GIF URL for ${exerciseId}`);
+      return data.gifUrl;
+    }
+    
+    console.warn(`No gifUrl in response for ${exerciseId}`);
+    return 'error';
   } catch (error) {
     console.error(`Error fetching exercise GIF by ID ${exerciseId}:`, error);
     return 'error';
@@ -36,22 +48,40 @@ export async function fetchExerciseGifById(exerciseId: string): Promise<string> 
 }
 
 export async function enrichWorkoutPlanWithGifs(workoutPlan: any) {
-  if (!workoutPlan || !workoutPlan.weeklySchedule) return workoutPlan;
+  if (!workoutPlan || !workoutPlan.weeklySchedule) {
+    console.log('No workout plan to enrich');
+    return workoutPlan;
+  }
 
-  const enrichedPlan = { ...workoutPlan };
+  console.log('Starting to enrich workout plan with GIFs...');
+  const enrichedPlan = JSON.parse(JSON.stringify(workoutPlan)); // Deep clone
 
-  for (const day of enrichedPlan.weeklySchedule) {
-    if (day.exercises && day.exercises.length > 0) {
-      const gifPromises = day.exercises.map((exercise: any) => 
-        fetchExerciseGifById(exercise.exerciseId || '0001')
-      );
-      
-      const gifs = await Promise.all(gifPromises);
-      
-      day.exercises.forEach((exercise: any, index: number) => {
-        exercise.videoUrl = gifs[index];
-      });
+  try {
+    for (const day of enrichedPlan.weeklySchedule) {
+      if (day.exercises && day.exercises.length > 0) {
+        
+        for (let i = 0; i < day.exercises.length; i++) {
+          const exercise = day.exercises[i];
+          
+          if (exercise.exerciseId && exercise.exerciseId !== '0001') {
+            const gifUrl = await fetchExerciseGifById(exercise.exerciseId);
+            exercise.videoUrl = gifUrl;
+          } else {
+            console.warn(`Invalid or missing exercise ID for ${exercise.name}. Defaulting to 'error'.`);
+            exercise.videoUrl = 'error';
+          }
+          
+          // Add a small delay between requests to avoid potential rate-limiting issues
+          if (i < day.exercises.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 150));
+          }
+        }
+      }
     }
+    
+    console.log('✅ Finished enriching workout plan with GIFs');
+  } catch (error) {
+    console.error('❌ Error during the GIF enrichment process:', error);
   }
 
   return enrichedPlan;
