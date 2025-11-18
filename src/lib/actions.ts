@@ -1,4 +1,3 @@
-
 "use server";
 
 import { z } from "zod";
@@ -7,28 +6,47 @@ import { generateDietPlan as genDietPlan } from "@/ai/flows/generate-diet-plan";
 import { dietPlanSchema, workoutPlanSchema } from "./schemas";
 import { generateRecoveryTips as genRecoveryTips } from "@/ai/flows/generate-recovery-tips";
 import { enrichWorkoutPlanWithGifs } from "./exercise-preview-service";
+import { getExerciseId } from "./exercise-database";
 
 export async function generateWorkoutPlanAction(values: z.infer<typeof workoutPlanSchema> & { medicalConditions?: string }) {
   try {
+    console.log('Starting workout generation...');
+    
     const validatedFields = workoutPlanSchema.extend({ medicalConditions: z.string().optional() }).safeParse(values);
     if (!validatedFields.success) {
+      console.error('Validation failed:', validatedFields.error);
       return { error: "Invalid input provided." };
     }
     
-    // Step 1: Generate workout plan with AI (includes exercise IDs now)
+    // Step 1: Generate workout plan with AI
+    console.log('Calling AI to generate workout plan...');
     const aiGeneratedPlan = await genWorkoutPlan(validatedFields.data);
+    console.log('AI generation complete');
     
-    // Step 2: Enrich with exercise GIFs using IDs
+    // Step 2: Add exercise IDs
+    if (aiGeneratedPlan.weeklySchedule) {
+      for (const day of aiGeneratedPlan.weeklySchedule) {
+        if (day.exercises) {
+          for (const exercise of day.exercises) {
+            const exerciseId = getExerciseId(exercise.name);
+            (exercise as any).exerciseId = exerciseId;
+          }
+        }
+      }
+    }
+    
+    // Step 3: Enrich with exercise GIFs
+    console.log('Fetching exercise GIFs...');
     const enrichedPlan = await enrichWorkoutPlanWithGifs(aiGeneratedPlan);
+    console.log('Workout plan complete with GIFs');
     
     return { data: enrichedPlan };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Workout plan generation failed:", error);
-    return { error: "An unexpected error occurred while generating the workout plan. Please try again later." };
+    return { error: error?.message || "An unexpected error occurred while generating the workout plan. Please try again later." };
   }
 }
 
-// Keep other actions unchanged
 export async function generateDietPlanAction(values: z.infer<typeof dietPlanSchema>) {
   try {
     const validatedFields = dietPlanSchema.safeParse(values);
