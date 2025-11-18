@@ -30,6 +30,7 @@ import { useFirebase } from "@/firebase";
 
 type Exercise = {
   name: string;
+  exerciseId: string;
   sets: string;
   reps: string;
   rest: string;
@@ -354,6 +355,10 @@ export default function WorkoutGeneratorPage() {
                                                 </div>
                                             </AccordionTrigger>
                                             <AccordionContent>
+                                                <div className="bg-muted p-2 rounded mb-2 text-xs">
+                                                  <p>Exercise ID: {exercise.exerciseId || 'MISSING'}</p>
+                                                  <p>Video URL: {exercise.videoUrl || 'NONE'}</p>
+                                                </div>
                                                 <div className="prose dark:prose-invert prose-sm max-w-none pl-4 border-l-2 ml-5">
                                                     <p><strong>Rest:</strong> {exercise.rest}</p>
                                                     <p><strong>Muscles:</strong> {exercise.muscleGroups?.join(', ')}</p>
