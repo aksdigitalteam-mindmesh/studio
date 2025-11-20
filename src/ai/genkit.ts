@@ -1,10 +1,11 @@
 
 import {genkit} from 'genkit';
-import {openAI} from 'genkitx-openai';
+import {firebase} from '@genkit-ai/firebase';
 
 export const ai = genkit({
   plugins: [
-    openAI({apiKey: process.env.OPENAI_API_KEY,
-    }),
+    firebase(),
   ],
+  logLevel: 'debug',
+  enableTracing: true,
 });
