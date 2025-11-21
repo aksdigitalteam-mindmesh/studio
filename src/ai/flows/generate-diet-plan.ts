@@ -11,11 +11,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 const GenerateDietPlanInputSchema = z.object({
   fitnessGoals: z
@@ -84,16 +79,20 @@ const GenerateDietPlanOutputSchema = z.object({
 
 export type GenerateDietPlanOutput = z.infer<typeof GenerateDietPlanOutputSchema>;
 
-async function generateDiet(input: GenerateDietPlanInput): Promise<GenerateDietPlanOutput> {
-  const prompt = `You are a certified nutritionist and expert recipe creator. A paid member wants to generate a personalized 7-day diet plan with calorie and macro recommendations to optimize their nutrition for their fitness goals.
 
-  Fitness Goals: ${input.fitnessGoals}
-  Calorie Target: ~${input.calorieTarget} calories per day
-  Macro Ratio: ${input.macroRatio}
-  Cuisine Preference: ${input.cuisine || 'None'}
-  Dietary Restrictions: ${input.dietaryRestrictions || 'None'}
-  Food Preferences: ${input.foodPreferences || 'None'}
-  Medical Conditions: ${input.medicalConditions || 'None'}
+const dietPrompt = ai.definePrompt({
+    name: 'dietPrompt',
+    input: { schema: GenerateDietPlanInputSchema },
+    output: { schema: GenerateDietPlanOutputSchema },
+    prompt: `You are a certified nutritionist and expert recipe creator. A paid member wants to generate a personalized 7-day diet plan with calorie and macro recommendations to optimize their nutrition for their fitness goals.
+
+  Fitness Goals: {{{fitnessGoals}}}
+  Calorie Target: ~{{{calorieTarget}}} calories per day
+  Macro Ratio: {{{macroRatio}}}
+  Cuisine Preference: {{{cuisine}}}
+  Dietary Restrictions: {{{dietaryRestrictions}}}
+  Food Preferences: {{{foodPreferences}}}
+  Medical Conditions: {{{medicalConditions}}}
 
   Generate a detailed 7-day diet plan. For each day, provide:
   1. A full day of meals (Breakfast, Lunch, Dinner, and a Snack).
@@ -101,29 +100,8 @@ async function generateDiet(input: GenerateDietPlanInput): Promise<GenerateDietP
   3. A daily summary of total calories and macros.
 
   The entire diet plan MUST align with the total daily calorie target and macro ratio. It also must respect all dietary restrictions, food preferences, medical conditions, and cuisine styles.
-  Create a catchy title and a brief, encouraging summary for the overall 7-day plan. Ensure the meals are varied and interesting across the 7 days.
-  
-  You must return the response in a structured JSON format that matches the following Zod schema:
-  ${JSON.stringify(GenerateDietPlanOutputSchema.shape)}
-  `;
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      { role: "system", content: "You are a nutritionist AI that returns structured JSON." },
-      { role: "user", content: prompt }
-    ],
-    response_format: { type: "json_object" },
-  });
-
-  const content = response.choices[0].message?.content;
-  if (!content) {
-    throw new Error("Failed to generate diet plan text");
-  }
-
-  const parsed = JSON.parse(content);
-  return GenerateDietPlanOutputSchema.parse(parsed);
-}
+  Create a catchy title and a brief, encouraging summary for the overall 7-day plan. Ensure the meals are varied and interesting across the 7 days.`,
+});
 
 const generateDietPlanFlow = ai.defineFlow(
   {
@@ -132,7 +110,8 @@ const generateDietPlanFlow = ai.defineFlow(
     outputSchema: GenerateDietPlanOutputSchema,
   },
   async input => {
-    return await generateDiet(input);
+    const {output} = await dietPrompt(input);
+    return output!;
   }
 );
 

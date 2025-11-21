@@ -11,11 +11,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 
 const GenerateRecoveryTipsInputSchema = z.object({
@@ -33,33 +28,14 @@ const GenerateRecoveryTipsOutputSchema = z.object({
 });
 export type GenerateRecoveryTipsOutput = z.infer<typeof GenerateRecoveryTipsOutputSchema>;
 
-async function generateTips(input: GenerateRecoveryTipsInput): Promise<GenerateRecoveryTipsOutput> {
-  const prompt = `You are a sports recovery specialist and physiotherapist. A user is experiencing high fatigue in the following muscle groups: ${input.fatiguedMuscles.join(', ')}.
+const recoveryPrompt = ai.definePrompt({
+    name: 'recoveryPrompt',
+    input: { schema: GenerateRecoveryTipsInputSchema },
+    output: { schema: GenerateRecoveryTipsOutputSchema },
+    prompt: `You are a sports recovery specialist and physiotherapist. A user is experiencing high fatigue in the following muscle groups: {{{fatiguedMuscles}}}.
 
-  Please generate 3-5 actionable and effective recovery tips to help them alleviate muscle soreness and recover faster. For each tip, provide a clear title and a concise description. Focus on practical advice like stretching, nutrition, hydration, and rest techniques.
-  
-  You must return the response in a structured JSON format that matches the following Zod schema:
-  ${JSON.stringify(GenerateRecoveryTipsOutputSchema.shape)}
-  `;
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      { role: "system", content: "You are a physiotherapy AI that returns structured JSON." },
-      { role: "user", content: prompt }
-    ],
-    response_format: { type: "json_object" },
-  });
-
-  const content = response.choices[0].message?.content;
-  if (!content) {
-    throw new Error("Failed to generate recovery tips");
-  }
-
-  const parsed = JSON.parse(content);
-  return GenerateRecoveryTipsOutputSchema.parse(parsed);
-}
-
+  Please generate 3-5 actionable and effective recovery tips to help them alleviate muscle soreness and recover faster. For each tip, provide a clear title and a concise description. Focus on practical advice like stretching, nutrition, hydration, and rest techniques.`,
+});
 
 const generateRecoveryTipsFlow = ai.defineFlow(
   {
@@ -68,7 +44,8 @@ const generateRecoveryTipsFlow = ai.defineFlow(
     outputSchema: GenerateRecoveryTipsOutputSchema,
   },
   async (input) => {
-    return await generateTips(input);
+    const {output} = await recoveryPrompt(input);
+    return output!;
   }
 );
 

@@ -3,11 +3,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 const GenerateWorkoutPlanInputSchema = z.object({
   fitnessGoals: z
@@ -61,16 +56,19 @@ const GenerateWorkoutPlanOutputSchema = z.object({
 export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutputSchema>;
 
 
-async function generateWorkout(input: GenerateWorkoutPlanInput): Promise<GenerateWorkoutPlanOutput> {
-  const prompt = `You are a certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences.
+const workoutPrompt = ai.definePrompt({
+    name: 'workoutPrompt',
+    input: { schema: GenerateWorkoutPlanInputSchema },
+    output: { schema: GenerateWorkoutPlanOutputSchema },
+    prompt: `You are a certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences.
 
-Fitness Goals: ${input.fitnessGoals}
-Intensity: ${input.intensity}
-Duration per session: ${input.duration} minutes
-Days per week: ${input.daysPerWeek}
-Equipment: ${input.equipment} equipment
-Body Focus: ${input.bodyFocus || 'Full body'}
-Medical Conditions: ${input.medicalConditions || 'None'}
+Fitness Goals: {{{fitnessGoals}}}
+Intensity: {{{intensity}}}
+Duration per session: {{{duration}}} minutes
+Days per week: {{{daysPerWeek}}}
+Equipment: {{{equipment}}} equipment
+Body Focus: {{{bodyFocus}}}
+Medical Conditions: {{{medicalConditions}}}
 
 If the user has specified any medical conditions, you MUST create a safe, low-impact workout plan and include a disclaimer to consult a doctor. Avoid high-impact exercises.
 
@@ -83,29 +81,9 @@ The muscle groups should be from this list: 'chest', 'biceps', 'abs', 'quads', '
 For the exerciseId field, use "0025" for all exercises (we'll fix this later automatically).
 For the videoUrl field for each exercise, you MUST return the string 'pending'.
 If a day is a rest day, the 'exercises' array should be empty.
-The exercises should be appropriate for the selected equipment availability.
+The exercises should be appropriate for the selected equipment availability.`,
+});
 
-You must return the response in a structured JSON format that matches the following Zod schema:
-${JSON.stringify(GenerateWorkoutPlanOutputSchema.shape)}
-`;
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      { role: "system", content: "You are a workout planner AI that returns structured JSON." },
-      { role: "user", content: prompt }
-    ],
-    response_format: { type: "json_object" },
-  });
-
-  const content = response.choices[0].message?.content;
-  if (!content) {
-    throw new Error("Failed to generate workout plan text");
-  }
-  
-  const parsed = JSON.parse(content);
-  return GenerateWorkoutPlanOutputSchema.parse(parsed);
-}
 
 const generateWorkoutPlanFlow = ai.defineFlow(
   {
@@ -114,7 +92,8 @@ const generateWorkoutPlanFlow = ai.defineFlow(
     outputSchema: GenerateWorkoutPlanOutputSchema,
   },
   async input => {
-    return await generateWorkout(input);
+    const {output} = await workoutPrompt(input);
+    return output!;
   }
 );
 
