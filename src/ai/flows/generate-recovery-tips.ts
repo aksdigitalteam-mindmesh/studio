@@ -30,7 +30,7 @@ export type GenerateRecoveryTipsOutput = z.infer<typeof GenerateRecoveryTipsOutp
 
 const recoveryPrompt = ai.definePrompt({
     name: 'recoveryPrompt',
-    model: 'googleai/gemini-1.5-flash',
+    model: 'googleai/gemini-pro',
     input: { schema: GenerateRecoveryTipsInputSchema },
     output: { schema: GenerateRecoveryTipsOutputSchema },
     prompt: `You are a sports recovery specialist and physiotherapist. A user is experiencing high fatigue in the following muscle groups: {{{fatiguedMuscles}}}.

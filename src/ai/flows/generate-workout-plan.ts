@@ -58,7 +58,7 @@ export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutput
 
 const workoutPrompt = ai.definePrompt({
     name: 'workoutPrompt',
-    model: 'googleai/gemini-1.5-flash',
+    model: 'googleai/gemini-pro',
     input: { schema: GenerateWorkoutPlanInputSchema },
     output: { schema: GenerateWorkoutPlanOutputSchema },
     prompt: `You are an expert certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences.
