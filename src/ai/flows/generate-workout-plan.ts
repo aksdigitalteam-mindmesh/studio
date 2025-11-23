@@ -2,7 +2,6 @@
 'use server';
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const GenerateWorkoutPlanInputSchema = z.object({
@@ -59,7 +58,7 @@ export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutput
 
 const workoutPrompt = ai.definePrompt({
     name: 'workoutPrompt',
-    model: googleAI.model('gemini-1.5-flash'),
+    model: 'googleai/gemini-1.5-flash',
     input: { schema: GenerateWorkoutPlanInputSchema },
     output: { schema: GenerateWorkoutPlanOutputSchema },
     prompt: `You are a certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences.

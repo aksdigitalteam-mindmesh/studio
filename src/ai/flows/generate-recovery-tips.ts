@@ -10,7 +10,6 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 
@@ -31,7 +30,7 @@ export type GenerateRecoveryTipsOutput = z.infer<typeof GenerateRecoveryTipsOutp
 
 const recoveryPrompt = ai.definePrompt({
     name: 'recoveryPrompt',
-    model: googleAI.model('gemini-1.5-flash'),
+    model: 'googleai/gemini-1.5-flash',
     input: { schema: GenerateRecoveryTipsInputSchema },
     output: { schema: GenerateRecoveryTipsOutputSchema },
     prompt: `You are a sports recovery specialist and physiotherapist. A user is experiencing high fatigue in the following muscle groups: {{{fatiguedMuscles}}}.

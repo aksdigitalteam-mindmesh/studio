@@ -10,7 +10,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const GenerateDietPlanInputSchema = z.object({
@@ -83,7 +82,7 @@ export type GenerateDietPlanOutput = z.infer<typeof GenerateDietPlanOutputSchema
 
 const dietPrompt = ai.definePrompt({
     name: 'dietPrompt',
-    model: googleAI.model('gemini-1.5-flash'),
+    model: 'googleai/gemini-1.5-flash',
     input: { schema: GenerateDietPlanInputSchema },
     output: { schema: GenerateDietPlanOutputSchema },
     prompt: `You are a certified nutritionist and expert recipe creator. A paid member wants to generate a personalized 7-day diet plan with calorie and macro recommendations to optimize their nutrition for their fitness goals.
