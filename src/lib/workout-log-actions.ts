@@ -3,7 +3,6 @@
 
 // These are client-side actions that interact with localStorage
 const WORKOUT_LOG_STORAGE_KEY = 'completedWorkouts';
-const LATEST_WORKOUT_PLAN_KEY = 'latestWorkoutPlan';
 const FATIGUE_STORAGE_KEY = 'muscleFatigueData';
 
 type CompletedWorkout = {
@@ -11,49 +10,49 @@ type CompletedWorkout = {
   date: string;
 };
 
-type Exercise = {
-  name: string;
-  muscleGroups?: string[];
-};
-
-type WorkoutPlan = {
-  title: string;
-  description: string;
-  weeklySchedule: { day: number; exercises?: Exercise[] }[];
+type SaveWorkoutPayload = {
+    title: string;
+    muscleGroups: string[];
+    fatigueRating: 'low' | 'medium' | 'high';
 };
 
 type FatigueData = Record<string, number>;
 
-function updateFatigueLevels(completedExercises: Exercise[]) {
+const FATIGUE_INCREASE = {
+    low: 30,
+    medium: 50,
+    high: 70
+};
+
+function updateFatigueLevels(payload: SaveWorkoutPayload) {
   if (typeof window === 'undefined') return;
 
   const fatigueString = localStorage.getItem(FATIGUE_STORAGE_KEY);
   let fatigueData: FatigueData = fatigueString ? JSON.parse(fatigueString) : {};
 
-  const trainedMuscles = new Set<string>();
-  completedExercises.forEach(exercise => {
-    exercise.muscleGroups?.forEach(muscle => trainedMuscles.add(muscle.toLowerCase()));
-  });
+  const trainedMuscles = new Set(payload.muscleGroups.map(m => m.toLowerCase()));
 
-  // Reset fatigue for all muscles, then apply fatigue for trained ones
+  // Daily recovery for ALL muscles
   Object.keys(fatigueData).forEach(muscle => {
-     fatigueData[muscle] = Math.max(0, (fatigueData[muscle] || 0) - 15); // Daily recovery
+     fatigueData[muscle] = Math.max(0, (fatigueData[muscle] || 0) - 15);
   });
 
+  // Apply new fatigue for trained muscles
   trainedMuscles.forEach(muscle => {
     const currentFatigue = fatigueData[muscle] || 0;
+    const increase = FATIGUE_INCREASE[payload.fatigueRating];
     // Increase fatigue, but cap at 100
-    fatigueData[muscle] = Math.min(100, currentFatigue + 50);
+    fatigueData[muscle] = Math.min(100, currentFatigue + increase);
   });
 
   localStorage.setItem(FATIGUE_STORAGE_KEY, JSON.stringify(fatigueData));
 }
 
-export function saveCompletedWorkoutAction(title: string, completedExerciseNames: string[]) {
+export function saveCompletedWorkoutAction(payload: SaveWorkoutPayload) {
   if (typeof window === 'undefined') return;
   
   const newWorkout: CompletedWorkout = {
-    title,
+    title: payload.title,
     date: new Date().toISOString(),
   };
 
@@ -61,14 +60,8 @@ export function saveCompletedWorkoutAction(title: string, completedExerciseNames
   const updatedWorkouts = [...existingWorkouts, newWorkout];
   localStorage.setItem(WORKOUT_LOG_STORAGE_KEY, JSON.stringify(updatedWorkouts));
 
-  // Update fatigue levels
-  const planString = localStorage.getItem(LATEST_WORKOUT_PLAN_KEY);
-  if (planString) {
-    const plan: WorkoutPlan = JSON.parse(planString);
-    const allExercises = plan.weeklySchedule.flatMap(day => day.exercises || []);
-    const completedExercises = allExercises.filter(ex => completedExerciseNames.includes(ex.name));
-    updateFatigueLevels(completedExercises);
-  }
+  // Update fatigue levels based on the payload
+  updateFatigueLevels(payload);
 
   // Dispatch a storage event to notify other tabs/windows
   window.dispatchEvent(new Event('storage'));

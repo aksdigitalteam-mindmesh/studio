@@ -61,7 +61,7 @@ const workoutPrompt = ai.definePrompt({
     model: 'googleai/gemini-1.5-flash',
     input: { schema: GenerateWorkoutPlanInputSchema },
     output: { schema: GenerateWorkoutPlanOutputSchema },
-    prompt: `You are a certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences.
+    prompt: `You are an expert certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences.
 
 Fitness Goals: {{{fitnessGoals}}}
 Intensity: {{{intensity}}}
@@ -73,13 +73,13 @@ Medical Conditions: {{{medicalConditions}}}
 
 If the user has specified any medical conditions, you MUST create a safe, low-impact workout plan and include a disclaimer to consult a doctor. Avoid high-impact exercises.
 
-Important Rule: You MUST structure the plan so that each major muscle group ('chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings') is trained at least twice during the 7-day week.
+Important Rule: You MUST structure the plan so that each major muscle group ('chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings') is trained at least twice during the 7-day week, provided the user works out 4 or more days. If they work out fewer than 4 days, train each muscle group at least once.
 
 Provide a catchy title for the whole week, a short description, and a weekly schedule.
 For each of the 7 days, provide a day number, a title for the day's workout, a short description, and a list of specific exercises with sets, reps, rest times, and the primary muscle groups targeted.
 The number of workout days in the schedule should match the user's 'Days per week' preference. The remaining days should be rest days.
 The muscle groups should be from this list: 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'.
-For the exerciseId field, use "0025" for all exercises (we'll fix this later automatically).
+For the exerciseId field, use "0025" for all exercises (this is a placeholder).
 For the videoUrl field for each exercise, you MUST return the string 'pending'.
 If a day is a rest day, the 'exercises' array should be empty.
 The exercises should be appropriate for the selected equipment availability.`,

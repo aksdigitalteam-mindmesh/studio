@@ -5,10 +5,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Dumbbell, CheckCircle, Timer, SkipForward, ChevronRight, Play, X, ChevronLeft } from "lucide-react";
+import { Dumbbell, CheckCircle, Timer, SkipForward, ChevronRight, Play, X, ChevronLeft, Check } from "lucide-react";
 import Link from "next/link";
 import { saveCompletedWorkoutAction } from "@/lib/workout-log-actions";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 // --- Types ---
 type Exercise = {
@@ -32,6 +33,7 @@ type WorkoutPlan = {
 };
 
 type SessionState = "preview" | "exercise" | "rest" | "completed";
+type FatigueRating = "low" | "medium" | "high";
 
 // --- Component ---
 const REST_DURATION_SECONDS = 30;
@@ -42,6 +44,7 @@ export function WorkoutLog() {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [restTimeLeft, setRestTimeLeft] = useState(REST_DURATION_SECONDS);
   const [isPaused, setIsPaused] = useState(false);
+  const [fatigueRating, setFatigueRating] = useState<FatigueRating | null>(null);
   const { toast } = useToast();
   
   const today = new Date();
@@ -123,12 +126,19 @@ export function WorkoutLog() {
   };
 
   const handleCompleteWorkout = () => {
-    if (activeWorkoutDay?.exercises) {
-      const completedExerciseNames = activeWorkoutDay.exercises.map(ex => ex.name);
-      saveCompletedWorkoutAction(activeWorkoutDay.title, completedExerciseNames);
-      toast({ title: "Workout Completed!", description: `Great job! "${activeWorkoutDay.title}" has been added to your log.` });
+    if (activeWorkoutDay?.exercises && fatigueRating) {
+      const muscleGroups = Array.from(new Set(activeWorkoutDay.exercises.flatMap(ex => ex.muscleGroups || [])));
+      saveCompletedWorkoutAction({
+          title: activeWorkoutDay.title,
+          muscleGroups,
+          fatigueRating,
+      });
+      toast({ title: "Workout Completed!", description: `Great job! "${activeWorkoutDay.title}" has been logged.` });
       setSessionState('preview');
       setCurrentExerciseIndex(0);
+      setFatigueRating(null);
+    } else {
+        toast({ variant: "destructive", title: "Please rate your fatigue" });
     }
   };
 
@@ -280,24 +290,23 @@ export function WorkoutLog() {
             <p className="text-muted-foreground mb-8">You crushed {activeWorkoutDay?.exercises?.length} exercises today.</p>
             
             <Card className="w-full max-w-sm mb-8">
-                <CardContent className="p-4 grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                        <p className="text-2xl font-bold">{activeWorkoutDay?.exercises?.length}</p>
-                        <p className="text-sm text-muted-foreground">Exercises</p>
-                    </div>
-                    <div className="text-center">
-                         <p className="text-2xl font-bold">~350</p>
-                        <p className="text-sm text-muted-foreground">Kcal Burned</p>
-                    </div>
+                <CardHeader>
+                    <CardTitle>Rate Your Fatigue</CardTitle>
+                    <CardDescription>How tired are the muscles you trained today?</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-3 gap-2">
+                    <Button variant={fatigueRating === 'low' ? 'default' : 'outline'} onClick={() => setFatigueRating('low')}>Low</Button>
+                    <Button variant={fatigueRating === 'medium' ? 'default' : 'outline'} onClick={() => setFatigueRating('medium')}>Medium</Button>
+                    <Button variant={fatigueRating === 'high' ? 'default' : 'outline'} onClick={() => setFatigueRating('high')}>High</Button>
                 </CardContent>
             </Card>
 
             <div className="w-full max-w-sm space-y-4">
-                <Button onClick={handleCompleteWorkout} size="lg" className="w-full">
-                    <CheckCircle className="mr-2 h-5 w-5"/> Log Workout
+                <Button onClick={handleCompleteWorkout} size="lg" className="w-full" disabled={!fatigueRating}>
+                    <Check className="mr-2 h-5 w-5"/> Log Workout & Fatigue
                 </Button>
-                <Button variant="outline" onClick={() => { setSessionState('preview'); setCurrentExerciseIndex(0); }} className="w-full">
-                    Back to Workout List
+                <Button variant="ghost" onClick={() => { setSessionState('preview'); setCurrentExerciseIndex(0); setFatigueRating(null); }} className="w-full">
+                    Cancel
                 </Button>
             </div>
         </div>
@@ -306,5 +315,3 @@ export function WorkoutLog() {
   
   return null; // Should not happen
 }
-
-    
