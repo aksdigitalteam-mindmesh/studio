@@ -1,8 +1,7 @@
 
 'use server';
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { z } from 'genkit';
 
 const GenerateWorkoutPlanInputSchema = z.object({
   fitnessGoals: z
@@ -55,21 +54,50 @@ const GenerateWorkoutPlanOutputSchema = z.object({
 });
 export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutputSchema>;
 
+async function callGemini(prompt: string): Promise<GenerateWorkoutPlanOutput> {
+  const API_KEY = process.env.GEMINI_API_KEY;
+  if (!API_KEY) {
+    throw new Error("GEMINI_API_KEY is not set.");
+  }
+  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
+  
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      response_mime_type: "application/json",
+    }
+  };
 
-const workoutPrompt = ai.definePrompt({
-    name: 'workoutPrompt',
-    model: 'googleai/gemini-pro',
-    input: { schema: GenerateWorkoutPlanInputSchema },
-    output: { schema: GenerateWorkoutPlanOutputSchema },
-    prompt: `You are an expert certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences.
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
 
-Fitness Goals: {{{fitnessGoals}}}
-Intensity: {{{intensity}}}
-Duration per session: {{{duration}}} minutes
-Days per week: {{{daysPerWeek}}}
-Equipment: {{{equipment}}} equipment
-Body Focus: {{{bodyFocus}}}
-Medical Conditions: {{{medicalConditions}}}
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API call failed with status ${response.status}: ${errorText}`);
+  }
+
+  const data = await response.json();
+  const jsonText = data.candidates[0].content.parts[0].text;
+  return JSON.parse(jsonText) as GenerateWorkoutPlanOutput;
+}
+
+
+export async function generateWorkoutPlan(
+  input: GenerateWorkoutPlanInput
+): Promise<GenerateWorkoutPlanOutput> {
+
+  const prompt = `You are an expert certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences.
+
+Fitness Goals: ${input.fitnessGoals}
+Intensity: ${input.intensity}
+Duration per session: ${input.duration} minutes
+Days per week: ${input.daysPerWeek}
+Equipment: ${input.equipment} equipment
+Body Focus: ${input.bodyFocus}
+Medical Conditions: ${input.medicalConditions}
 
 If the user has specified any medical conditions, you MUST create a safe, low-impact workout plan and include a disclaimer to consult a doctor. Avoid high-impact exercises.
 
@@ -82,25 +110,12 @@ The muscle groups should be from this list: 'chest', 'biceps', 'abs', 'quads', '
 For the exerciseId field, use "0025" for all exercises (this is a placeholder).
 For the videoUrl field for each exercise, you MUST return the string 'pending'.
 If a day is a rest day, the 'exercises' array should be empty.
-The exercises should be appropriate for the selected equipment availability.`,
-});
+The exercises should be appropriate for the selected equipment availability.
 
+Return the response as a single, valid JSON object that conforms to this Zod schema:
 
-const generateWorkoutPlanFlow = ai.defineFlow(
-  {
-    name: 'generateWorkoutPlanFlow',
-    inputSchema: GenerateWorkoutPlanInputSchema,
-    outputSchema: GenerateWorkoutPlanOutputSchema,
-  },
-  async input => {
-    const {output} = await workoutPrompt(input);
-    return output!;
-  }
-);
-
-
-export async function generateWorkoutPlan(
-  input: GenerateWorkoutPlanInput
-): Promise<GenerateWorkoutPlanOutput> {
-  return generateWorkoutPlanFlow(input);
+const GenerateWorkoutPlanOutputSchema = ${JSON.stringify(GenerateWorkoutPlanOutputSchema.shape, null, 2)};
+`;
+  
+  return callGemini(prompt);
 }

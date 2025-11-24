@@ -9,8 +9,7 @@
  * - GenerateDietPlanOutput - The return type for the generateDietPlan function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { z } from 'genkit';
 
 const GenerateDietPlanInputSchema = z.object({
   fitnessGoals: z
@@ -79,21 +78,50 @@ const GenerateDietPlanOutputSchema = z.object({
 
 export type GenerateDietPlanOutput = z.infer<typeof GenerateDietPlanOutputSchema>;
 
+async function callGemini(prompt: string): Promise<GenerateDietPlanOutput> {
+  const API_KEY = process.env.GEMINI_API_KEY;
+  if (!API_KEY) {
+    throw new Error("GEMINI_API_KEY is not set.");
+  }
+  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
+  
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      response_mime_type: "application/json",
+    }
+  };
 
-const dietPrompt = ai.definePrompt({
-    name: 'dietPrompt',
-    model: 'googleai/gemini-pro',
-    input: { schema: GenerateDietPlanInputSchema },
-    output: { schema: GenerateDietPlanOutputSchema },
-    prompt: `You are a certified nutritionist and expert recipe creator. A paid member wants to generate a personalized 7-day diet plan with calorie and macro recommendations to optimize their nutrition for their fitness goals.
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
 
-  Fitness Goals: {{{fitnessGoals}}}
-  Calorie Target: ~{{{calorieTarget}}} calories per day
-  Macro Ratio: {{{macroRatio}}}
-  Cuisine Preference: {{{cuisine}}}
-  Dietary Restrictions: {{{dietaryRestrictions}}}
-  Food Preferences: {{{foodPreferences}}}
-  Medical Conditions: {{{medicalConditions}}}
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API call failed with status ${response.status}: ${errorText}`);
+  }
+
+  const data = await response.json();
+  const jsonText = data.candidates[0].content.parts[0].text;
+  return JSON.parse(jsonText) as GenerateDietPlanOutput;
+}
+
+
+export async function generateDietPlan(
+  input: GenerateDietPlanInput
+): Promise<GenerateDietPlanOutput> {
+  
+  const prompt = `You are a certified nutritionist and expert recipe creator. A paid member wants to generate a personalized 7-day diet plan with calorie and macro recommendations to optimize their nutrition for their fitness goals.
+
+  Fitness Goals: ${input.fitnessGoals}
+  Calorie Target: ~${input.calorieTarget} calories per day
+  Macro Ratio: ${input.macroRatio}
+  Cuisine Preference: ${input.cuisine}
+  Dietary Restrictions: ${input.dietaryRestrictions}
+  Food Preferences: ${input.foodPreferences}
+  Medical Conditions: ${input.medicalConditions}
 
   Generate a detailed 7-day diet plan. For each day, provide:
   1. A full day of meals (Breakfast, Lunch, Dinner, and a Snack).
@@ -101,23 +129,12 @@ const dietPrompt = ai.definePrompt({
   3. A daily summary of total calories and macros.
 
   The entire diet plan MUST align with the total daily calorie target and macro ratio. It also must respect all dietary restrictions, food preferences, medical conditions, and cuisine styles.
-  Create a catchy title and a brief, encouraging summary for the overall 7-day plan. Ensure the meals are varied and interesting across the 7 days.`,
-});
+  Create a catchy title and a brief, encouraging summary for the overall 7-day plan. Ensure the meals are varied and interesting across the 7 days.
+  
+  Return the response as a single, valid JSON object that conforms to this Zod schema:
+  
+  const GenerateDietPlanOutputSchema = ${JSON.stringify(GenerateDietPlanOutputSchema.shape, null, 2)};
+  `;
 
-const generateDietPlanFlow = ai.defineFlow(
-  {
-    name: 'generateDietPlanFlow',
-    inputSchema: GenerateDietPlanInputSchema,
-    outputSchema: GenerateDietPlanOutputSchema,
-  },
-  async input => {
-    const {output} = await dietPrompt(input);
-    return output!;
-  }
-);
-
-export async function generateDietPlan(
-  input: GenerateDietPlanInput
-): Promise<GenerateDietPlanOutput> {
-  return generateDietPlanFlow(input);
+  return callGemini(prompt);
 }
