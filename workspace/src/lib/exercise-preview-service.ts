@@ -4,7 +4,7 @@ const EXERCISEDB_API_URL = 'https://exercisedb.p.rapidapi.com';
 const API_KEY = process.env.EXERCISEDB_API_KEY;
 
 export async function fetchExerciseGifById(exerciseId: string): Promise<string> {
-  if (!API_KEY) {
+  if (!API_KEY || API_KEY === "YOUR_EXERCISEDB_API_KEY_HERE") {
     console.error('CRITICAL: ExerciseDB API key is not configured in .env file.');
     return 'error';
   }

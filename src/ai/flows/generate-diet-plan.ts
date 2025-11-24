@@ -80,8 +80,8 @@ export type GenerateDietPlanOutput = z.infer<typeof GenerateDietPlanOutputSchema
 
 async function callGemini(prompt: string): Promise<GenerateDietPlanOutput> {
   const API_KEY = process.env.GEMINI_API_KEY;
-  if (!API_KEY) {
-    throw new Error("GEMINI_API_KEY is not set.");
+  if (!API_KEY || API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+    throw new Error("GEMINI_API_KEY is not set in the .env file.");
   }
   const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
   
@@ -89,6 +89,7 @@ async function callGemini(prompt: string): Promise<GenerateDietPlanOutput> {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       response_mime_type: "application/json",
+      temperature: 0.7,
     }
   };
 
@@ -100,12 +101,25 @@ async function callGemini(prompt: string): Promise<GenerateDietPlanOutput> {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`API call failed with status ${response.status}: ${errorText}`);
+    console.error("Gemini API Error:", errorText);
+    throw new Error(`API call failed with status ${response.status}. Please check your API key and billing status.`);
   }
 
   const data = await response.json();
+  
+  if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
+      console.error("Unexpected Gemini API response structure:", data);
+      throw new Error("Failed to parse the response from the AI. The structure was not as expected.");
+  }
   const jsonText = data.candidates[0].content.parts[0].text;
-  return JSON.parse(jsonText) as GenerateDietPlanOutput;
+  
+  try {
+    return JSON.parse(jsonText) as GenerateDietPlanOutput;
+  } catch (e) {
+      console.error("Failed to parse JSON from Gemini response:", e);
+      console.error("Received text from API:", jsonText);
+      throw new Error("The AI returned an invalid response. Please try generating again.");
+  }
 }
 
 
@@ -118,10 +132,10 @@ export async function generateDietPlan(
   Fitness Goals: ${input.fitnessGoals}
   Calorie Target: ~${input.calorieTarget} calories per day
   Macro Ratio: ${input.macroRatio}
-  Cuisine Preference: ${input.cuisine}
-  Dietary Restrictions: ${input.dietaryRestrictions}
-  Food Preferences: ${input.foodPreferences}
-  Medical Conditions: ${input.medicalConditions}
+  Cuisine Preference: ${input.cuisine || 'Any'}
+  Dietary Restrictions: ${input.dietaryRestrictions || 'None'}
+  Food Preferences: ${input.foodPreferences || 'None'}
+  Medical Conditions: ${input.medicalConditions || 'None'}
 
   Generate a detailed 7-day diet plan. For each day, provide:
   1. A full day of meals (Breakfast, Lunch, Dinner, and a Snack).
@@ -131,9 +145,11 @@ export async function generateDietPlan(
   The entire diet plan MUST align with the total daily calorie target and macro ratio. It also must respect all dietary restrictions, food preferences, medical conditions, and cuisine styles.
   Create a catchy title and a brief, encouraging summary for the overall 7-day plan. Ensure the meals are varied and interesting across the 7 days.
   
-  Return the response as a single, valid JSON object that conforms to this Zod schema:
+  You MUST return the response as a single, valid JSON object that strictly conforms to this Zod schema:
   
   const GenerateDietPlanOutputSchema = ${JSON.stringify(GenerateDietPlanOutputSchema.shape, null, 2)};
+
+  Do not add any introductory text or markdown formatting around the JSON object. The response must be only the JSON.
   `;
 
   return callGemini(prompt);

@@ -56,8 +56,8 @@ export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutput
 
 async function callGemini(prompt: string): Promise<GenerateWorkoutPlanOutput> {
   const API_KEY = process.env.GEMINI_API_KEY;
-  if (!API_KEY) {
-    throw new Error("GEMINI_API_KEY is not set.");
+  if (!API_KEY || API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+    throw new Error("GEMINI_API_KEY is not set in the .env file.");
   }
   const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
   
@@ -65,6 +65,7 @@ async function callGemini(prompt: string): Promise<GenerateWorkoutPlanOutput> {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       response_mime_type: "application/json",
+      temperature: 0.4,
     }
   };
 
@@ -76,12 +77,25 @@ async function callGemini(prompt: string): Promise<GenerateWorkoutPlanOutput> {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`API call failed with status ${response.status}: ${errorText}`);
+    console.error("Gemini API Error:", errorText);
+    throw new Error(`API call failed with status ${response.status}. Please check your API key and billing status.`);
   }
 
   const data = await response.json();
+
+  if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
+      console.error("Unexpected Gemini API response structure:", data);
+      throw new Error("Failed to parse the response from the AI. The structure was not as expected.");
+  }
   const jsonText = data.candidates[0].content.parts[0].text;
-  return JSON.parse(jsonText) as GenerateWorkoutPlanOutput;
+  
+  try {
+    return JSON.parse(jsonText) as GenerateWorkoutPlanOutput;
+  } catch (e) {
+      console.error("Failed to parse JSON from Gemini response:", e);
+      console.error("Received text from API:", jsonText);
+      throw new Error("The AI returned an invalid response. Please try generating again.");
+  }
 }
 
 
@@ -96,25 +110,27 @@ Intensity: ${input.intensity}
 Duration per session: ${input.duration} minutes
 Days per week: ${input.daysPerWeek}
 Equipment: ${input.equipment} equipment
-Body Focus: ${input.bodyFocus}
-Medical Conditions: ${input.medicalConditions}
+Body Focus: ${input.bodyFocus || 'Full Body'}
+Medical Conditions: ${input.medicalConditions || 'None'}
 
 If the user has specified any medical conditions, you MUST create a safe, low-impact workout plan and include a disclaimer to consult a doctor. Avoid high-impact exercises.
 
-Important Rule: You MUST structure the plan so that each major muscle group ('chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings') is trained at least twice during the 7-day week, provided the user works out 4 or more days. If they work out fewer than 4 days, train each muscle group at least once.
+Important Rule: You MUST structure the plan so that each major muscle group ('chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings') is trained at least twice during the 7-day week, provided the user works out 4 or more days. If they work out fewer than 4 days, train each muscle group at least once. Ensure proper rest between training the same muscle group.
 
 Provide a catchy title for the whole week, a short description, and a weekly schedule.
 For each of the 7 days, provide a day number, a title for the day's workout, a short description, and a list of specific exercises with sets, reps, rest times, and the primary muscle groups targeted.
 The number of workout days in the schedule should match the user's 'Days per week' preference. The remaining days should be rest days.
-The muscle groups should be from this list: 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'.
-For the exerciseId field, use "0025" for all exercises (this is a placeholder).
+The muscle groups must be from this list: 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'.
+For the exerciseId field, use "0001" for all exercises (this is a placeholder and will be replaced later).
 For the videoUrl field for each exercise, you MUST return the string 'pending'.
 If a day is a rest day, the 'exercises' array should be empty.
 The exercises should be appropriate for the selected equipment availability.
 
-Return the response as a single, valid JSON object that conforms to this Zod schema:
+You MUST return the response as a single, valid JSON object that strictly conforms to this Zod schema:
 
 const GenerateWorkoutPlanOutputSchema = ${JSON.stringify(GenerateWorkoutPlanOutputSchema.shape, null, 2)};
+
+Do not add any introductory text or markdown formatting around the JSON object. The response must be only the JSON.
 `;
   
   return callGemini(prompt);

@@ -28,8 +28,8 @@ export type GenerateRecoveryTipsOutput = z.infer<typeof GenerateRecoveryTipsOutp
 
 async function callGemini(prompt: string): Promise<GenerateRecoveryTipsOutput> {
   const API_KEY = process.env.GEMINI_API_KEY;
-  if (!API_KEY) {
-    throw new Error("GEMINI_API_KEY is not set.");
+  if (!API_KEY || API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+    throw new Error("GEMINI_API_KEY is not set in the .env file.");
   }
   const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
   
@@ -37,6 +37,7 @@ async function callGemini(prompt: string): Promise<GenerateRecoveryTipsOutput> {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       response_mime_type: "application/json",
+      temperature: 0.5,
     }
   };
 
@@ -48,12 +49,25 @@ async function callGemini(prompt: string): Promise<GenerateRecoveryTipsOutput> {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`API call failed with status ${response.status}: ${errorText}`);
+    console.error("Gemini API Error:", errorText);
+    throw new Error(`API call failed with status ${response.status}. Please check your API key and billing status.`);
   }
 
   const data = await response.json();
+  
+  if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
+      console.error("Unexpected Gemini API response structure:", data);
+      throw new Error("Failed to parse the response from the AI. The structure was not as expected.");
+  }
   const jsonText = data.candidates[0].content.parts[0].text;
-  return JSON.parse(jsonText) as GenerateRecoveryTipsOutput;
+  
+  try {
+    return JSON.parse(jsonText) as GenerateRecoveryTipsOutput;
+  } catch (e) {
+      console.error("Failed to parse JSON from Gemini response:", e);
+      console.error("Received text from API:", jsonText);
+      throw new Error("The AI returned an invalid response. Please try generating again.");
+  }
 }
 
 
@@ -65,9 +79,11 @@ export async function generateRecoveryTips(
 
   Please generate 3-5 actionable and effective recovery tips to help them alleviate muscle soreness and recover faster. For each tip, provide a clear title and a concise description. Focus on practical advice like stretching, nutrition, hydration, and rest techniques.
 
-  Return the response as a single, valid JSON object that conforms to this Zod schema:
+  You MUST return the response as a single, valid JSON object that strictly conforms to this Zod schema:
   
   const GenerateRecoveryTipsOutputSchema = ${JSON.stringify(GenerateRecoveryTipsOutputSchema.shape, null, 2)};
+
+  Do not add any introductory text or markdown formatting around the JSON object. The response must be only the JSON.
   `;
 
   return callGemini(prompt);
