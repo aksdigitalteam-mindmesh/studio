@@ -1,11 +1,11 @@
 "use server";
 
 const EXERCISEDB_API_URL = 'https://exercisedb.p.rapidapi.com';
-const API_KEY = '64af1fa9demsh6d0f3820b7a1c1fp1f4c4djsn4aa38d5fcf5d';
+const API_KEY = process.env.EXERCISEDB_API_KEY;
 
 export async function fetchExerciseGifById(exerciseId: string): Promise<string> {
-  if (!API_KEY) {
-    console.warn('ExerciseDB API key not found');
+  if (!API_KEY || API_KEY === 'YOUR_EXERCISEDB_API_KEY_HERE') {
+    console.warn('ExerciseDB API key not found in .env file. Please add EXERCISEDB_API_KEY.');
     return 'error';
   }
 
@@ -32,7 +32,6 @@ export async function fetchExerciseGifById(exerciseId: string): Promise<string> 
     }
 
     const data = await response.json();
-    console.log(`Data for ${exerciseId}:`, data);
     
     if (data && data.gifUrl) {
       console.log(`✅ Found GIF URL: ${data.gifUrl}`);

@@ -80,8 +80,8 @@ export type GenerateDietPlanOutput = z.infer<typeof GenerateDietPlanOutputSchema
 
 async function callGemini(prompt: string): Promise<GenerateDietPlanOutput> {
   const API_KEY = process.env.GEMINI_API_KEY;
-  if (!API_KEY || API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-    throw new Error("GEMINI_API_KEY is not set in the .env file.");
+  if (!API_KEY || API_KEY === 'YOUR_GEMINI_API_KEY_HERE' || API_KEY === 'SET_YOUR_API_KEY') {
+    throw new Error("GEMINI_API_KEY is not set in the .env file. Please add it and restart the server.");
   }
   const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
   
@@ -102,7 +102,7 @@ async function callGemini(prompt: string): Promise<GenerateDietPlanOutput> {
   if (!response.ok) {
     const errorText = await response.text();
     console.error("Gemini API Error:", errorText);
-    throw new Error(`API call failed with status ${response.status}. Please check your API key and billing status.`);
+    throw new Error(`API call failed with status ${response.status}. Please check your API key, billing status, and that the Generative Language API is enabled.`);
   }
 
   const data = await response.json();
@@ -118,7 +118,7 @@ async function callGemini(prompt: string): Promise<GenerateDietPlanOutput> {
   } catch (e) {
       console.error("Failed to parse JSON from Gemini response:", e);
       console.error("Received text from API:", jsonText);
-      throw new Error("The AI returned an invalid response. Please try generating again.");
+      throw new Error("The AI returned an invalid JSON response. Please try generating again.");
   }
 }
 
