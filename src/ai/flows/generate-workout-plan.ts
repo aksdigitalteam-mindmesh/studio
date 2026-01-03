@@ -1,7 +1,8 @@
 
 'use server';
 
-import { z } from 'genkit';
+import { z } from 'zod';
+import OpenAI from 'openai';
 
 const GenerateWorkoutPlanInputSchema = z.object({
   fitnessGoals: z
@@ -54,50 +55,38 @@ const GenerateWorkoutPlanOutputSchema = z.object({
 });
 export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutputSchema>;
 
-async function callGemini(prompt: string): Promise<GenerateWorkoutPlanOutput> {
-  const API_KEY = process.env.GEMINI_API_KEY;
-  if (!API_KEY || API_KEY === 'YOUR_GEMINI_API_KEY_HERE' || API_KEY === 'SET_YOUR_API_KEY') {
-    throw new Error("GEMINI_API_KEY is not set in the .env file. Please add it and restart the server.");
+async function callOpenAI(prompt: string): Promise<GenerateWorkoutPlanOutput> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not set in the .env file.");
   }
-  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
-  
-  const body = {
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: {
-      response_mime_type: "application/json",
-      temperature: 0.4,
-    }
-  };
+  const openai = new OpenAI({ apiKey });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.4,
+    response_format: { type: "json_object" },
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Gemini API Error:", errorText);
-    throw new Error(`API call failed with status ${response.status}. Please check your API key, billing status, and that the Generative Language API is enabled.`);
+  const jsonString = response.choices[0]?.message?.content;
+  if (!jsonString) {
+    throw new Error("Failed to get a valid response from the AI.");
   }
 
-  const data = await response.json();
-
-  if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
-      console.error("Unexpected Gemini API response structure:", data);
-      throw new Error("Failed to parse the response from the AI. The structure was not as expected.");
-  }
-  const jsonText = data.candidates[0].content.parts[0].text;
-  
   try {
-    return JSON.parse(jsonText) as GenerateWorkoutPlanOutput;
+    const parsedJson = JSON.parse(jsonString);
+    const validationResult = GenerateWorkoutPlanOutputSchema.safeParse(parsedJson);
+    if (!validationResult.success) {
+      console.error("AI output failed Zod validation:", validationResult.error);
+      throw new Error("The AI returned data in an unexpected format.");
+    }
+    return validationResult.data;
   } catch (e) {
-      console.error("Failed to parse JSON from Gemini response:", e);
-      console.error("Received text from API:", jsonText);
-      throw new Error("The AI returned an invalid JSON response. Please try generating again.");
+    console.error("Failed to parse JSON from AI response:", e);
+    throw new Error("The AI returned an invalid JSON response.");
   }
 }
-
 
 export async function generateWorkoutPlan(
   input: GenerateWorkoutPlanInput
@@ -105,33 +94,38 @@ export async function generateWorkoutPlan(
 
   const prompt = `You are an expert certified personal trainer. Generate a personalized 7-day workout plan based on the user's preferences.
 
-Fitness Goals: ${input.fitnessGoals}
-Intensity: ${input.intensity}
-Duration per session: ${input.duration} minutes
-Days per week: ${input.daysPerWeek}
-Equipment: ${input.equipment} equipment
-Body Focus: ${input.bodyFocus || 'Full Body'}
-Medical Conditions: ${input.medicalConditions || 'None'}
+  User Details:
+  - Fitness Goals: ${input.fitnessGoals}
+  - Intensity: ${input.intensity}
+  - Duration per session: ${input.duration} minutes
+  - Days per week: ${input.daysPerWeek}
+  - Equipment: ${input.equipment} equipment
+  - Body Focus: ${input.bodyFocus || 'Full Body'}
+  - Medical Conditions: ${input.medicalConditions || 'None'}
 
-If the user has specified any medical conditions, you MUST create a safe, low-impact workout plan and include a disclaimer to consult a doctor. Avoid high-impact exercises.
+  Your Task:
+  - Create a 7-day workout schedule.
+  - Provide a catchy title and a short description for the whole week.
+  - For each day, provide a day number, a title, a description, and a list of exercises.
+  - For each exercise, specify name, sets, reps, rest time, and the primary muscle groups targeted.
+  
+  Important Rules:
+  - If the user has specified any medical conditions, you MUST create a safe, low-impact workout plan and include a disclaimer to consult a doctor. Avoid high-impact exercises.
+  - You MUST structure the plan so that each major muscle group ('chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings') is trained at least twice during the 7-day week, provided the user works out 4 or more days. If they work out fewer than 4 days, train each muscle group at least once. Ensure proper rest between training the same muscle group.
+  - The number of workout days in the schedule should match the user's 'Days per week' preference. The remaining days should be rest days.
+  - For rest days, the 'exercises' array should be empty.
+  - The exercises must be appropriate for the selected equipment availability.
+  
+  JSON Output Formatting:
+  - For the 'exerciseId' field, use "0001" for all exercises (this is a placeholder).
+  - For the 'videoUrl' field for each exercise, you MUST return the string 'pending'.
+  - The 'muscleGroups' array must only contain values from this list: 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'.
+  - You MUST return the response as a single, valid JSON object that strictly conforms to this Zod schema:
 
-Important Rule: You MUST structure the plan so that each major muscle group ('chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings') is trained at least twice during the 7-day week, provided the user works out 4 or more days. If they work out fewer than 4 days, train each muscle group at least once. Ensure proper rest between training the same muscle group.
+  const GenerateWorkoutPlanOutputSchema = ${JSON.stringify(GenerateWorkoutPlanOutputSchema.shape, null, 2)};
 
-Provide a catchy title for the whole week, a short description, and a weekly schedule.
-For each of the 7 days, provide a day number, a title for the day's workout, a short description, and a list of specific exercises with sets, reps, rest times, and the primary muscle groups targeted.
-The number of workout days in the schedule should match the user's 'Days per week' preference. The remaining days should be rest days.
-The muscle groups must be from this list: 'chest', 'biceps', 'abs', 'quads', 'shoulders', 'back', 'triceps', 'glutes', 'hamstrings', 'calves'.
-For the exerciseId field, use "0001" for all exercises (this is a placeholder and will be replaced later).
-For the videoUrl field for each exercise, you MUST return the string 'pending'.
-If a day is a rest day, the 'exercises' array should be empty.
-The exercises should be appropriate for the selected equipment availability.
-
-You MUST return the response as a single, valid JSON object that strictly conforms to this Zod schema:
-
-const GenerateWorkoutPlanOutputSchema = ${JSON.stringify(GenerateWorkoutPlanOutputSchema.shape, null, 2)};
-
-Do not add any introductory text or markdown formatting around the JSON object. The response must be only the JSON.
+  Do not add any introductory text or markdown formatting around the JSON object. The response must be only the JSON.
 `;
   
-  return callGemini(prompt);
+  return callOpenAI(prompt);
 }

@@ -9,7 +9,8 @@
  * - GenerateDietPlanOutput - The return type for the generateDietPlan function.
  */
 
-import { z } from 'genkit';
+import { z } from 'zod';
+import OpenAI from 'openai';
 
 const GenerateDietPlanInputSchema = z.object({
   fitnessGoals: z
@@ -78,47 +79,38 @@ const GenerateDietPlanOutputSchema = z.object({
 
 export type GenerateDietPlanOutput = z.infer<typeof GenerateDietPlanOutputSchema>;
 
-async function callGemini(prompt: string): Promise<GenerateDietPlanOutput> {
-  const API_KEY = process.env.GEMINI_API_KEY;
-  if (!API_KEY || API_KEY === 'YOUR_GEMINI_API_KEY_HERE' || API_KEY === 'SET_YOUR_API_KEY') {
-    throw new Error("GEMINI_API_KEY is not set in the .env file. Please add it and restart the server.");
+async function callOpenAI(prompt: string): Promise<GenerateDietPlanOutput> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not set in the .env file.");
   }
-  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`;
-  
-  const body = {
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: {
-      response_mime_type: "application/json",
-      temperature: 0.7,
-    }
-  };
+  const openai = new OpenAI({ apiKey });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.7,
+    response_format: { type: "json_object" },
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Gemini API Error:", errorText);
-    throw new Error(`API call failed with status ${response.status}. Please check your API key, billing status, and that the Generative Language API is enabled.`);
+  const jsonString = response.choices[0]?.message?.content;
+  if (!jsonString) {
+    throw new Error("Failed to get a valid response from the AI.");
   }
 
-  const data = await response.json();
-  
-  if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
-      console.error("Unexpected Gemini API response structure:", data);
-      throw new Error("Failed to parse the response from the AI. The structure was not as expected.");
-  }
-  const jsonText = data.candidates[0].content.parts[0].text;
-  
   try {
-    return JSON.parse(jsonText) as GenerateDietPlanOutput;
+    // The response is a JSON string, so we parse it.
+    const parsedJson = JSON.parse(jsonString);
+    // Validate the parsed JSON against our Zod schema.
+    const validationResult = GenerateDietPlanOutputSchema.safeParse(parsedJson);
+    if (!validationResult.success) {
+      console.error("AI output failed Zod validation:", validationResult.error);
+      throw new Error("The AI returned data in an unexpected format.");
+    }
+    return validationResult.data;
   } catch (e) {
-      console.error("Failed to parse JSON from Gemini response:", e);
-      console.error("Received text from API:", jsonText);
-      throw new Error("The AI returned an invalid JSON response. Please try generating again.");
+    console.error("Failed to parse JSON from AI response:", e);
+    throw new Error("The AI returned an invalid JSON response.");
   }
 }
 
@@ -129,28 +121,29 @@ export async function generateDietPlan(
   
   const prompt = `You are a certified nutritionist and expert recipe creator. A paid member wants to generate a personalized 7-day diet plan with calorie and macro recommendations to optimize their nutrition for their fitness goals.
 
-  Fitness Goals: ${input.fitnessGoals}
-  Calorie Target: ~${input.calorieTarget} calories per day
-  Macro Ratio: ${input.macroRatio}
-  Cuisine Preference: ${input.cuisine || 'Any'}
-  Dietary Restrictions: ${input.dietaryRestrictions || 'None'}
-  Food Preferences: ${input.foodPreferences || 'None'}
-  Medical Conditions: ${input.medicalConditions || 'None'}
+  User Details:
+  - Fitness Goals: ${input.fitnessGoals}
+  - Calorie Target: ~${input.calorieTarget} calories per day
+  - Macro Ratio: ${input.macroRatio}
+  - Cuisine Preference: ${input.cuisine || 'Any'}
+  - Dietary Restrictions: ${input.dietaryRestrictions || 'None'}
+  - Food Preferences: ${input.foodPreferences || 'None'}
+  - Medical Conditions: ${input.medicalConditions || 'None'}
 
+  Your Task:
   Generate a detailed 7-day diet plan. For each day, provide:
   1. A full day of meals (Breakfast, Lunch, Dinner, and a Snack).
   2. For each meal, provide a short description, a detailed recipe (ingredients and instructions), and an estimation of calories and macros (protein, carbs, fat).
   3. A daily summary of total calories and macros.
 
-  The entire diet plan MUST align with the total daily calorie target and macro ratio. It also must respect all dietary restrictions, food preferences, medical conditions, and cuisine styles.
-  Create a catchy title and a brief, encouraging summary for the overall 7-day plan. Ensure the meals are varied and interesting across the 7 days.
-  
-  You MUST return the response as a single, valid JSON object that strictly conforms to this Zod schema:
-  
-  const GenerateDietPlanOutputSchema = ${JSON.stringify(GenerateDietPlanOutputSchema.shape, null, 2)};
-
-  Do not add any introductory text or markdown formatting around the JSON object. The response must be only the JSON.
+  Constraints:
+  - The entire diet plan MUST align with the total daily calorie target and macro ratio.
+  - It also must respect all dietary restrictions, food preferences, medical conditions, and cuisine styles.
+  - Create a catchy title and a brief, encouraging summary for the overall 7-day plan.
+  - Ensure the meals are varied and interesting across the 7 days.
+  - You MUST return the response as a single, valid JSON object. Do not add any introductory text, markdown formatting, or any other text outside of the JSON object.
+  - The JSON object must strictly conform to the structure of the following TypeScript type: ${JSON.stringify(GenerateDietPlanOutputSchema.shape, null, 2)}
   `;
 
-  return callGemini(prompt);
+  return callOpenAI(prompt);
 }
