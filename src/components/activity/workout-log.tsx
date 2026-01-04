@@ -5,11 +5,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Dumbbell, CheckCircle, Timer, SkipForward, ChevronRight, Play, X, ChevronLeft, Check } from "lucide-react";
+import { Dumbbell, CheckCircle, Timer, SkipForward, ChevronRight, Play, X, ChevronLeft, Check, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { saveCompletedWorkoutAction } from "@/lib/workout-log-actions";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 // --- Types ---
 type Exercise = {
@@ -17,7 +17,7 @@ type Exercise = {
   sets: string;
   reps: string;
   rest: string;
-  videoUrl: string;
+  videoUrl: string; // Can be an image URL
   muscleGroups?: string[];
 };
 
@@ -199,8 +199,8 @@ export function WorkoutLog() {
                     <div className="flex items-center gap-4">
                       <div className="relative h-20 w-28 rounded-md overflow-hidden bg-muted flex items-center justify-center">
                         {exercise.videoUrl && exercise.videoUrl !== 'error' ? (
-                          <video src={exercise.videoUrl} loop autoPlay muted playsInline className="h-full w-full object-cover"></video>
-                        ) : (<Dumbbell className="h-8 w-8 text-muted-foreground" />)}
+                          <Image src={exercise.videoUrl} alt={exercise.name} layout="fill" objectFit="cover" />
+                        ) : (<ImageIcon className="h-8 w-8 text-muted-foreground" />)}
                       </div>
                       <div>
                         <h3 className="font-semibold">{exercise.name}</h3>
@@ -240,10 +240,10 @@ export function WorkoutLog() {
 
             <div className="relative flex-grow w-full overflow-hidden rounded-lg bg-muted">
                  {currentExercise.videoUrl && currentExercise.videoUrl !== 'error' ? (
-                    <video key={currentExercise.videoUrl} src={currentExercise.videoUrl} loop autoPlay muted playsInline className="h-full w-full object-cover"></video>
+                    <Image src={currentExercise.videoUrl} key={currentExercise.videoUrl} alt={`Instructional image for ${currentExercise.name}`} layout="fill" objectFit="contain" />
                 ) : (
                     <div className="flex items-center justify-center h-full">
-                        <Dumbbell className="h-16 w-16 text-muted-foreground" />
+                        <ImageIcon className="h-16 w-16 text-muted-foreground" />
                     </div>
                 )}
             </div>

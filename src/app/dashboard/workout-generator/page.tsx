@@ -18,7 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { generateWorkoutPlanAction } from "@/lib/actions";
 import { workoutPlanSchema } from "@/lib/schemas";
 import { useState, useTransition, useEffect } from "react";
-import { Loader2, VideoOff, CheckCircle, ShieldAlert, Calendar, Dumbbell, Star } from "lucide-react";
+import { Loader2, VideoOff, CheckCircle, ShieldAlert, Calendar, Dumbbell, Star, ImageOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -27,6 +27,7 @@ import { useUsageTracker } from "@/hooks/use-usage-tracker";
 import { useAuthContext } from "@/hooks/use-auth";
 import { doc, getDoc } from "firebase/firestore";
 import { useFirebase } from "@/firebase";
+import Image from "next/image";
 
 type Exercise = {
   name: string;
@@ -34,7 +35,7 @@ type Exercise = {
   sets: string;
   reps: string;
   rest: string;
-  videoUrl: string;
+  videoUrl: string; // This might now be an image URL
   muscleGroups?: string[];
 };
 
@@ -303,8 +304,8 @@ export default function WorkoutGeneratorPage() {
             {isPending && (
                 <div className="flex h-full flex-col items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="mt-4 text-muted-foreground">Generating your workout and videos...</p>
-                    <p className="text-sm text-muted-foreground">(This may take a minute or two)</p>
+                    <p className="mt-4 text-muted-foreground">Generating your workout and images...</p>
+                    <p className="text-sm text-muted-foreground">(This may take a minute)</p>
                 </div>
             )}
             {result && (
@@ -339,12 +340,12 @@ export default function WorkoutGeneratorPage() {
                                             <AccordionTrigger>
                                                 <div className="flex items-center gap-4">
                                                     <div className="relative h-16 w-28 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                                                    {exercise.videoUrl !== 'error' ? (
-                                                        <video src={exercise.videoUrl} loop autoPlay muted playsInline className="h-full w-full object-cover"></video>
+                                                    {exercise.videoUrl && exercise.videoUrl !== 'error' ? (
+                                                        <Image src={exercise.videoUrl} alt={`Image for ${exercise.name}`} layout="fill" objectFit="cover" />
                                                     ) : (
                                                         <div className="flex flex-col items-center text-destructive">
-                                                            <VideoOff className="h-6 w-6" />
-                                                            <span className="text-xs">No video</span>
+                                                            <ImageOff className="h-6 w-6" />
+                                                            <span className="text-xs">No image</span>
                                                         </div>
                                                     )}
                                                     </div>
@@ -355,18 +356,14 @@ export default function WorkoutGeneratorPage() {
                                                 </div>
                                             </AccordionTrigger>
                                             <AccordionContent>
-                                                <div className="bg-muted p-2 rounded mb-2 text-xs">
-                                                  <p>Exercise ID: {exercise.exerciseId || 'MISSING'}</p>
-                                                  <p>Video URL: {exercise.videoUrl || 'NONE'}</p>
-                                                </div>
                                                 <div className="prose dark:prose-invert prose-sm max-w-none pl-4 border-l-2 ml-5">
                                                     <p><strong>Rest:</strong> {exercise.rest}</p>
                                                     <p><strong>Muscles:</strong> {exercise.muscleGroups?.join(', ')}</p>
                                                     {exercise.videoUrl === 'error' && (
                                                         <Alert variant="destructive" className="mt-2">
-                                                        <AlertTitle>Video Generation Failed</AlertTitle>
+                                                        <AlertTitle>Image Generation Failed</AlertTitle>
                                                         <AlertDescription>
-                                                            We couldn't generate a video for this exercise.
+                                                            We couldn't generate an image for this exercise.
                                                         </AlertDescription>
                                                         </Alert>
                                                     )}

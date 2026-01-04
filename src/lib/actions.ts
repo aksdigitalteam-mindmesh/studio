@@ -1,3 +1,4 @@
+
 "use server";
 
 import { z } from "zod";
@@ -5,7 +6,7 @@ import { generateWorkoutPlan as genWorkoutPlan } from "@/ai/flows/generate-worko
 import { generateDietPlan as genDietPlan } from "@/ai/flows/generate-diet-plan";
 import { dietPlanSchema, workoutPlanSchema } from "./schemas";
 import { generateRecoveryTips as genRecoveryTips } from "@/ai/flows/generate-recovery-tips";
-import { enrichWorkoutPlanWithGifs } from "./exercise-preview-service";
+import { enrichWorkoutPlanWithImages } from "./exercise-preview-service";
 import { getExerciseId } from "./exercise-database";
 
 export async function generateWorkoutPlanAction(values: z.infer<typeof workoutPlanSchema> & { medicalConditions?: string }) {
@@ -35,10 +36,10 @@ export async function generateWorkoutPlanAction(values: z.infer<typeof workoutPl
       }
     }
     
-    // Step 3: Enrich with exercise GIFs
-    console.log('Fetching exercise GIFs...');
-    const enrichedPlan = await enrichWorkoutPlanWithGifs(aiGeneratedPlan);
-    console.log('Workout plan complete with GIFs');
+    // Step 3: Enrich with exercise Images
+    console.log('Fetching exercise images...');
+    const enrichedPlan = await enrichWorkoutPlanWithImages(aiGeneratedPlan);
+    console.log('Workout plan complete with images');
     
     return { data: enrichedPlan };
   } catch (error: any) {

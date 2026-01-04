@@ -2,72 +2,74 @@
 'use server';
 
 /**
- * @fileOverview Generates a video for a given fitness exercise.
+ * @fileOverview Generates an image for a given fitness exercise using DALL-E 3.
  *
- * - generateExerciseMedia - A function that generates a video for an exercise.
+ * - generateExerciseMedia - A function that generates an image for an exercise.
  * - GenerateExerciseMediaInput - The input type for the generateExerciseMedia function.
  * - GenerateExerciseMediaOutput - The return type for the generateExerciseMedia function.
  */
 
-import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/google-genai';
-import { z } from 'genkit';
+import { z } from 'zod';
+import OpenAI from 'openai';
 
 const GenerateExerciseMediaInputSchema = z.object({
-  exerciseName: z.string().describe('The name of the exercise to generate a video for.'),
+  exerciseName: z.string().describe('The name of the exercise to generate an image for.'),
 });
 export type GenerateExerciseMediaInput = z.infer<typeof GenerateExerciseMediaInputSchema>;
 
 const GenerateExerciseMediaOutputSchema = z.object({
-  videoUrl: z.string().describe('The data URI of the generated video, or an error string.'),
+  imageUrl: z.string().describe('The URL of the generated image, or an error string.'),
 });
 export type GenerateExerciseMediaOutput = z.infer<typeof GenerateExerciseMediaOutputSchema>;
+
+
+async function callOpenAI(prompt: string): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not set in the .env file.");
+  }
+  const openai = new OpenAI({ apiKey });
+
+  try {
+    const response = await openai.images.generate({
+        model: "dall-e-3",
+        prompt: prompt,
+        n: 1,
+        size: "1024x1024",
+        response_format: 'url',
+    });
+
+    const imageUrl = response.data[0].url;
+    if (!imageUrl) {
+        throw new Error("Failed to get a valid image URL from the AI.");
+    }
+    return imageUrl;
+  } catch (error: any) {
+     console.error("Error calling OpenAI Image API:", error);
+     throw new Error(error.message || "An unknown error occurred while generating the image.");
+  }
+}
 
 
 export async function generateExerciseMedia(
   { exerciseName }: GenerateExerciseMediaInput
 ): Promise<GenerateExerciseMediaOutput> {
   try {
-      let { operation } = await ai.generate({
-        model: googleAI.model('veo-2.0-generate-001'),
-        prompt: `Generate a clean, simple, vector-style animation of a person performing the '${exerciseName}' exercise. The background should be a solid, light grey color. The person should be gender-neutral and wearing simple workout attire. The style should be minimalist and clear, focusing on proper form.`,
-        config: {
-          durationSeconds: 6,
-          aspectRatio: '16:9',
-        },
-      });
+      const prompt = `Generate a clean, simple, vector-style instructional illustration of a person performing the '${exerciseName}' exercise. The background should be a solid, light grey color. The person should be gender-neutral and wearing simple workout attire. The style should be minimalist and clear, focusing on proper form, like a diagram in a fitness manual.`;
 
-      if (!operation) {
-          throw new Error('Expected the model to return an operation');
-      }
+      const imageUrl = await callOpenAI(prompt);
 
-      // Wait for the operation to complete
-      while (!operation.done) {
-          await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds
-          operation = await ai.checkOperation(operation);
-          if (!operation) { // Add a check here in case checkOperation fails
-            throw new Error('Operation status check failed.');
-          }
-      }
-
-      if (operation.error) {
-          throw new Error(`Video generation failed: ${operation.error.message}`);
-      }
-
-      const video = operation.output?.message?.content.find((p) => !!p.media);
-      
-      if (!video || !video.media?.url) {
-        throw new Error('Video generation failed or returned no media.');
+      if (!imageUrl) {
+        throw new Error('Image generation failed or returned no media.');
       }
 
       return {
-        videoUrl: video.media.url,
+        imageUrl: imageUrl,
       };
     } catch (error) {
-      console.error(`Failed to generate video for ${exerciseName}:`, error);
-      // Return a placeholder or a specific error indicator URL
+      console.error(`Failed to generate image for ${exerciseName}:`, error);
       return {
-        videoUrl: 'error' 
+        imageUrl: 'error' 
       };
     }
 }
