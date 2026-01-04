@@ -36,7 +36,7 @@ interface UserProfile {
     weight?: number;
     targetWeight?: number;
     fitnessGoal?: 'weight-loss' | 'build-muscle' | 'endurance';
-    intensity?: 'beginner' | 'intermediate' | 'advanced';
+    intensity?: 'low' | 'medium' | 'high';
     goalLastUpdated?: any; 
     goalUpdateCount?: number;
 }
@@ -252,3 +252,5 @@ export const useAuthContext = () => {
   }
   return context;
 };
+
+    

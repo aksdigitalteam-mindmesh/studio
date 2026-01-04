@@ -79,11 +79,21 @@ export default function WorkoutGeneratorPage() {
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists()) {
                 const userData = userDoc.data();
+
+                // Map old intensity values to new ones for backwards compatibility
+                let intensityValue: 'low' | 'medium' | 'high' = 'medium';
+                if (userData.intensity === 'beginner') intensityValue = 'low';
+                if (userData.intensity === 'intermediate') intensityValue = 'medium';
+                if (userData.intensity === 'advanced') intensityValue = 'high';
+                if (['low', 'medium', 'high'].includes(userData.intensity)) {
+                    intensityValue = userData.intensity;
+                }
+
                 form.reset({
                     duration: userData.workoutDuration || 60,
                     daysPerWeek: userData.workoutDaysPerWeek || 5,
                     fitnessGoals: form.getValues('fitnessGoals'),
-                    intensity: userData.intensity || 'medium',
+                    intensity: intensityValue,
                     equipment: form.getValues('equipment'),
                     bodyFocus: form.getValues('bodyFocus'),
                 });
@@ -242,7 +252,7 @@ export default function WorkoutGeneratorPage() {
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                           className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
                         >
                           <FormItem className="flex items-center space-x-3 space-y-0">
@@ -394,3 +404,5 @@ export default function WorkoutGeneratorPage() {
     </div>
   );
 }
+
+    

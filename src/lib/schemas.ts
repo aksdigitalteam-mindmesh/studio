@@ -38,7 +38,7 @@ export const signupSchema = loginSchema.extend({
   fitnessGoal: z.enum(["weight-loss", "build-muscle", "endurance"], {
     required_error: "You need to select a fitness goal.",
   }),
-  intensity: z.enum(["beginner", "intermediate", "advanced"], {
+  intensity: z.enum(["low", "medium", "high"], {
       required_error: "You need to select an intensity level.",
   }),
 }).refine(data => {
@@ -70,3 +70,5 @@ export const onboardingSchema = z.object({
         required_error: "You need to select an intensity level.",
     }),
 });
+
+    

@@ -56,7 +56,7 @@ export default function LoginPage() {
       weight: 70,
       targetWeight: 65,
       fitnessGoal: "weight-loss",
-      intensity: "beginner",
+      intensity: "medium",
     },
   });
   
@@ -363,16 +363,16 @@ export default function LoginPage() {
                                   className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
                                 >
                                   <FormItem className="flex items-center space-x-3 space-y-0">
-                                    <FormControl><RadioGroupItem value="beginner" /></FormControl>
-                                    <FormLabel className="font-normal">Beginner</FormLabel>
+                                    <FormControl><RadioGroupItem value="low" /></FormControl>
+                                    <FormLabel className="font-normal">Beginner (Low)</FormLabel>
                                   </FormItem>
                                   <FormItem className="flex items-center space-x-3 space-y-0">
-                                    <FormControl><RadioGroupItem value="intermediate" /></FormControl>
-                                    <FormLabel className="font-normal">Intermediate</FormLabel>
+                                    <FormControl><RadioGroupItem value="medium" /></FormControl>
+                                    <FormLabel className="font-normal">Intermediate (Medium)</FormLabel>
                                   </FormItem>
                                   <FormItem className="flex items-center space-x-3 space-y-0">
-                                    <FormControl><RadioGroupItem value="advanced" /></FormControl>
-                                    <FormLabel className="font-normal">Advanced</FormLabel>
+                                    <FormControl><RadioGroupItem value="high" /></FormControl>
+                                    <FormLabel className="font-normal">Advanced (High)</FormLabel>
                                   </FormItem>
                                 </RadioGroup>
                               </FormControl>
@@ -468,3 +468,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
