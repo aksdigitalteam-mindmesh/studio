@@ -81,13 +81,13 @@ export type GenerateDietPlanOutput = z.infer<typeof GenerateDietPlanOutputSchema
 
 async function callOpenAI(prompt: string): Promise<GenerateDietPlanOutput> {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not set in the .env file.");
+  if (!apiKey || apiKey === "YOUR_OPENAI_API_KEY_HERE") {
+    throw new Error("OPENAI_API_KEY is not set or is a placeholder in the .env file.");
   }
   const openai = new OpenAI({ apiKey });
 
   const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
     response_format: { type: "json_object" },
