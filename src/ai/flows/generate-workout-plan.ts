@@ -57,14 +57,14 @@ export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutput
 
 async function callOpenAI(prompt: string): Promise<GenerateWorkoutPlanOutput> {
   const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo-1106",
+    model: "gpt-4o-mini",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.4,
     response_format: { type: "json_object" },
   });
 
   const jsonString = response.choices[0]?.message?.content;
-  if (!jsonString) {
+  if (!jsonString || typeof jsonString !== 'string') {
     throw new Error("Failed to get a valid response from the AI.");
   }
 
