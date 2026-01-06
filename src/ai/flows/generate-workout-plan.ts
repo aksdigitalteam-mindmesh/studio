@@ -57,7 +57,7 @@ export type GenerateWorkoutPlanOutput = z.infer<typeof GenerateWorkoutPlanOutput
 
 async function callOpenAI(prompt: string): Promise<GenerateWorkoutPlanOutput> {
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-3.5-turbo-1106",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.4,
     response_format: { type: "json_object" },
