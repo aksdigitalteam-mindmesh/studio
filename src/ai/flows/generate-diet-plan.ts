@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import OpenAI from 'openai';
+import { openai } from '@/lib/openai';
 
 const GenerateDietPlanInputSchema = z.object({
   fitnessGoals: z
@@ -80,12 +80,6 @@ const GenerateDietPlanOutputSchema = z.object({
 export type GenerateDietPlanOutput = z.infer<typeof GenerateDietPlanOutputSchema>;
 
 async function callOpenAI(prompt: string): Promise<GenerateDietPlanOutput> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || apiKey === "YOUR_OPENAI_API_KEY_HERE") {
-    throw new Error("OPENAI_API_KEY is not set or is a placeholder in the .env file.");
-  }
-  const openai = new OpenAI({ apiKey });
-
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [{ role: "user", content: prompt }],
@@ -99,9 +93,7 @@ async function callOpenAI(prompt: string): Promise<GenerateDietPlanOutput> {
   }
 
   try {
-    // The response is a JSON string, so we parse it.
     const parsedJson = JSON.parse(jsonString);
-    // Validate the parsed JSON against our Zod schema.
     const validationResult = GenerateDietPlanOutputSchema.safeParse(parsedJson);
     if (!validationResult.success) {
       console.error("AI output failed Zod validation:", validationResult.error);

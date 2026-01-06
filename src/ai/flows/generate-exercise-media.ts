@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import OpenAI from 'openai';
+import { openai } from '@/lib/openai';
 
 const GenerateExerciseMediaInputSchema = z.object({
   exerciseName: z.string().describe('The name of the exercise to generate an image for.'),
@@ -24,12 +24,6 @@ export type GenerateExerciseMediaOutput = z.infer<typeof GenerateExerciseMediaOu
 
 
 async function callOpenAI(prompt: string): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not set in the .env file.");
-  }
-  const openai = new OpenAI({ apiKey });
-
   try {
     const response = await openai.images.generate({
         model: "dall-e-3",
@@ -46,6 +40,10 @@ async function callOpenAI(prompt: string): Promise<string> {
     return imageUrl;
   } catch (error: any) {
      console.error("Error calling OpenAI Image API:", error);
+     // Check for specific billing error
+     if (error.code === 'billing_not_active') {
+       throw new Error("OpenAI account has no credit. Please add credit to your account to generate images.");
+     }
      throw new Error(error.message || "An unknown error occurred while generating the image.");
   }
 }

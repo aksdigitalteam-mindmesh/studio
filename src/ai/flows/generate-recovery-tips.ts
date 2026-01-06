@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import OpenAI from 'openai';
+import { openai } from '@/lib/openai';
 
 const GenerateRecoveryTipsInputSchema = z.object({
   fatiguedMuscles: z.array(z.string()).describe('A list of the most fatigued muscle groups.'),
@@ -28,12 +28,6 @@ const GenerateRecoveryTipsOutputSchema = z.object({
 export type GenerateRecoveryTipsOutput = z.infer<typeof GenerateRecoveryTipsOutputSchema>;
 
 async function callOpenAI(prompt: string): Promise<GenerateRecoveryTipsOutput> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || apiKey === "YOUR_OPENAI_API_KEY_HERE") {
-    throw new Error("OPENAI_API_KEY is not set or is a placeholder in the .env file.");
-  }
-  const openai = new OpenAI({ apiKey });
-
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [{ role: "user", content: prompt }],
