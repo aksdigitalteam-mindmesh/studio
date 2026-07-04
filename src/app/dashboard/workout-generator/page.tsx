@@ -18,11 +18,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { generateWorkoutPlanAction } from "@/lib/actions";
 import { workoutPlanSchema } from "@/lib/schemas";
 import { useState, useTransition, useEffect } from "react";
-import { Loader2, VideoOff, CheckCircle, ShieldAlert, Calendar, Dumbbell, Star, ImageOff } from "lucide-react";
+import { Loader2, Calendar, Star, ImageOff, Library } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useUsageTracker } from "@/hooks/use-usage-tracker";
 import { useAuthContext } from "@/hooks/use-auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -35,7 +34,7 @@ type Exercise = {
   sets: string;
   reps: string;
   rest: string;
-  videoUrl: string; // This might now be an image URL
+  videoUrl: string;
   muscleGroups?: string[];
 };
 
@@ -56,7 +55,7 @@ export default function WorkoutGeneratorPage() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<WorkoutPlan | null>(null);
   const { toast } = useToast();
-  const { canUse, recordUsage, usagesLeft } = useUsageTracker();
+  const { recordUsage } = useUsageTracker();
   const { user, profile } = useAuthContext();
   const { firestore } = useFirebase();
 
@@ -79,21 +78,11 @@ export default function WorkoutGeneratorPage() {
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists()) {
                 const userData = userDoc.data();
-
-                // Map old intensity values to new ones for backwards compatibility
-                let intensityValue: 'low' | 'medium' | 'high' = 'medium';
-                if (userData.intensity === 'beginner') intensityValue = 'low';
-                if (userData.intensity === 'intermediate') intensityValue = 'medium';
-                if (userData.intensity === 'advanced') intensityValue = 'high';
-                if (['low', 'medium', 'high'].includes(userData.intensity)) {
-                    intensityValue = userData.intensity;
-                }
-
                 form.reset({
                     duration: userData.workoutDuration || 60,
                     daysPerWeek: userData.workoutDaysPerWeek || 5,
                     fitnessGoals: form.getValues('fitnessGoals'),
-                    intensity: intensityValue,
+                    intensity: userData.intensity || 'medium',
                     equipment: form.getValues('equipment'),
                     bodyFocus: form.getValues('bodyFocus'),
                 });
@@ -105,15 +94,6 @@ export default function WorkoutGeneratorPage() {
 
 
   function onSubmit(values: z.infer<typeof workoutPlanSchema>) {
-    if (!canUse()) {
-        toast({
-          variant: "destructive",
-          title: "Usage Limit Reached",
-          description: "You have used all your AI generations for this week.",
-        });
-        return;
-    }
-
     setResult(null);
     startTransition(async () => {
       const response = await generateWorkoutPlanAction({
@@ -128,17 +108,12 @@ export default function WorkoutGeneratorPage() {
         });
       }
       if (response.data) {
-        recordUsage(); // Record usage only on success
+        recordUsage();
         setResult(response.data);
         try {
           localStorage.setItem('latestWorkoutPlan', JSON.stringify(response.data));
         } catch (e) {
-            console.error("Could not save workout plan to local storage", e);
-             toast({
-              variant: "destructive",
-              title: "Could not save workout",
-              description: "There was an issue saving your workout plan for the dashboard.",
-            });
+            console.error("Could not save workout plan", e);
         }
       }
     });
@@ -154,24 +129,15 @@ export default function WorkoutGeneratorPage() {
     }
   };
 
-  const isAtLimit = !canUse();
-
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
-            <CardTitle>Your Preferences</CardTitle>
-            <CardDescription>Tell us what you're looking for in a workout.</CardDescription>
+            <CardTitle>Plan Preferences</CardTitle>
+            <CardDescription>We'll build your plan using our inbuilt exercise library.</CardDescription>
           </CardHeader>
           <CardContent>
-            {isAtLimit && (
-                 <Alert variant="destructive" className="mb-6">
-                    <ShieldAlert className="h-4 w-4" />
-                    <AlertTitle>Weekly Limit Reached</AlertTitle>
-                    <AlertDescription>You have used all your AI generations for the week. Please check back later.</AlertDescription>
-                </Alert>
-            )}
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
@@ -187,32 +153,34 @@ export default function WorkoutGeneratorPage() {
                     </FormItem>
                   )}
                 />
-                 <FormField
-                  control={form.control}
-                  name="duration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Workout Time Per Day (minutes)</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="e.g., 60" {...field} />
-                      </FormControl>
-                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="daysPerWeek"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Days Per Week</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="e.g., 5" {...field} />
-                      </FormControl>
-                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                 <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                    control={form.control}
+                    name="duration"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Daily Mins</FormLabel>
+                        <FormControl>
+                            <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="daysPerWeek"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Days / Week</FormLabel>
+                        <FormControl>
+                            <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                </div>
                 <FormField
                   control={form.control}
                   name="equipment"
@@ -223,19 +191,15 @@ export default function WorkoutGeneratorPage() {
                         <RadioGroup
                           onValueChange={field.onChange}
                           defaultValue={field.value}
-                          className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
+                          className="flex gap-4"
                         >
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="with" />
-                            </FormControl>
-                            <FormLabel className="font-normal">With Equipment</FormLabel>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl><RadioGroupItem value="with" /></FormControl>
+                            <FormLabel className="font-normal">Yes</FormLabel>
                           </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="without" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Without Equipment</FormLabel>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl><RadioGroupItem value="without" /></FormControl>
+                            <FormLabel className="font-normal">No</FormLabel>
                           </FormItem>
                         </RadioGroup>
                       </FormControl>
@@ -248,29 +212,23 @@ export default function WorkoutGeneratorPage() {
                   name="intensity"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel>Desired Intensity</FormLabel>
+                      <FormLabel>Intensity</FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
                           value={field.value}
-                          className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
+                          className="flex gap-4"
                         >
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="low" />
-                            </FormControl>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl><RadioGroupItem value="low" /></FormControl>
                             <FormLabel className="font-normal">Low</FormLabel>
                           </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="medium" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Medium</FormLabel>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl><RadioGroupItem value="medium" /></FormControl>
+                            <FormLabel className="font-normal">Med</FormLabel>
                           </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="high" />
-                            </FormControl>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl><RadioGroupItem value="high" /></FormControl>
                             <FormLabel className="font-normal">High</FormLabel>
                           </FormItem>
                         </RadioGroup>
@@ -279,26 +237,18 @@ export default function WorkoutGeneratorPage() {
                     </FormItem>
                   )}
                 />
-                 <FormField
-                  control={form.control}
-                  name="bodyFocus"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Body Part Focus (optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Legs, Core, Arms" {...field} />
-                      </FormControl>
-                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={isPending || isAtLimit} className="w-full">
+                <Button type="submit" disabled={isPending} className="w-full">
                   {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
+                      Building Plan...
                     </>
-                  ) : "Generate 7-Day Workout"}
+                  ) : (
+                      <>
+                        <Library className="mr-2 h-4 w-4" />
+                        Build My Workout
+                      </>
+                  )}
                 </Button>
               </form>
             </Form>
@@ -307,15 +257,14 @@ export default function WorkoutGeneratorPage() {
 
         <Card className="flex flex-col min-h-[400px]">
             <CardHeader>
-                <CardTitle>Your Personalized Workout</CardTitle>
-                <CardDescription>Your AI-generated 7-day workout plan will appear here.</CardDescription>
+                <CardTitle>Generated Workout</CardTitle>
+                <CardDescription>Your 7-day plan from our local exercise library.</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
             {isPending && (
                 <div className="flex h-full flex-col items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="mt-4 text-muted-foreground">Generating your workout and images...</p>
-                    <p className="text-sm text-muted-foreground">(This may take a minute)</p>
+                    <p className="mt-4 text-muted-foreground">Selecting exercises...</p>
                 </div>
             )}
             {result && (
@@ -324,9 +273,9 @@ export default function WorkoutGeneratorPage() {
                     <h2 className="text-2xl font-bold font-headline">{result.title}</h2>
                     <p className="text-muted-foreground mt-2">{result.description}</p>
                   </div>
-                   <Button onClick={handleSavePlan} className="w-full">
+                   <Button onClick={handleSavePlan} className="w-full" variant="secondary">
                       <Star className="mr-2 h-4 w-4" />
-                      Set as My Active Workout Plan
+                      Set as Active Plan
                     </Button>
                   <Accordion type="single" collapsible className="w-full" defaultValue="day-1">
                     {result.weeklySchedule.map((day) => (
@@ -336,9 +285,9 @@ export default function WorkoutGeneratorPage() {
                              <div className="bg-primary/10 p-3 rounded-full">
                                <Calendar className="h-6 w-6 text-primary" />
                              </div>
-                             <div>
-                               <p className="font-semibold text-left">Day {day.day}: {day.title}</p>
-                               <p className="text-sm text-muted-foreground text-left">{day.description}</p>
+                             <div className="text-left">
+                               <p className="font-semibold">Day {day.day}: {day.title}</p>
+                               <p className="text-sm text-muted-foreground">{day.exercises?.length || 0} exercises</p>
                              </div>
                            </div>
                          </AccordionTrigger>
@@ -351,17 +300,16 @@ export default function WorkoutGeneratorPage() {
                                                 <div className="flex items-center gap-4">
                                                     <div className="relative h-16 w-28 rounded-md overflow-hidden bg-muted flex items-center justify-center">
                                                     {exercise.videoUrl && exercise.videoUrl !== 'error' ? (
-                                                        <Image src={exercise.videoUrl} alt={`Image for ${exercise.name}`} layout="fill" objectFit="cover" />
+                                                        <Image src={exercise.videoUrl} alt={exercise.name} layout="fill" objectFit="cover" />
                                                     ) : (
-                                                        <div className="flex flex-col items-center text-destructive">
+                                                        <div className="flex flex-col items-center text-muted-foreground">
                                                             <ImageOff className="h-6 w-6" />
-                                                            <span className="text-xs">No image</span>
                                                         </div>
                                                     )}
                                                     </div>
-                                                    <div>
-                                                        <p className="font-semibold text-left">{exercise.name}</p>
-                                                        <p className="text-sm text-muted-foreground text-left">{exercise.sets} sets, {exercise.reps} reps</p>
+                                                    <div className="text-left">
+                                                        <p className="font-semibold">{exercise.name}</p>
+                                                        <p className="text-sm text-muted-foreground">{exercise.sets} sets, {exercise.reps} reps</p>
                                                     </div>
                                                 </div>
                                             </AccordionTrigger>
@@ -369,14 +317,6 @@ export default function WorkoutGeneratorPage() {
                                                 <div className="prose dark:prose-invert prose-sm max-w-none pl-4 border-l-2 ml-5">
                                                     <p><strong>Rest:</strong> {exercise.rest}</p>
                                                     <p><strong>Muscles:</strong> {exercise.muscleGroups?.join(', ')}</p>
-                                                    {exercise.videoUrl === 'error' && (
-                                                        <Alert variant="destructive" className="mt-2">
-                                                        <AlertTitle>Image Generation Failed</AlertTitle>
-                                                        <AlertDescription>
-                                                            We couldn't generate an image for this exercise.
-                                                        </AlertDescription>
-                                                        </Alert>
-                                                    )}
                                                 </div>
                                             </AccordionContent>
                                         </AccordionItem>
@@ -395,7 +335,7 @@ export default function WorkoutGeneratorPage() {
             )}
             {!isPending && !result && (
                  <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed bg-muted/50">
-                    <p className="text-muted-foreground">Waiting for generation...</p>
+                    <p className="text-muted-foreground">Choose preferences and click build.</p>
                  </div>
             )}
             </CardContent>
@@ -404,5 +344,3 @@ export default function WorkoutGeneratorPage() {
     </div>
   );
 }
-
-    
