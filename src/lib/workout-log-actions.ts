@@ -4,6 +4,7 @@
 // These are client-side actions that interact with localStorage
 const WORKOUT_LOG_STORAGE_KEY = 'completedWorkouts';
 const FATIGUE_STORAGE_KEY = 'muscleFatigueData';
+const LAST_RECOVERY_KEY = 'lastFatigueRecoveryDate';
 
 type CompletedWorkout = {
   title: string;
@@ -24,20 +25,30 @@ const FATIGUE_INCREASE = {
     high: 70
 };
 
+/**
+ * Updates muscle fatigue levels based on the workout performed.
+ * Also handles daily 15% recovery for all muscles.
+ */
 function updateFatigueLevels(payload: SaveWorkoutPayload) {
   if (typeof window === 'undefined') return;
 
   const fatigueString = localStorage.getItem(FATIGUE_STORAGE_KEY);
   let fatigueData: FatigueData = fatigueString ? JSON.parse(fatigueString) : {};
 
-  const trainedMuscles = new Set(payload.muscleGroups.map(m => m.toLowerCase()));
+  // 1. Handle Automatic Recovery (once per day)
+  const today = new Date().toDateString();
+  const lastRecovery = localStorage.getItem(LAST_RECOVERY_KEY);
+  
+  if (lastRecovery !== today) {
+    Object.keys(fatigueData).forEach(muscle => {
+       fatigueData[muscle] = Math.max(0, (fatigueData[muscle] || 0) - 15);
+    });
+    localStorage.setItem(LAST_RECOVERY_KEY, today);
+  }
 
-  // Daily recovery for ALL muscles
-  Object.keys(fatigueData).forEach(muscle => {
-     fatigueData[muscle] = Math.max(0, (fatigueData[muscle] || 0) - 15);
-  });
+  // 2. Apply New Fatigue for trained muscles
+  const trainedMuscles = new Set(payload.muscleGroups.map(m => m.toLowerCase().trim()));
 
-  // Apply new fatigue for trained muscles
   trainedMuscles.forEach(muscle => {
     const currentFatigue = fatigueData[muscle] || 0;
     const increase = FATIGUE_INCREASE[payload.fatigueRating];
@@ -63,12 +74,16 @@ export function saveCompletedWorkoutAction(payload: SaveWorkoutPayload) {
   // Update fatigue levels based on the payload
   updateFatigueLevels(payload);
 
-  // Dispatch a storage event to notify other tabs/windows
+  // Dispatch a storage event to notify other tabs/windows and the current window
   window.dispatchEvent(new Event('storage'));
 }
 
 export function getCompletedWorkouts(): CompletedWorkout[] {
   if (typeof window === 'undefined') return [];
   const log = localStorage.getItem(WORKOUT_LOG_STORAGE_KEY);
-  return log ? JSON.parse(log) : [];
+  try {
+    return log ? JSON.parse(log) : [];
+  } catch {
+    return [];
+  }
 }

@@ -17,7 +17,7 @@ type Exercise = {
   sets: string;
   reps: string;
   rest: string;
-  videoUrl: string; // Can be an image URL
+  videoUrl: string;
   muscleGroups?: string[];
 };
 
@@ -75,11 +75,17 @@ export function WorkoutLog() {
       timer = setInterval(() => {
         setRestTimeLeft(prev => prev - 1);
       }, 1000);
-    } else if (sessionState === 'rest' && restTimeLeft <= 0) {
-      handleNext();
     }
     return () => clearInterval(timer);
   }, [sessionState, restTimeLeft, isPaused]);
+
+  // Handle rest end
+  useEffect(() => {
+    if (sessionState === 'rest' && restTimeLeft <= 0) {
+      setSessionState('exercise');
+      setCurrentExerciseIndex(prev => prev + 1);
+    }
+  }, [restTimeLeft, sessionState]);
 
 
   const startSession = (index = 0) => {
@@ -94,7 +100,7 @@ export function WorkoutLog() {
   const handleNext = () => {
     if (!activeWorkoutDay?.exercises) return;
 
-    setIsPaused(false); // Make sure timer isn't paused
+    setIsPaused(false);
     setRestTimeLeft(REST_DURATION_SECONDS);
 
     if (currentExerciseIndex < activeWorkoutDay.exercises.length - 1) {
@@ -104,17 +110,6 @@ export function WorkoutLog() {
     }
   };
   
-  const handleRestEnd = () => {
-      setSessionState('exercise');
-      setCurrentExerciseIndex(prev => prev + 1);
-  }
-
-  useEffect(() => {
-    if (sessionState === 'rest' && restTimeLeft <= 0) {
-      handleRestEnd();
-    }
-  }, [restTimeLeft, sessionState]);
-
   const skipRest = () => {
       setRestTimeLeft(0);
   }
@@ -127,18 +122,24 @@ export function WorkoutLog() {
 
   const handleCompleteWorkout = () => {
     if (activeWorkoutDay?.exercises && fatigueRating) {
-      const muscleGroups = Array.from(new Set(activeWorkoutDay.exercises.flatMap(ex => ex.muscleGroups || [])));
+      // Extract unique muscle groups from all exercises in the workout
+      const muscleGroups = Array.from(
+        new Set(activeWorkoutDay.exercises.flatMap(ex => ex.muscleGroups || []))
+      );
+
       saveCompletedWorkoutAction({
           title: activeWorkoutDay.title,
           muscleGroups,
           fatigueRating,
       });
-      toast({ title: "Workout Completed!", description: `Great job! "${activeWorkoutDay.title}" has been logged.` });
+
+      toast({ title: "Workout Logged!", description: `"${activeWorkoutDay.title}" and your muscle fatigue have been updated.` });
+      
       setSessionState('preview');
       setCurrentExerciseIndex(0);
       setFatigueRating(null);
     } else {
-        toast({ variant: "destructive", title: "Please rate your fatigue" });
+        toast({ variant: "destructive", title: "Missing Rating", description: "Please rate your fatigue level before logging." });
     }
   };
 
@@ -198,11 +199,11 @@ export function WorkoutLog() {
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="relative h-20 w-28 rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                        {exercise.videoUrl && exercise.videoUrl !== 'error' ? (
+                        {exercise.videoUrl && exercise.videoUrl !== 'error' && exercise.videoUrl !== 'pending' ? (
                           <Image src={exercise.videoUrl} alt={exercise.name} layout="fill" objectFit="cover" />
                         ) : (<ImageIcon className="h-8 w-8 text-muted-foreground" />)}
                       </div>
-                      <div>
+                      <div className="text-left">
                         <h3 className="font-semibold">{exercise.name}</h3>
                         <p className="text-sm text-muted-foreground">{exercise.sets} sets x {exercise.reps} reps</p>
                       </div>
@@ -239,7 +240,7 @@ export function WorkoutLog() {
             </div>
 
             <div className="relative flex-grow w-full overflow-hidden rounded-lg bg-muted">
-                 {currentExercise.videoUrl && currentExercise.videoUrl !== 'error' ? (
+                 {currentExercise.videoUrl && currentExercise.videoUrl !== 'error' && currentExercise.videoUrl !== 'pending' ? (
                     <Image src={currentExercise.videoUrl} key={currentExercise.videoUrl} alt={`Instructional image for ${currentExercise.name}`} layout="fill" objectFit="contain" />
                 ) : (
                     <div className="flex items-center justify-center h-full">
@@ -313,5 +314,5 @@ export function WorkoutLog() {
     )
   }
   
-  return null; // Should not happen
+  return null;
 }
