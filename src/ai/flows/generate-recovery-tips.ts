@@ -1,75 +1,54 @@
-
 'use server';
 
-/**
- * @fileOverview Generates recovery tips for fatigued muscles.
- *
- * - generateRecoveryTips - A function that generates recovery tips.
- * - GenerateRecoveryTipsInput - The input type for the generateRecoveryTips function.
- * - GenerateRecoveryTipsOutput - The return type for the generateRecoveryTips function.
- */
-
 import { z } from 'zod';
-import { openai } from '@/lib/openai';
 
 const GenerateRecoveryTipsInputSchema = z.object({
-  fatiguedMuscles: z.array(z.string()).describe('A list of the most fatigued muscle groups.'),
+  fatiguedMuscles: z.array(z.string()),
 });
 export type GenerateRecoveryTipsInput = z.infer<typeof GenerateRecoveryTipsInputSchema>;
 
 const TipSchema = z.object({
-    title: z.string().describe("A short, catchy title for the recovery tip."),
-    description: z.string().describe("A detailed, actionable description of the recovery technique."),
+  title: z.string(),
+  description: z.string(),
 });
 
 const GenerateRecoveryTipsOutputSchema = z.object({
-    tips: z.array(TipSchema).describe('A list of 3-5 personalized recovery tips.'),
+  tips: z.array(TipSchema),
 });
 export type GenerateRecoveryTipsOutput = z.infer<typeof GenerateRecoveryTipsOutputSchema>;
 
-async function callOpenAI(prompt: string): Promise<GenerateRecoveryTipsOutput> {
-  const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo-1106",
-    messages: [{ role: "user", content: prompt }],
-    temperature: 0.5,
-    response_format: { type: "json_object" },
+async function callGemini(prompt: string): Promise<GenerateRecoveryTipsOutput> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+      }
+    })
   });
 
-  const jsonString = response.choices[0]?.message?.content;
-  if (!jsonString || typeof jsonString !== 'string') {
-    throw new Error("Failed to get a valid response from the AI.");
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Gemini API error: ${error}`);
   }
 
-  try {
-    const parsedJson = JSON.parse(jsonString);
-    const validationResult = GenerateRecoveryTipsOutputSchema.safeParse(parsedJson);
-    if (!validationResult.success) {
-      console.error("AI output failed Zod validation:", validationResult.error);
-      throw new Error("The AI returned data in an unexpected format.");
-    }
-    return validationResult.data;
-  } catch (e) {
-    console.error("Failed to parse JSON from AI response:", e);
-    throw new Error("The AI returned an invalid JSON response.");
-  }
+  const data = await response.json();
+  const jsonString = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  
+  if (!jsonString) throw new Error("Empty response from Gemini");
+
+  return JSON.parse(jsonString);
 }
 
-export async function generateRecoveryTips(
-  input: GenerateRecoveryTipsInput
-): Promise<GenerateRecoveryTipsOutput> {
-  
-  const prompt = `You are a sports recovery specialist and physiotherapist. A user is experiencing high fatigue in the following muscle groups: ${input.fatiguedMuscles.join(', ')}.
+export async function generateRecoveryTips(input: GenerateRecoveryTipsInput): Promise<GenerateRecoveryTipsOutput> {
+  const prompt = `You are a physiotherapist. User has fatigue in: ${input.fatiguedMuscles.join(', ')}.
+  Provide 3-5 actionable recovery tips.
+  Return ONLY JSON: { "tips": [{ "title": "String", "description": "String" }] }`;
 
-  Your Task:
-  Please generate 3-5 actionable and effective recovery tips to help them alleviate muscle soreness and recover faster. For each tip, provide a clear title and a concise description. Focus on practical advice like stretching, nutrition, hydration, and rest techniques.
-
-  Constraints:
-  - You MUST return the response as a single, valid JSON object that strictly conforms to this Zod schema:
-  
-  const GenerateRecoveryTipsOutputSchema = ${JSON.stringify(GenerateRecoveryTipsOutputSchema.shape, null, 2)};
-
-  - Do not add any introductory text, markdown formatting, or any other text outside of the JSON object.
-  `;
-
-  return callOpenAI(prompt);
+  return callGemini(prompt);
 }
