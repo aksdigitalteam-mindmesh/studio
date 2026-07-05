@@ -2,7 +2,7 @@
 
 **Fit-Pulse** is a high-performance, mobile-first web application designed to be your personal digital coach. It combines a fast, inbuilt workout engine with Gemini AI-powered nutrition and recovery advice to provide a holistic fitness experience.
 
-## 🚀 Key Features
+##  Key Features
 
 ### 1. Dynamic Dashboard (The KCAL Ring)
 - **Real-time Calorie Tracking**: A central "KCAL LEFT" ring system that calculates: `Goal - Eaten + Burned`.
@@ -41,7 +41,7 @@
   - **ExerciseDB (RapidAPI)**: For high-quality instructional exercise GIFs.
   - **Vercel Analytics**: Built-in performance monitoring.
 
-## 📐 Business Logic
+##  Business Logic
 
 ### Calorie Calculation
 Uses the **Mifflin-St Jeor Equation** for BMR, adjusted by a TDEE multiplier (1.375) and specific goal offsets:
@@ -51,7 +51,7 @@ Uses the **Mifflin-St Jeor Equation** for BMR, adjusted by a TDEE multiplier (1.
 ### Goal Limits
 - Users are limited to **2 Fitness Goal changes per month** (enforced via server-side Firestore logic) to ensure plan consistency.
 
-## 📦 Getting Started
+##  Getting Started
 
 1. **Clone the repository**
 2. **Setup Environment Variables**:
